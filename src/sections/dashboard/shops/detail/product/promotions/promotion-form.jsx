@@ -1,0 +1,53 @@
+import dayjs from 'dayjs';
+import { usePromotionsStore } from 'src/store/promotionsStore';
+import PromotionCreateForm from './components/promotion-create-form';
+import { useSearchParams } from 'next/navigation';
+import toast from 'react-hot-toast';
+
+const PromotionForm = () => {
+  const searchParams = useSearchParams();
+  const shopId = searchParams.get('id');
+  const initialData = {
+    title: 'Discount',
+    begin_time: dayjs().add(2, 'm'),
+    end_time: dayjs().add(2, 'm').add(30, 'd'),
+    type: 'DirectDiscount',
+    discount: '15',
+    product_type: 'SPU',
+  };
+
+  const { createPromotion, loading } = usePromotionsStore((state) => state);
+
+  const onSubmit = (dataForm, productSelected) => {
+    const onSuccess = (res) => {
+      toast.success(`Tạo promotion ${dataForm?.title}  thành công`);
+      navigate(`/shops/${shopId}/promotions`);
+    };
+    const onFail = (err) => {
+      toast.error(`Tạo promotion thất bại. ${err}`);
+    };
+
+    const submitData = {
+      ...dataForm,
+      title: `Discount ${dataForm.title}`,
+      begin_time: dataForm.begin_time.unix(),
+      end_time: dataForm.end_time.unix(),
+      product_list: productSelected.map((item) => ({
+        product_id: item.id,
+        num_limit: -1,
+        user_limit: -1,
+        discount: dataForm.discount,
+      })),
+    };
+
+    delete submitData.discount;
+
+    // console.log('submitData: ', submitData);
+
+    createPromotion(shopId, submitData, onSuccess, onFail);
+  };
+
+  return <PromotionCreateForm initialData={initialData} loading={loading} onSubmit={onSubmit} />;
+};
+
+export default PromotionForm;

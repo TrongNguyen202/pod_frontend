@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import './component.scss';
+@import 'react-quill/dist/quill.snow.css';
+
+// @import url('https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap');
+
+@font-face {
+  font-family: 'Sora';
+  src: url('/fonts/sora.ttf');
+}
+
+body {
+  font-family: 'Sora', sans-serif !important;
+}
+
+* {
+  font-family: 'Sora', sans-serif !important;
+}
+
+:root {
+  --font-sora: 'Sora', sans-serif !important;
+}
+
+.loader-custom {
+  width: 50px;
+  aspect-ratio: 1;
+  display: grid;
+}
+.loader-custom::before,
+.loader-custom::after {
+  content: '';
+  grid-area: 1/1;
+  --c: no-repeat radial-gradient(farthest-side, #25b09b 92%, #0000);
+  background:
+    var(--c) 50% 0,
+    var(--c) 50% 100%,
+    var(--c) 100% 50%,
+    var(--c) 0 50%;
+  background-size: 12px 12px;
+  animation: l12 1s infinite;
+}
+.loader-custom::before {
+  margin: 4px;
+  filter: hue-rotate(45deg);
+  background-size: 8px 8px;
+  animation-timing-function: linear;
+}
+
+@keyframes l12 {
+  100% {
+    transform: rotate(0.5turn);
+  }
+}
+
+.MuiDateRangeCalendar-root > :first-child {
+  display: none !important;
+}
+
+.editable-cell {
+  position: relative;
+}
+
+.editable-cell-value-wrap {
+  padding: 5px 12px;
+  cursor: pointer;
+  border: 1px solid #d9d9d9;
+  border-radius: 2px;
+}
+
+// .MuiInputBase-input {
+//   height: 10px !important;
+// }
+
+// .MuiAutocomplete-root {
+//   .MuiInputBase-root {
+//     padding-top: 10px !important;
+//     .MuiInputBase-input {
+//       height: 18px !important;
+//     }
+//   }
+// }
+
+// .ant-modal-root {
+//   .ant-modal-mask {
+//     z-index: 99999;
+//   }
+//   .ant-modal-wrap {
+//     z-index: 999999;
+//   }
+// }
+
+// .ant-select-dropdown {
+//   z-index: 1000000 !important;
+// }
+
+.ant-form {
+  font-family: 'Sora', sans-serif !important;
+}

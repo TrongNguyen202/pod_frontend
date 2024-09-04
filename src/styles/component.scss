@@ -1,0 +1,31 @@
+.cascader-product {
+  height: 53px;
+  display: flex;
+  .rs-picker-toggle {
+    height: 53px;
+    .rs-stack {
+      height: 100%;
+      color: #000;
+    }
+    .rs-picker-caret-icon {
+      top: 15px;
+    }
+    .rs-stack-item {
+      height: 100%;
+      .rs-picker-toggle-placeholder {
+        line-height: 40px;
+      }
+      .rs-picker-toggle-value {
+        height: 100%;
+        color: #000;
+        span {
+          height: 100%;
+          line-height: 40px;
+        }
+      }
+      .rs-picker-clean {
+        height: 74%;
+      }
+    }
+  }
+}
