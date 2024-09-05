@@ -114,17 +114,26 @@ export default function ProductItem({
       });
     }
   };
+  const getImageSource = (image) => {
+    // Nếu hình ảnh là base64 mà thiếu tiền tố
+    if (image?.url && image.url.startsWith('/')) {
+      // Thêm tiền tố base64 cho định dạng JPEG
+      return `data:image/jpeg;base64,${image.url}`;
+    }
+    // Trả về bình thường nếu đã có tiền tố
+    return image?.thumbUrl || image?.url;
+  };
 
   return (
     <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-md hover:shadow-blue-300 duration-300 hover:translate-y-[-5px] h-full">
       <div className="w-[100%] h-[13vw] relative">
-        <LazyLoadImage
-          src={product?.images[0]?.thumbUrl || product?.images[0]?.url}
-          alt="Image main"
-          className="w-full h-full object-cover cursor-pointer"
-          onClick={() => setIsOpenModal(true)}
-          loading="lazy"
-        />
+      <LazyLoadImage
+      src={getImageSource(product?.images[0])}
+      alt="Image main"
+      className="w-full h-full object-cover cursor-pointer"
+      onClick={() => setIsOpenModal(true)}
+      loading="lazy"
+    />
         <input
           type="checkbox"
           name={product.id}
