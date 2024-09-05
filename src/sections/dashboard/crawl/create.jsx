@@ -44,7 +44,7 @@ export const PageCrawlProduct = () => {
   const [isShowModalUpload, setShowModalUpload] = useState(false);
   const [showSkeleton, setShowSkeleton] = useState(false);
   const [showOutsideImages, setShowOutsideImages] = useState(false);
-  const [username,setUserName] = useState("")
+  // const [username,setUserName] = useState("")
   const [licenseCode, setLicenseCode] = useState({
     code: localStorage.getItem('licenseCode'),
     invalid: !localStorage.getItem('licenseCode'),
@@ -140,26 +140,40 @@ export const PageCrawlProduct = () => {
       [key]: value,
     });
   };
-  // const fetchProductInstagram = 
-  const fetchDataInstagram = async(usernameInsta)=>{
-    setLoading(true);
-    const headers ={
-      "x-ig-app-id":"936619743392459",
-      "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36",
-      "Accept-Language": "en-US,en;q=0.9,ru;q=0.8",
-      "Accept-Encoding": "gzip, deflate, br",
-      "Accept": "*/*",
-    }
-    fetch(`https://i.instagram.com/api/v1/users/web_profile_info/username=${usernameInsta}`, {
-      method:"GET",
-      headers
-    }).then((response)=>{
-      return response.json()
-    }).then((data)=>{
-      console.log("data instagram",data)
-    })
+  const scrapeUserInsta = async (username) => {
+    try {
+        const response = await axios.get(
+            `http://localhost:8000/api/crawl-insta?username=${username}`,
+            {
+                headers: {
+                    "x-ig-app-id": "936619743392459",
+                    "User-Agent":
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36",
+                    "Accept-Language": "en-US,en;q=0.9,ru;q=0.8",
+                    "Accept-Encoding": "gzip, deflate, br",
+                    "Accept": "*/*",
+                },
+            }
+        );
 
-  }
+        if (response.status === 200) {
+            const dataInsta = response.data.data;
+
+            // Assuming dataInsta contains the list of products or media, you can now set the product list
+            if (dataInsta && Array.isArray(dataInsta)) {
+                setProductList(dataInsta); // Set your product list or media data here
+                setLoading(false)
+            } else {
+                console.error("No media data available.");
+            }
+        } else {
+            console.error("Failed to retrieve data. Status:", response.status);
+        }
+    } catch (error) {
+        console.error("Failed to retrieve data:", error);
+    }
+};
+
   const fetchInfoProducts = async (ids, productData) => {
     setLoading(true);
     const headers = {
@@ -197,6 +211,7 @@ export const PageCrawlProduct = () => {
             ...product,
           };
         });
+        
         setProductList(combineProducts);
         // localStorage.setItem('productList', JSON.stringify(combineProducts));
       })
@@ -257,15 +272,18 @@ export const PageCrawlProduct = () => {
     });
     // lấy danh sách id của sản phẩm để get thông tin sản phẩm
     const ids = productData.map((item) => item.id.split('.')[0]).join(',');
+    console.log("product data", productData)
     setProductList(productData);
     setCheckedItems([]);
     setIsAllChecked(false);
     setShowSkeleton(true);
     if (optionCrawl.crawler === 'Etsy') await fetchInfoProducts(ids, productData);
+    if(optionCrawl.crawler==="Instagram") await scrapeUserInsta(optionCrawl.url)
+
     else {
       setLoading(false);
       setShowSkeleton(false);
-    }
+    } 
   };
 
   const handleCrawl = async () => {
