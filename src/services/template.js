@@ -21,7 +21,7 @@ const requestCreateTemplate = async (data) => {
 
 const requestUpdateTemplate = async (id, data) => {
   const config = {
-    method: 'GET',
+    method: 'PUT',
     url: `/templates/${id}`,
     data,
   };
