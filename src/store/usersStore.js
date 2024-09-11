@@ -53,7 +53,8 @@ export const useUsersStore = create((set, get) => ({
 
   getGroupUser: async (onSuccess = () => {}, onFail = () => {}) => {
     try {
-      const response = await RepositoryRemote.users.getGroupUser();
+      const response = await RepositoryRemote.users.requestGetGroupUser();
+      console.log("hello this is api group usser")
       onSuccess(response.data);
     } catch (error) {
       onFail(error?.response?.data.error || 'Có lỗi xảy ra khi lấy dữ liệu user!');

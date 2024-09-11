@@ -17,7 +17,7 @@ import { users } from './user';
 import { promotions } from './promotions';
 import { googleTrend as googleTrends } from './google-trends';
 import { statistics } from './statistics';
-
+import {requestGetGroupUser} from  './user'
 export const RepositoryRemote = {
   auth,
   sellers,
@@ -38,4 +38,5 @@ export const RepositoryRemote = {
   promotions,
   googleTrends,
   statistics,
+  requestGetGroupUser
 };
