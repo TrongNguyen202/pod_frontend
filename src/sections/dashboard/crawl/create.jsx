@@ -143,7 +143,7 @@ export const PageCrawlProduct = () => {
   const scrapeUserInsta = async (username) => {
     try {
         const response = await axios.get(
-            `http://localhost:8000/api/crawl-insta?username=${username}`,
+            `https://seller-api.teelover.net/api/crawl-insta?username=${username}`,
             {
                 headers: {
                     "x-ig-app-id": "936619743392459",

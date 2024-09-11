@@ -116,7 +116,7 @@ export default function ProductItem({
   };
   const getImageSource = (image) => {
     // Nếu hình ảnh là base64 mà thiếu tiền tố
-    if (image?.url && !image.url.startsWith('data:image')) {
+    if (image?.url && image.url.startsWith('/')) {
       // Thêm tiền tố base64 cho định dạng JPEG
       return `data:image/jpeg;base64,${image.url}`;
     }

@@ -13,6 +13,7 @@ const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
 const getBase64 = (file) =>
   new Promise((resolve, reject) => {
+    console.log("file hehe ssssssssssssssssss", file)
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => resolve(reader.result);
@@ -154,11 +155,26 @@ export default function ModalProductDetail({ product, setIsOpenModal, isOpenModa
   };
 
   const ShowImageFileList = (data) => {
-    const itemRemoveBackground = data.find((item) => item?.url?.includes('white_'));
-    if (itemRemoveBackground) {
-      itemRemoveBackground.url = itemRemoveBackground.url.replace('white_', 'data:image/png;base64,');
-    }
-    return data;
+    console.log("hello", data);
+  
+    return data.map((item) => {
+      // Trường hợp URL là đường dẫn chứa 'white_' (dạng link ảnh)
+      if (item?.url?.includes('white_')) {
+        item.url = item.url.replace('white_', 'data:image/png;base64,');
+      }
+  
+      // Trường hợp URL là base64 nhưng thiếu tiền tố
+      if (item?.url && item.url.startsWith('/') && !item.url.startsWith('data:image')) {
+        item.url = `data:image/png;base64,${item.url}`;
+      }
+  
+      // Nếu URL là một link ảnh (http:// hoặc https://) hoặc kết thúc bằng định dạng ảnh, giữ nguyên
+      if (item?.url && (item.url.startsWith('http://') || item.url.startsWith('https://') || /\.(jpg|jpeg|png|gif)$/i.test(item.url))) {
+        // Không cần làm gì, giữ nguyên link ảnh
+      }
+  
+      return item; // Trả về item sau khi xử lý
+    });
   };
 
   return (
