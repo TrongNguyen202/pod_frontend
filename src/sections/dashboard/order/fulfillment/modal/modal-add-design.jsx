@@ -54,6 +54,9 @@ export const ModalAddDesign = (props) => {
         variation: product.variation,
         ...(product.image_back && { image_back: product.image_back }),
         ...(product.image_front && { image_front: product.image_front }),
+        ...(product.mockup_back && { mockup_back: product.mockup_back }),
+        ...(product.mockup_front && { mockup_front: product.mockup_front }),
+        
       };
     });
 
@@ -160,6 +163,27 @@ export const ModalAddDesign = (props) => {
                                   render={({ field }) => (
                                     <TextField {...field} label="Design back image" fullWidth margin="normal" />
                                   )}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Controller
+                                name = {`design[${index}].mockup_front`}
+                                control={control}
+                                defaultValue=""
+                                render={({ field }) => (
+                                  <TextField {...field} label="Mockup front image" fullWidth margin="normal" />
+                                )}
+                                
+                                />
+                              </TableCell>\<TableCell>
+                                <Controller
+                                name = {`design[${index}].mockup_back`}
+                                control={control}
+                                defaultValue=""
+                                render={({ field }) => (
+                                  <TextField {...field} label="Mockup back image" fullWidth margin="normal" />
+                                )}
+                                
                                 />
                               </TableCell>
                             </TableRow>

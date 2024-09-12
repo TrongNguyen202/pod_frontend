@@ -80,6 +80,9 @@ export const DesignTable = (props) => {
             <TableCell>Variation</TableCell>
             <TableCell>Design front image </TableCell>
             <TableCell>Design back image</TableCell>
+            <TableCell>Design mockup front</TableCell>
+            <TableCell>Design mockup back</TableCell>
+
             <TableCell
               style={{
                 position: "sticky",
@@ -123,6 +126,16 @@ export const DesignTable = (props) => {
                       <TableCell>
                         <Typography variant="body2">
                           {design?.image_back || ""}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {design?.mockup_front || ""}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {design?.mockup_back || ""}
                         </Typography>
                       </TableCell>
                       <TableCell

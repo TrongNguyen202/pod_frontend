@@ -184,6 +184,32 @@ function DesignSku() {
       ),
     },
     {
+      title: 'Design mockup front',
+      dataIndex: 'mockup_front',
+      render: (text) => (
+        <Link
+          href={text || '#'}
+          target={text ? "_blank" : "_self"}
+          className="inline-block max-w-[200px]"
+        >
+          {text || 'No link'}
+        </Link>
+      ),
+    },
+    {
+      title: 'Design mockup back',
+      dataIndex: 'mockup_back',
+      render: (text) => (
+        <Link
+          href={text || '#'}
+          target={text ? "_blank" : "_self"}
+          className="inline-block max-w-[200px]"
+        >
+          {text || 'No link'}
+        </Link>
+      ),
+    },
+    {
       title: 'Actions',
       dataIndex: 'actions',
       align: 'center',
