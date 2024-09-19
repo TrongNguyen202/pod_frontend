@@ -50,7 +50,7 @@ function DesignSku() {
         content: err,
       });
     };
-
+    console.log("des id", designSku.results[index].id,)
     deleteDesignSku(designSku.results[index].id, onSuccess, onFail);
   };
 

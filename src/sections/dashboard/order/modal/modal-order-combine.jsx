@@ -61,13 +61,14 @@ export const ModalOrderCombine = (props) => {
 
   const confirmCombine = async () => {
     if (shopId) {
+      console.log("hfdasujeghf")
       const idToast = toast.loading("Đang xử lý gộp đơn. Vui lòng chờ!");
       setDisableButton(true);
       try {
         const dataCombineConfirm = {
           pre_combine_pkg_list: dataCombine,
         };
-
+        console.log(dataCombineConfirm)
         const response = await RepositoryRemote.orders.requestConfirmCombine(
           shopId,
           dataCombineConfirm

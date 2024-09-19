@@ -43,10 +43,11 @@ export const ModalAddDesign = (props) => {
     control,
     name: 'designs',
   });
+  console.log("field", fields)
 
   const onSubmit = async (data) => {
     const newData = data.designs;
-
+    console.log("data design",newData)
     const convertData = newData.map((product) => {
       return {
         sku_id: product.sku_id,
@@ -59,6 +60,7 @@ export const ModalAddDesign = (props) => {
         
       };
     });
+    console.log("convert data des", convertData)
 
     try {
       const res = await RepositoryRemote.orders.requestPostDesignSku(convertData);
@@ -122,6 +124,8 @@ export const ModalAddDesign = (props) => {
                       <TableCell>Variation</TableCell>
                       <TableCell>Design front image</TableCell>
                       <TableCell>Design back image</TableCell>
+                      <TableCell>Mockup front image</TableCell>
+                      <TableCell>Mockup back image</TableCell>
                     </TableHead>
                     <TableBody>
                       {fields.length ? (
@@ -166,18 +170,18 @@ export const ModalAddDesign = (props) => {
                                 />
                               </TableCell>
                               <TableCell>
-                                <Controller
-                                name = {`design[${index}].mockup_front`}
+                              <Controller
+                                name={`designs[${index}].mockup_front`}
                                 control={control}
-                                defaultValue=""
+                                defaultValue={field.sku_image || ""} // Gán giá trị sku_image vào mockup_front nếu có
                                 render={({ field }) => (
                                   <TextField {...field} label="Mockup front image" fullWidth margin="normal" />
                                 )}
-                                
-                                />
-                              </TableCell>\<TableCell>
+                              />
+                            </TableCell>
+                              <TableCell>
                                 <Controller
-                                name = {`design[${index}].mockup_back`}
+                                name = {`designs[${index}].mockup_back`}
                                 control={control}
                                 defaultValue=""
                                 render={({ field }) => (
