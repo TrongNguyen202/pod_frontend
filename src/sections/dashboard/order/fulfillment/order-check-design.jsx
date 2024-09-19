@@ -20,7 +20,7 @@ export const OrderCheckDesign = (props) => {
     rowsPerPage: 10,
     // search: ""
   });
-
+  console.log("Data to ship", toShipInfoData)
   const handleCheckDesign = (data) => {
     const dataCheck = data
       .map((order) => {
@@ -28,8 +28,10 @@ export const OrderCheckDesign = (props) => {
           .map((item, index) => {
             const productItem = item.item_list
               .map((product) => ({
+
                 ...product,
                 order_id: order.order_list[index].id,
+               
               }))
               .flat();
             return productItem;
@@ -44,6 +46,7 @@ export const OrderCheckDesign = (props) => {
           product_name: item.product_name,
           variation: item.sku_name,
           product_id: item.product_id,
+          sku_image: item.sku_image
         }));
       })
       .flat();
@@ -141,6 +144,7 @@ export const OrderCheckDesign = (props) => {
       />
       {openAddDesignSku && (
         <ModalAddDesign
+         
           isOpen={openAddDesignSku}
           handleClose={() => setOpenAddDesignSku(false)}
           design={newDesignSku}

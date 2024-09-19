@@ -50,7 +50,7 @@ function DesignSku() {
         content: err,
       });
     };
-
+    console.log("des id", designSku.results[index].id,)
     deleteDesignSku(designSku.results[index].id, onSuccess, onFail);
   };
 
@@ -173,6 +173,32 @@ function DesignSku() {
     {
       title: 'Design image back',
       dataIndex: 'image_back',
+      render: (text) => (
+        <Link
+          href={text || '#'}
+          target={text ? "_blank" : "_self"}
+          className="inline-block max-w-[200px]"
+        >
+          {text || 'No link'}
+        </Link>
+      ),
+    },
+    {
+      title: 'Design mockup front',
+      dataIndex: 'mockup_front',
+      render: (text) => (
+        <Link
+          href={text || '#'}
+          target={text ? "_blank" : "_self"}
+          className="inline-block max-w-[200px]"
+        >
+          {text || 'No link'}
+        </Link>
+      ),
+    },
+    {
+      title: 'Design mockup back',
+      dataIndex: 'mockup_back',
       render: (text) => (
         <Link
           href={text || '#'}

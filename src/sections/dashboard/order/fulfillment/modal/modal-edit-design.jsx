@@ -17,6 +17,8 @@ export const ModalEditDesign = (props) => {
       sku_id: design?.sku_id || "",
       product_name: design?.product_name || "",
       variation: design?.variation || "",
+      mockup_front: design?.mockup_front || "",
+      mockup_back: design?.mockup_back || "",
     },
   });
 
@@ -30,9 +32,11 @@ export const ModalEditDesign = (props) => {
     const updateItem = {
       image_front: data.image_front,
       image_back: data.image_back,
+      mockup_front: data.mockup_front,
+      mockup_back: data.mockup_back,
     };
     try {
-      const res = await RepositoryRemote.orders.requestPutDesignSku(updateItem);
+      const res = await RepositoryRemote.orders.requestPutDesignSku(updateItem,  design.id);
       if (res.data) {
         toast.success("Cập nhật thiết kế thành công");
         dispatch(fetchGetDesignSku());
@@ -128,6 +132,32 @@ export const ModalEditDesign = (props) => {
               <TextField
                 {...field}
                 label="Image back"
+                fullWidth
+                margin="normal"
+                disabledx
+              />
+            )}
+          />
+          <Controller
+            name="mockup_front"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="mockup_front"
+                fullWidth
+                margin="normal"
+                disabledx
+              />
+            )}
+          />
+             <Controller
+            name="mockup_back"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="mockup_back"
                 fullWidth
                 margin="normal"
                 disabledx

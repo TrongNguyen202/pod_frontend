@@ -190,11 +190,12 @@ const requestPutDesignSku = async (data, designId) => {
   return axiosAPI(config);
 };
 
-const requestDeleteDesignSku = async (data, designId) => {
+const requestDeleteDesignSku = async (designId) => {
+  console.log("heheheheh",designId)
   const config = {
     method: 'DELETE',
     url: `/designskus/${designId}/`,
-    data,
+    
   };
 
   return axiosAPI(config);

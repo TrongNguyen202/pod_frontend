@@ -233,6 +233,7 @@ export const useShopsOrder = create((set) => ({
 
   deleteDesignSku: async (DesignId, onSuccess = () => {}, onFail = () => {}) => {
     try {
+      console.log(DesignId)
       set({ loading: true });
       const response = await RepositoryRemote.orders.requestDeleteDesignSku(DesignId);
       onSuccess(response);

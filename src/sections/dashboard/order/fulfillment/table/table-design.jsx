@@ -25,7 +25,7 @@ import PopupState, { bindPopover, bindTrigger } from "material-ui-popup-state";
 import toast from "react-hot-toast";
 import { fetchGetDesignSku } from "src/redux/reducers/orders";
 import { useAppDispatch, useAppSelector } from "src/redux/hook";
-
+import { RepositoryRemote } from "src/services";
 export const DesignTable = (props) => {
   const {
     count = 0,
@@ -42,8 +42,9 @@ export const DesignTable = (props) => {
 
   const handleDeleteDesign = async (design) => {
     if (design?.id) {
+      // console.log("desssss id", design.id)
       try {
-        const res = await RepositoryRemote.orders.requestPostDesignSku(
+        const res = await RepositoryRemote.orders.requestDeleteDesignSku(
           design?.id
         );
         if (res.data) {
@@ -80,6 +81,9 @@ export const DesignTable = (props) => {
             <TableCell>Variation</TableCell>
             <TableCell>Design front image </TableCell>
             <TableCell>Design back image</TableCell>
+            <TableCell>Design mockup front</TableCell>
+            <TableCell>Design mockup back</TableCell>
+
             <TableCell
               style={{
                 position: "sticky",
@@ -123,6 +127,16 @@ export const DesignTable = (props) => {
                       <TableCell>
                         <Typography variant="body2">
                           {design?.image_back || ""}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {design?.mockup_front || ""}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {design?.mockup_back || ""}
                         </Typography>
                       </TableCell>
                       <TableCell

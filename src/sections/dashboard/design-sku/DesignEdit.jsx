@@ -51,6 +51,8 @@ function DesignEdit({ openModal, initData, refreshDesign, groupId }) {
         const updateItem = {
           image_front: values.image_front,
           image_back: values.image_back,
+          mockup_front: values.mockup_front,
+          mockup_back: values.mockup_back
         };
         putDesignSku(updateItem, values.id, onSuccess, onFail);
       } else {
@@ -61,6 +63,8 @@ function DesignEdit({ openModal, initData, refreshDesign, groupId }) {
             variation: initData.variation,
             ...(values.image_front !== null && { image_front: values.image_front }),
             ...(values.image_back !== null && { image_back: values.image_back }),
+            ...(values.mockup_front !== null && { mockup_front: values.mockup_front }),
+            ...(values.mockup_back !== null && { mockup_back: values.mockup_back }),
           },
         ];
 
@@ -116,6 +120,20 @@ function DesignEdit({ openModal, initData, refreshDesign, groupId }) {
           name="image_back"
           className="font-bold"
           label={<label style={{ minWidth: '100px' }}>Image back</label>}
+        >
+          <Input />
+        </Form.Item>
+        <Form.Item
+          name="mockup_front"
+          className="font-bold"
+          label={<label style={{ minWidth: '100px' }}>Mockup_front</label>}
+        >
+          <Input />
+        </Form.Item>
+        <Form.Item
+          name="mockup_back"
+          className="font-bold"
+          label={<label style={{ minWidth: '100px' }}>Mockup_back</label>}
         >
           <Input />
         </Form.Item>

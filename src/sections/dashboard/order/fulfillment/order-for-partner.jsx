@@ -45,6 +45,7 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
   const handleCreateOrderFlashShip = async () => {};
 
   const checkDataPartner = (data) => {
+    // console.log("da cos data")
     const dataCheck = data
       .map((order) => {
         // order.order_list[0].item_list = order.order_list[0].item_list.filter((item) => item.sku_name !== 'Default');
@@ -122,6 +123,7 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
 
     const dataFlashShip = orderPartnerResult?.filter((item) => item.is_FlashShip);
     const dataPrintCare = orderPartnerResult?.filter((item) => !item.is_FlashShip);
+    console.log("data flashship", dataPrintCare)
     if (dataFlashShip.length) setFlashShipTable(dataFlashShip);
     if (dataPrintCare.length) setPrintCareTable(dataPrintCare);
   };
@@ -201,6 +203,8 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
             ...order,
             image_design_front: design.image_front,
             image_design_back: design.image_back,
+            mockup_front:design.mockup_front,
+            mockup_back:design.mockup_back,
           };
         }
         return order;
@@ -373,8 +377,8 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
             'Variant ID': key === 'PrintCare' ? product.sku_name : product.variant_id,
             'Print area front': product?.image_design_front || '',
             'Print area back': product?.image_design_back || '',
-            'Mockup Front': '',
-            'Mockup Back': '',
+            'Mockup Front':product?.mockup_front,
+            'Mockup Back': product?.mockup_back,
             'Product note': product.note,
             'Link label': product.label,
           };
@@ -457,11 +461,11 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
               fontWeight: 600,
             }}
           >
-            {`Create Order in PrintCare (${printCareTable.length ? printCareTable.length : '0'})`}
+            {`Create Order in PrintCare or merchize (${printCareTable.length ? printCareTable.length : '0'})`}
           </Typography>
           <Box className="flex items-center gap-4">
             <Button disabled={true} variant="contained">
-              Create order with PrintCare
+              Create order with PrintCare or merchize
             </Button>
             <Button
               onClick={() => handleExportExcelFile(ordersSelectionPrintCare.selected, 'PrintCare')}

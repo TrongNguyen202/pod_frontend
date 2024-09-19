@@ -43,10 +43,11 @@ export const ModalAddDesign = (props) => {
     control,
     name: 'designs',
   });
+  console.log("field", fields)
 
   const onSubmit = async (data) => {
     const newData = data.designs;
-
+    console.log("data design",newData)
     const convertData = newData.map((product) => {
       return {
         sku_id: product.sku_id,
@@ -54,8 +55,12 @@ export const ModalAddDesign = (props) => {
         variation: product.variation,
         ...(product.image_back && { image_back: product.image_back }),
         ...(product.image_front && { image_front: product.image_front }),
+        ...(product.mockup_back && { mockup_back: product.mockup_back }),
+        ...(product.mockup_front && { mockup_front: product.mockup_front }),
+        
       };
     });
+    console.log("convert data des", convertData)
 
     try {
       const res = await RepositoryRemote.orders.requestPostDesignSku(convertData);
@@ -119,6 +124,8 @@ export const ModalAddDesign = (props) => {
                       <TableCell>Variation</TableCell>
                       <TableCell>Design front image</TableCell>
                       <TableCell>Design back image</TableCell>
+                      <TableCell>Mockup front image</TableCell>
+                      <TableCell>Mockup back image</TableCell>
                     </TableHead>
                     <TableBody>
                       {fields.length ? (
@@ -160,6 +167,27 @@ export const ModalAddDesign = (props) => {
                                   render={({ field }) => (
                                     <TextField {...field} label="Design back image" fullWidth margin="normal" />
                                   )}
+                                />
+                              </TableCell>
+                              <TableCell>
+                              <Controller
+                                name={`designs[${index}].mockup_front`}
+                                control={control}
+                                defaultValue={field.sku_image || ""} // Gán giá trị sku_image vào mockup_front nếu có
+                                render={({ field }) => (
+                                  <TextField {...field} label="Mockup front image" fullWidth margin="normal" />
+                                )}
+                              />
+                            </TableCell>
+                              <TableCell>
+                                <Controller
+                                name = {`designs[${index}].mockup_back`}
+                                control={control}
+                                defaultValue=""
+                                render={({ field }) => (
+                                  <TextField {...field} label="Mockup back image" fullWidth margin="normal" />
+                                )}
+                                
                                 />
                               </TableCell>
                             </TableRow>
