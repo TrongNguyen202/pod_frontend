@@ -79,7 +79,11 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
         if (variationObject.length < 2) {
           isFlashShip = false;
         } else {
-          const variationObjectSize = variationObject?.size?.split(/[\s-,]/).filter(Boolean);
+          const variationObjectSize = 
+  typeof variationObject?.size === 'string' 
+  ? variationObject.size.split(/[\s-,]/).filter(Boolean) 
+  : [];
+
           const checkProductType = PODVariant.data?.filter((variant) =>
             variationObjectSize.find((item) => item.toUpperCase() === variant.product_type.toUpperCase()),
           );
