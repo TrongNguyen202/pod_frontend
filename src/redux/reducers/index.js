@@ -12,7 +12,7 @@ import google from "./google";
 import flashShip from "./flash-ship";
 import categories from "./categories";
 import shopsBrand from "./shops-brand";
-
+import ckf from  "./ckf-variant";
 const rootReducer = combineReducers({
   auth,
   main,
@@ -27,6 +27,7 @@ const rootReducer = combineReducers({
   flashShip,
   categories,
   shopsBrand,
+  ckf,
 });
 
 export default rootReducer;

@@ -20,11 +20,14 @@ export const fetchGetFlashShipPODVariant = createAsyncThunk(
   }
 );
 
+
+
 const slicer = createSlice({
   name: "flashShip",
   initialState,
 
   extraReducers: (builder) => {
+    // Xử lý fetchGetFlashShipPODVariant
     builder.addCase(fetchGetFlashShipPODVariant.pending, (state) => {
       state.PODVariant.loading = true;
     });
@@ -37,10 +40,13 @@ const slicer = createSlice({
       state.PODVariant.loading = false;
       state.PODVariant.data = [];
       state.PODVariant.error =
-        action?.error?.message || "Error while processing.";
+        action?.error?.message || "Error while processing FlashShip POD Variant.";
     });
+
+
   },
 });
+
 
 export const {} = slicer.actions;
 

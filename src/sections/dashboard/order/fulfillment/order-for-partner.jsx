@@ -8,6 +8,7 @@ import { TableOrderFlashShip } from './table/table-order-flashship';
 import { useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { fetchGetFlashShipPODVariant } from 'src/redux/reducers/flash-ship';
+import { fetchGetCkfVariant } from 'src/redux/reducers/ckf-variant';
 import { useSelection } from 'src/hooks/use-selection';
 import { TableOrderPrintCare } from './table/table-order-printcare';
 import { RepositoryRemote } from 'src/services';
@@ -22,6 +23,7 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
   const [dataOCRCheck, setDataOCRCheck] = useState([]);
   const [flashShipTable, setFlashShipTable] = useState([]);
   const [printCareTable, setPrintCareTable] = useState([]);
+  const [ckfTable, setCkfTable] = useState([]);
   const [openLoginFlashShip, setOpenLoginFlashShip] = useState(false);
   const [allowCreateOrderPartner, setAllowCreateOrderPartner] = useState(false);
   const [loadingTableFlashShip, setLoadingTableFlashShip] = useState(false);
@@ -30,7 +32,8 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
 
   const { designSku, toShipInfor, packageFulfillmentCompleted } = useAppSelector((state) => state.orders);
   const { PODVariant } = useAppSelector((state) => state.flashShip);
-
+  const {PODKcfVariant} = useAppSelector((state)=>state.ckf)
+  console.log("pod variant", PODVariant)
   const orderIds = useMemo(() => {
     return flashShipTable.map((ship) => ship.order_id);
   }, [flashShipTable]);
@@ -38,10 +41,12 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
   const orderIdsPrinterCare = useMemo(() => {
     return printCareTable.map((ship) => ship.order_id);
   }, [printCareTable]);
-
+  const orderIdsKcf = useMemo(() => {
+    return ckfTable.map((ship) => ship.order_id);
+  }, [ckfTable]);
   const ordersSelection = useSelection(orderIds);
   const ordersSelectionPrintCare = useSelection(orderIdsPrinterCare);
-
+  const ordersSelectionKcf = useSelection(orderIdsKcf)
   const handleCreateOrderFlashShip = async () => {};
 
   const checkDataPartner = (data) => {
@@ -58,6 +63,7 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
       const itemList = dataItem?.order_list?.flatMap((item) => item.item_list);
       const itemListRemovePhysical = itemList.filter((item) => item.sku_name !== 'Default');
       let isFlashShip = true;
+      let isKcf = true;
       const variations = itemListRemovePhysical.map((variation) => {
         if (!isFlashShip) return variation;
         let variationObject = {};
@@ -83,10 +89,66 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
   typeof variationObject?.size === 'string' 
   ? variationObject.size.split(/[\s-,]/).filter(Boolean) 
   : [];
-
+          console.log("variant object", variationObject)
+          console.log("variant object size", variationObjectSize)
+          console.log("pod variant flaship", PODVariant)
+          console.log("pod variant ckf", PODKcfVariant)
+          const checkIsWashTee = variationObjectSize.includes("Wash") || variationObjectSize.includes("Washed")
+          const checkIsWashTShirt = variationObjectSize.includes("Tee") || variationObjectSize.includes("T-Shirt");
+          const checkIsWashHoodie = variationObjectSize.includes("Hoodie")
+          const checkIsWashSweater = variationObjectSize.includes("Sweater")
+          if (!checkIsWashTee){
+            isKcf = false
+          }
           const checkProductType = PODVariant.data?.filter((variant) =>
             variationObjectSize.find((item) => item.toUpperCase() === variant.product_type.toUpperCase()),
           );
+          
+          if  (checkIsWashTee) {
+            isKcf = true
+            result.size = variationObjectSize[variationObjectSize.length -1]
+            result.color = variationObject?.color?.split(" ").pop()
+            const checkColorCkf = PODKcfVariant.data.filter((color) => {
+              const variationColor = variationObject?.color?.split(" ").pop().toUpperCase();
+              console.log("color find", variationObject?.color?.split(" ").pop())
+              return color.color.toUpperCase() === variationColor;
+            });
+            if (checkColorCkf.length){
+              isFlashShip = false
+              console.log("having color wash")
+              if(checkIsWashTShirt){
+                result.variant_id = PODKcfVariant.data.find(
+                  (item) => 
+                    
+                    item.color === variationObject?.color?.split(" ").pop() && 
+                    item.product_type === "SHIRT"
+                ).variant_id;
+                // console.log("foundddd", result.variant_id)
+                result.product_type = "Washed Tee"
+              }
+              if(checkIsWashSweater){
+                result.variant_id = PODKcfVariant.data.find(
+                  (item) => 
+                    
+                    item.color === variationObject?.color?.split(" ").pop() && 
+                    item.product_type === "SWEATHIRT"
+                ).variant_id;S
+                // console.log("foundddd", result.variant_id)
+                result.product_type = "Washed Sweater"
+              }
+              if(checkIsWashHoodie){
+                result.variant_id = PODKcfVariant.data.find(
+                  (item) => 
+                    
+                    item.color === variationObject?.color?.split(" ").pop() && 
+                    item.product_type === "HOODIE"
+                ).variant_id;
+                console.log("foundddd", result.variant_id)
+                result.product_type = "Washed Hoodie"
+              }
+            }
+          }
+          
 
           if (!checkProductType.length) {
             isFlashShip = false;
@@ -115,10 +177,11 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
 
         return result;
       });
-
+      console.log("final variant", variations)
       orderPartner.buyer_email = dataItem.order_list[0].buyer_email;
       orderPartner.order_list = variations;
       orderPartner.is_FlashShip = isFlashShip;
+      orderPartner.is_ckf = isKcf;
       orderPartner.order_id = dataItem.order_list
         .map((item, index) => (index !== 0 ? `-${item.order_id}` : item.order_id))
         .join('');
@@ -126,9 +189,12 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
     });
 
     const dataFlashShip = orderPartnerResult?.filter((item) => item.is_FlashShip);
-    const dataPrintCare = orderPartnerResult?.filter((item) => !item.is_FlashShip);
-    console.log("data flashship", dataPrintCare)
+    const dataKcf = orderPartnerResult?.filter((item) => item.is_ckf);
+    const dataPrintCare = orderPartnerResult?.filter((item) => !item.is_FlashShip  && !item.is_ckf);
+
+    console.log("data printcares", dataPrintCare)
     if (dataFlashShip.length) setFlashShipTable(dataFlashShip);
+    if (dataKcf.length) setCkfTable(dataKcf);
     if (dataPrintCare.length) setPrintCareTable(dataPrintCare);
   };
 
@@ -168,10 +234,10 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
   }, [toShipInfor.data]);
 
   useEffect(() => {
-    if (dataOCRCheck && PODVariant.data.length > 0) {
+    if (dataOCRCheck && PODVariant.data.length > 0 && PODKcfVariant.data.length > 0 ) {
       checkDataPartner(dataOCRCheck);
     }
-  }, [dataOCRCheck, PODVariant.data]);
+  }, [dataOCRCheck, PODVariant.data, PODKcfVariant.data]);
 
   useEffect(() => {
     if (shopId) {
@@ -195,6 +261,7 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
       dispatch(fetchGetFlashShipPODVariant());
       dispatch(fetchToShipInfor({ shopId: shopId, body: data }));
       dispatch(fetchPackageFulfillmentCompleted(shopId));
+      dispatch(fetchGetCkfVariant());
     }
   }, [toShipInfoData, shopId]);
 
@@ -318,9 +385,14 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
   const handleExportExcelFile = async (data, key) => {
     try {
       setLoadingTableFlashShip(true);
-      const dataFind = (key === 'FlashShip' ? flashShipTable : printCareTable).filter((ship) =>
-        data.includes(ship?.order_id),
-      );
+      const today = new Date();
+      const formattedDate = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+      const dataFind = (key === 'FlashShip' 
+        ? flashShipTable 
+        : key === 'ckf' 
+          ? ckfTable 
+          : printCareTable
+      ).filter((ship) => data.includes(ship?.order_id));
 
       const dataLabel = {
         pdf_name: dataFind.map((item) => `${item.package_id}.pdf`),
@@ -363,7 +435,8 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
           .flat();
 
         const dataExport = productItem.map((product) => {
-          const result = {
+          console.log("final product", product)
+          let result = {
             'External ID': 'POD196',
             'Order ID': product.order_id,
             'Shipping method': 1,
@@ -389,6 +462,36 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
 
           if (key === 'PrintCare') {
             result['Tracking ID'] = product.tracking_id;
+          }
+          if (key ==="ckf"){
+            result ={
+              'Process day':formattedDate,
+              'Sent out day':'',
+              'Order ID':product.order_id,
+              'Label Tiktok':product.label,
+              'Tracking':product.tracking_id,
+              'tracking status':'',
+              '店铺编号':'',
+              'Customer Note':product.note || " ",
+              'Phone (Billing)':'',
+              'Name (Shipping)':product.name_buyer,
+              'Address 1&2 (Shipping)':product.street,
+              'City (Shipping)':product.city,
+              'State Code (Shipping)':product.state,
+              'Postcode Code (Shipping)':product.zip_code,
+              'Country Code (Shipping)':"US",
+              'SKU BASIC':product.variant_id,
+              'SKU Custom':product.seller_sku || '',
+              'Item Name':product.product_name,
+              'Type':product.product_type,
+              "Size":product.size,
+              "Color":product.color,
+              "Quantity":product.quantity,
+              'Design Front': product?.image_design_front || '',
+              'Design Back': product?.image_design_back || '',
+              'Mockup link':product?.mockup_front || ''
+              
+            }
           }
 
           return result;
@@ -487,6 +590,40 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
           onSelectAll={ordersSelectionPrintCare.handleSelectAll}
           onSelectOne={ordersSelectionPrintCare.handleSelectOne}
           selected={ordersSelectionPrintCare.selected}
+          loadingTable={loadingTableFlashShip}
+        />
+      </Card>
+      <Card className="p-3">
+        <Box className="flex items-center justify-between">
+          <Typography
+            sx={{
+              position: 'relative',
+              fontSize: 20,
+              fontWeight: 600,
+            }}
+          >
+            {`Create Order Wash Tee Shirt with KCF (${ckfTable.length ? ckfTable.length : '0'})`}
+          </Typography>
+          <Box className="flex items-center gap-4">
+            <Button disabled={true} variant="contained">
+            Create Order Wash Tee Shirt with KCF 
+            </Button>
+            <Button
+              onClick={() => handleExportExcelFile(ordersSelectionKcf.selected, 'ckf')}
+              disabled={!ordersSelectionKcf.selected.length}
+              variant="contained"
+            >
+              Export to excel file
+            </Button>
+          </Box>
+        </Box>
+        <TableOrderPrintCare
+          items={ckfTable}
+          onDeselectAll={ordersSelectionKcf.handleDeselectAll}
+          onDeselectOne={ordersSelectionKcf.handleDeselectOne}
+          onSelectAll={ordersSelectionKcf.handleSelectAll}
+          onSelectOne={ordersSelectionKcf.handleSelectOne}
+          selected={ordersSelectionKcf.selected}
           loadingTable={loadingTableFlashShip}
         />
       </Card>

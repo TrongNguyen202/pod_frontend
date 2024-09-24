@@ -55,4 +55,12 @@ export const useFlashShipStores = create((set) => ({
     }
     set({ loading: false });
   },
+  getCkfVariant: async (onSuccess = () => {}, onFail = () => {}) => {
+    try {
+      const response = await RepositoryRemote.flashShip.requestGetCkfVariant();
+      onSuccess(response.data);
+    } catch (error) {
+      onFail(error?.response?.data?.msg || 'Có lỗi xảy ra!');
+    }
+  }
 }));
