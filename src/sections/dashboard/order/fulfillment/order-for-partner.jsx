@@ -50,26 +50,28 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
   const handleCreateOrderFlashShip = async () => {};
 
   const checkDataPartner = (data) => {
-    // console.log("da cos data")
     const dataCheck = data
       .map((order) => {
-        // order.order_list[0].item_list = order.order_list[0].item_list.filter((item) => item.sku_name !== 'Default');
         return order;
       })
       .filter((order) => order.order_list[0].item_list.length > 0);
-
+  
     const orderPartnerResult = dataCheck?.map((dataItem) => {
       const orderPartner = { ...dataItem };
       const itemList = dataItem?.order_list?.flatMap((item) => item.item_list);
       const itemListRemovePhysical = itemList.filter((item) => item.sku_name !== 'Default');
+  
       let isFlashShip = true;
       let isKcf = true;
+  
       const variations = itemListRemovePhysical.map((variation) => {
         if (!isFlashShip) return variation;
+  
         let variationObject = {};
         const result = { ...variation };
         const variationSplit = variation?.sku_name.split(',').map((item) => item.trim());
-
+  
+        // Xử lý dữ liệu biến thể
         if (variationSplit.length === 3) {
           variationObject = {
             color: variationSplit[0],
@@ -81,89 +83,80 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
             size: variationSplit[1],
           };
         }
-
-        if (variationObject.length < 2) {
+  
+        if (Object.keys(variationObject).length < 2) {
           isFlashShip = false;
         } else {
           const variationObjectSize = 
-  typeof variationObject?.size === 'string' 
-  ? variationObject.size.split(/[\s-,]/).filter(Boolean) 
-  : [];
-          console.log("variant object", variationObject)
-          console.log("variant object size", variationObjectSize)
-          console.log("pod variant flaship", PODVariant)
-          console.log("pod variant ckf", PODKcfVariant)
-          const checkIsWashTee = variationObjectSize.includes("Wash") || variationObjectSize.includes("Washed")
+            typeof variationObject?.size === 'string'
+              ? variationObject.size.split(/[\s-,]/).filter(Boolean)
+              : [];
+  
+          // Các kiểm tra cho "Wash"
+          const checkIsWashTee = variationObjectSize.includes("Wash") || variationObjectSize.includes("Washed");
           const checkIsWashTShirt = variationObjectSize.includes("Tee") || variationObjectSize.includes("T-Shirt");
-          const checkIsWashHoodie = variationObjectSize.includes("Hoodie")
-          const checkIsWashSweater = variationObjectSize.includes("Sweater")
-          if (!checkIsWashTee){
-            isKcf = false
+          const checkIsWashHoodie = variationObjectSize.includes("Hoodie");
+          const checkIsWashSweater = variationObjectSize.includes("Sweater");
+  
+          if (!checkIsWashTee) {
+            isKcf = false;
           }
+  
           const checkProductType = PODVariant.data?.filter((variant) =>
             variationObjectSize.find((item) => item.toUpperCase() === variant.product_type.toUpperCase()),
           );
-          
-          if  (checkIsWashTee) {
-            isKcf = true
-            result.size = variationObjectSize[variationObjectSize.length -1]
-            result.color = variationObject?.color?.split(" ").pop()
+  
+          if (checkIsWashTee) {
+            isKcf = true;
+            result.size = variationObjectSize[variationObjectSize.length - 1];
+            result.color = variationObject?.color?.split(" ").pop();
+  
             const checkColorCkf = PODKcfVariant.data.filter((color) => {
               const variationColor = variationObject?.color?.split(" ").pop().toUpperCase();
-              console.log("color find", variationObject?.color?.split(" ").pop())
               return color.color.toUpperCase() === variationColor;
             });
-            if (checkColorCkf.length){
-              isFlashShip = false
-              console.log("having color wash")
-              if(checkIsWashTShirt){
+  
+            if (checkColorCkf.length) {
+              isFlashShip = false;
+  
+              if (checkIsWashTShirt) {
                 result.variant_id = PODKcfVariant.data.find(
-                  (item) => 
-                    
-                    item.color === variationObject?.color?.split(" ").pop() && 
-                    item.product_type === "SHIRT"
-                ).variant_id;
-                // console.log("foundddd", result.variant_id)
-                result.product_type = "Washed Tee"
+                  (item) => item.color === variationObject?.color?.split(" ").pop() && 
+                            item.product_type === "SHIRT"
+                )?.variant_id;
+                result.product_type = "Washed Tee";
               }
-              if(checkIsWashSweater){
+  
+              if (checkIsWashSweater) {
                 result.variant_id = PODKcfVariant.data.find(
-                  (item) => 
-                    
-                    item.color === variationObject?.color?.split(" ").pop() && 
-                    item.product_type === "SWEATHIRT"
-                ).variant_id;S
-                // console.log("foundddd", result.variant_id)
-                result.product_type = "Washed Sweater"
+                  (item) => item.color === variationObject?.color?.split(" ").pop() && 
+                            item.product_type === "SWEATSHIRT"
+                )?.variant_id;
+                result.product_type = "Washed Sweater";
               }
-              if(checkIsWashHoodie){
+  
+              if (checkIsWashHoodie) {
                 result.variant_id = PODKcfVariant.data.find(
-                  (item) => 
-                    
-                    item.color === variationObject?.color?.split(" ").pop() && 
-                    item.product_type === "HOODIE"
-                ).variant_id;
-                console.log("foundddd", result.variant_id)
-                result.product_type = "Washed Hoodie"
+                  (item) => item.color === variationObject?.color?.split(" ").pop() && 
+                            item.product_type === "HOODIE"
+                )?.variant_id;
+                result.product_type = "Washed Hoodie";
               }
             }
           }
-          
-
+  
           if (!checkProductType.length) {
             isFlashShip = false;
-          }
-
-          if (checkProductType.length) {
+          } else {
             const checkColor = checkProductType.filter(
               (color) => color.color.toUpperCase() === variationObject?.color?.replace(' ', '').toUpperCase(),
             );
-
+  
             if (checkColor.length) {
               const checkSize = checkColor.find((size) => {
                 return variationObjectSize.find((item) => item.toUpperCase() === size.size.toUpperCase());
               });
-
+  
               if (checkSize) {
                 result.variant_id = checkSize.variant_id;
               } else {
@@ -174,10 +167,10 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
             }
           }
         }
-
+  
         return result;
       });
-      console.log("final variant", variations)
+  
       orderPartner.buyer_email = dataItem.order_list[0].buyer_email;
       orderPartner.order_list = variations;
       orderPartner.is_FlashShip = isFlashShip;
@@ -185,19 +178,22 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
       orderPartner.order_id = dataItem.order_list
         .map((item, index) => (index !== 0 ? `-${item.order_id}` : item.order_id))
         .join('');
+  
       return orderPartner;
     });
-
+  
+    // Phân loại các đơn hàng dựa trên trạng thái FlashShip, KCF, và PrintCare
     const dataFlashShip = orderPartnerResult?.filter((item) => item.is_FlashShip);
     const dataKcf = orderPartnerResult?.filter((item) => item.is_ckf);
-    const dataPrintCare = orderPartnerResult?.filter((item) => !item.is_FlashShip  && !item.is_ckf);
-
-    console.log("data printcares", dataPrintCare)
+    const dataPrintCare = orderPartnerResult?.filter((item) => !item.is_FlashShip && !item.is_ckf);
+  
+    // Cập nhật bảng với dữ liệu đã phân loại
+    console.log("data printcares", dataPrintCare);
     if (dataFlashShip.length) setFlashShipTable(dataFlashShip);
     if (dataKcf.length) setCkfTable(dataKcf);
     if (dataPrintCare.length) setPrintCareTable(dataPrintCare);
   };
-
+  
   const handleDataOCRCheck = () => {
     if (toShipInfor?.data?.length) {
       let errorShown = false;
