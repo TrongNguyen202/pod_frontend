@@ -46,8 +46,7 @@ export default function ProductItem({
   handleCheckChange,
   handleChangeProduct,
   showSkeleton,
-  showOutsideImages,
-  isWebPage
+  showOutsideImages
 }) {
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [fileList, setFileList] = useState(product.images);
@@ -69,7 +68,6 @@ export default function ProductItem({
     num_favorers,
     hey,
   } = product ?? {};
-  console.log('isWebPage: ' + index + ' ' + isWebPage);
   
 
   useEffect(() => {
@@ -128,7 +126,7 @@ export default function ProductItem({
   };
 
   return (
-    <div className={`${isWebPage ? 'bg-red-200': 'bg-white'} rounded-lg overflow-hidden shadow-lg hover:shadow-md hover:shadow-blue-300 duration-300 hover:translate-y-[-5px] h-full`}>
+    <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-md hover:shadow-blue-300 duration-300 hover:translate-y-[-5px] h-full">
       <div className="w-[100%] h-[13vw] relative">
       <LazyLoadImage
       src={getImageSource(product?.images[0])}
@@ -143,7 +141,6 @@ export default function ProductItem({
           checked={!!checkedItems[product.id]}
           onChange={handleCheckChange}
           className="absolute top-2 left-2 cursor-pointer w-6 h-6"
-          disable={!isWebPage}
         />
         <Tooltip title={`Có ${product.images.length} ảnh`} placement="top">
           <p className="absolute font-medium h-7 w-7 flex justify-center items-center rounded-md bg-gray-100 bottom-3 right-2 text-green-600 shadow-md border-gray-300 border-solid border-[1px]">

@@ -45,7 +45,6 @@ export const PageCrawlProduct = () => {
   const [isShowModalUpload, setShowModalUpload] = useState(false);
   const [showSkeleton, setShowSkeleton] = useState(false);
   const [showOutsideImages, setShowOutsideImages] = useState(false);
-  const [webpStatus, setWebpStatus] = useState({});
   // const [username,setUserName] = useState("")
   const [licenseCode, setLicenseCode] = useState({
     code: localStorage.getItem('licenseCode'),
@@ -57,34 +56,6 @@ export const PageCrawlProduct = () => {
     title: '',
   });
   const [downloadType, setDownloadType] = useState('excel');
-
-  const isAnyImageWebP = async (imagesUrl) => {
-    try {
-        for (const imageUrl of imagesUrl) {
-            const response = await fetch(imageUrl?.url, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'image/webp,image/*,*/*;q=0.8'
-                }
-            });
-
-            if (response.ok) {
-                const contentType = response.headers.get('Content-Type');
-                if (contentType && contentType.includes('image/webp')) {
-                    console.log(`Image ${imageUrl} is in WebP format.`);
-                    return true; // Trả về true nếu có ít nhất 1 ảnh là định dạng WebP
-                }
-            } else {
-                console.error(`Failed to fetch image ${imageUrl}: Status ${response.status}`);
-            }
-        }
-        return false; // Trả về false nếu không có ảnh nào là định dạng WebP
-    } catch (error) {
-        console.error('Error fetching the images:', error);
-        return false; // Trả về false trong trường hợp có lỗi
-    }
-  };
-
   
   useEffect(() => {
     if (checkedItems && checkedItems.length === 0) return;
@@ -129,19 +100,6 @@ export const PageCrawlProduct = () => {
 
   const CountSelectedItems = Object.values(checkedItems).filter((value) => value === true).length;
 
-  useEffect(() => {
-    const checkWebPStatus = async () => {
-      const status = {};
-      for (const item of productList) {
-        const isWebP = await isAnyImageWebP(item.images);
-        status[item.id] = isWebP;
-      }
-      setWebpStatus(status);
-    };
-
-    checkWebPStatus();
-  }, [productList]);
-
   const renderProductList = () => {
     return loading ? (
       <Stack justifyContent="center" alignItems="center">
@@ -161,7 +119,6 @@ export const PageCrawlProduct = () => {
                 handleChangeProduct={handleChangeProduct}
                 showSkeleton={showSkeleton}
                 showOutsideImages={showOutsideImages}
-                isWebPage={webpStatus[item.id] || false}
               />
             </Col>
           );
