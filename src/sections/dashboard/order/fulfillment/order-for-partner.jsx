@@ -58,30 +58,35 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
   
     const orderPartnerResult = dataCheck?.map((dataItem) => {
       const orderPartner = { ...dataItem };
+      console.log("original data", dataItem)
       const itemList = dataItem?.order_list?.flatMap((item) => item.item_list);
+      console.log("item list", itemList)
       const itemListRemovePhysical = itemList.filter((item) => item.sku_name !== 'Default');
-  
+      console.log("itemListRemovePhysical",itemListRemovePhysical)
       let isFlashShip = true;
       let isKcf = true;
   
       const variations = itemListRemovePhysical.map((variation) => {
-        if (!isFlashShip) return variation;
-  
+        // if (!isFlashShip) return variation;
+        
         let variationObject = {};
         const result = { ...variation };
         const variationSplit = variation?.sku_name.split(',').map((item) => item.trim());
-  
+        console.log("variantsplit", variationSplit)
         // Xử lý dữ liệu biến thể
         if (variationSplit.length === 3) {
           variationObject = {
             color: variationSplit[0],
             size: variationSplit[1] - variationSplit[2],
+            
           };
+          console.log("variant object 1", variationObject)
         } else {
           variationObject = {
             color: variationSplit[0],
             size: variationSplit[1],
           };
+          console.log("variant object", variationObject)
         }
   
         if (Object.keys(variationObject).length < 2) {
@@ -91,12 +96,10 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
             typeof variationObject?.size === 'string'
               ? variationObject.size.split(/[\s-,]/).filter(Boolean)
               : [];
-  
+          console.log("variant object size", variationObjectSize)
           // Các kiểm tra cho "Wash"
           const checkIsWashTee = variationObjectSize.includes("Wash") || variationObjectSize.includes("Washed");
-          const checkIsWashTShirt = variationObjectSize.includes("Tee") || variationObjectSize.includes("T-Shirt");
-          const checkIsWashHoodie = variationObjectSize.includes("Hoodie");
-          const checkIsWashSweater = variationObjectSize.includes("Sweater");
+          
   
           if (!checkIsWashTee) {
             isKcf = false;
@@ -110,7 +113,7 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
             isKcf = true;
             result.size = variationObjectSize[variationObjectSize.length - 1];
             result.color = variationObject?.color?.split(" ").pop();
-  
+            
             const checkColorCkf = PODKcfVariant.data.filter((color) => {
               const variationColor = variationObject?.color?.split(" ").pop().toUpperCase();
               return color.color.toUpperCase() === variationColor;
@@ -118,16 +121,31 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
   
             if (checkColorCkf.length) {
               isFlashShip = false;
-  
+              console.log("is color ck")
+              const checkIsWashTShirt = variationObjectSize.includes("Tee") || variationObjectSize.includes("T-Shirt");
+            const checkIsWashHoodie = variationObjectSize.includes("Hoodie");
+            const checkIsWashSweater = variationObjectSize.includes("Sweater");
               if (checkIsWashTShirt) {
-                result.variant_id = PODKcfVariant.data.find(
-                  (item) => item.color === variationObject?.color?.split(" ").pop() && 
+                console.log("is teee",PODKcfVariant.data)
+                const color = variationObject?.color?.split(" ").pop().toUpperCase() // Chuyển đổi màu sang viết hoa
+                console.log("final color", color)
+                PODKcfVariant.data.forEach((variant) => {
+                  if(variant.product_type=="SHIRT"){
+                    console.log(variant.color.toUpperCase());
+                  }
+                });
+                
+                const matchedVariant = PODKcfVariant.data.find(
+                  (item) => item.color.toUpperCase() === color &&  // Chuyển đổi cả màu trong dữ liệu
                             item.product_type === "SHIRT"
-                )?.variant_id;
+                );
+                console.log("match", matchedVariant)
+                result.variant_id = matchedVariant?.variant_id;
                 result.product_type = "Washed Tee";
               }
   
               if (checkIsWashSweater) {
+                console.log("is sweater")
                 result.variant_id = PODKcfVariant.data.find(
                   (item) => item.color === variationObject?.color?.split(" ").pop() && 
                             item.product_type === "SWEATSHIRT"
@@ -136,18 +154,20 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
               }
   
               if (checkIsWashHoodie) {
+                console.log("hoodie wash")
                 result.variant_id = PODKcfVariant.data.find(
                   (item) => item.color === variationObject?.color?.split(" ").pop() && 
                             item.product_type === "HOODIE"
                 )?.variant_id;
                 result.product_type = "Washed Hoodie";
+                console.log("result.variant_id",result.variant_id)
               }
             }
           }
   
           if (!checkProductType.length) {
             isFlashShip = false;
-          } else {
+          } else if (isKcf==false){
             const checkColor = checkProductType.filter(
               (color) => color.color.toUpperCase() === variationObject?.color?.replace(' ', '').toUpperCase(),
             );
