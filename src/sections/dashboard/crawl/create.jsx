@@ -32,11 +32,12 @@ import { LoadingCustom } from '../../../components/loading';
 import ModalShowError from './ModalShowError';
 import ModalUploadProduct from './ModalUploadProduct';
 import { method } from 'lodash';
+import { items } from 'src/api/file-manager/data';
 
 export const PageCrawlProduct = () => {
-  // const productListStorage = JSON.parse(localStorage.getItem('productList'));
+  const productListStorage = JSON.parse(localStorage.getItem('productCrawlList'));  
   const userInfo = JSON.parse(localStorage.getItem('user'));
-  const [productList, setProductList] = useState([]);
+  const [productList, setProductList] = useState(productListStorage || []);
   const [checkedItems, setCheckedItems] = useState([]);
   const [isAllChecked, setIsAllChecked] = useState(false);
   const [optionCrawl, setOptionCrawl] = useState(initialCrawl);
@@ -55,11 +56,7 @@ export const PageCrawlProduct = () => {
     title: '',
   });
   const [downloadType, setDownloadType] = useState('excel');
-
-  // useEffect(() => {
-  //   localStorage.setItem('productList', JSON.stringify(productList));
-  // }, [productList]);
-
+  
   useEffect(() => {
     if (checkedItems && checkedItems.length === 0) return;
     const CountSelectedItems = Object.values(checkedItems).filter((value) => value === true).length;
@@ -110,7 +107,7 @@ export const PageCrawlProduct = () => {
       </Stack>
     ) : (
       <Row gutter={[16, 16]} className="flex py-5 transition-all duration-300">
-        {productList.map((item, index) => {
+        {productList.map((item, index) => {          
           return (
             <Col span={4} key={item.id}>
               <ProductItem
@@ -274,6 +271,7 @@ export const PageCrawlProduct = () => {
     const ids = productData.map((item) => item.id.split('.')[0]).join(',');
     console.log("product data", productData)
     setProductList(productData);
+    localStorage.setItem('productCrawlList', JSON.stringify(productData));
     setCheckedItems([]);
     setIsAllChecked(false);
     setShowSkeleton(true);
@@ -486,7 +484,7 @@ export const PageCrawlProduct = () => {
         toast.error('Failed to read clipboard contents');
       });
   };
-
+  
   return (
     <Stack direction="column" spacing={2}>
       <Card>
