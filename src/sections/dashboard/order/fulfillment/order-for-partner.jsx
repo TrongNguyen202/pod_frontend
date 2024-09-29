@@ -51,44 +51,46 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
 
   const checkDataPartner = (data) => {
     const dataCheck = data
-      .map((order) => {
-        return order;
-      })
-      .filter((order) => order.order_list[0].item_list.length > 0);
+      .filter((order) => order.order_list[0].item_list.length > 0); // Lọc các đơn có item_list
   
     const orderPartnerResult = dataCheck?.map((dataItem) => {
       const orderPartner = { ...dataItem };
-      console.log("original data", dataItem)
+      console.log("Original data", dataItem);
+      
+      // Gom các item_list vào một mảng duy nhất
       const itemList = dataItem?.order_list?.flatMap((item) => item.item_list);
-      console.log("item list", itemList)
+      console.log("Item list", itemList);
+  
+      // Lọc bỏ các item có sku_name là 'Default'
       const itemListRemovePhysical = itemList.filter((item) => item.sku_name !== 'Default');
-      console.log("itemListRemovePhysical",itemListRemovePhysical)
+      console.log("ItemListRemovePhysical", itemListRemovePhysical);
+      
       let isFlashShip = true;
       let isKcf = true;
   
+      // Lặp qua các biến thể để kiểm tra và xử lý dữ liệu
       const variations = itemListRemovePhysical.map((variation) => {
-        // if (!isFlashShip) return variation;
-        
         let variationObject = {};
         const result = { ...variation };
         const variationSplit = variation?.sku_name.split(',').map((item) => item.trim());
-        console.log("variantsplit", variationSplit)
-        // Xử lý dữ liệu biến thể
+        console.log("Variant split", variationSplit);
+  
+        // Xử lý dựa trên chiều dài của chuỗi SKU
         if (variationSplit.length === 3) {
           variationObject = {
             color: variationSplit[0],
-            size: variationSplit[1] - variationSplit[2],
-            
+            size: variationSplit[1],
+            other: variationSplit[2],
           };
-          console.log("variant object 1", variationObject)
         } else {
           variationObject = {
             color: variationSplit[0],
             size: variationSplit[1],
           };
-          console.log("variant object", variationObject)
         }
+        console.log("Variant object", variationObject);
   
+        // Kiểm tra số lượng key trong variationObject
         if (Object.keys(variationObject).length < 2) {
           isFlashShip = false;
         } else {
@@ -96,24 +98,27 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
             typeof variationObject?.size === 'string'
               ? variationObject.size.split(/[\s-,]/).filter(Boolean)
               : [];
-          console.log("variant object size", variationObjectSize)
-          // Các kiểm tra cho "Wash"
+  
+          console.log("Variant object size", variationObjectSize);
+  
+          // Kiểm tra biến thể "Wash"
           const checkIsWashTee = variationObjectSize.includes("Wash") || variationObjectSize.includes("Washed");
-          
   
           if (!checkIsWashTee) {
             isKcf = false;
           }
   
           const checkProductType = PODVariant.data?.filter((variant) =>
-            variationObjectSize.find((item) => item.toUpperCase() === variant.product_type.toUpperCase()),
+            variationObjectSize.find((item) => item.toUpperCase() === variant.product_type.toUpperCase())
           );
   
+          // Nếu là Wash Tee, Hoodie, hoặc Sweater
           if (checkIsWashTee) {
             isKcf = true;
             result.size = variationObjectSize[variationObjectSize.length - 1];
             result.color = variationObject?.color?.split(" ").pop();
-            
+  
+            // Kiểm tra màu sắc và loại sản phẩm trong KCF Variant
             const checkColorCkf = PODKcfVariant.data.filter((color) => {
               const variationColor = variationObject?.color?.split(" ").pop().toUpperCase();
               return color.color.toUpperCase() === variationColor;
@@ -121,55 +126,85 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
   
             if (checkColorCkf.length) {
               isFlashShip = false;
-              console.log("is color ck")
+              console.log("Is CKF color");
+  
               const checkIsWashTShirt = variationObjectSize.includes("Tee") || variationObjectSize.includes("T-Shirt");
-            const checkIsWashHoodie = variationObjectSize.includes("Hoodie");
-            const checkIsWashSweater = variationObjectSize.includes("Sweater");
+              const checkIsWashHoodie = variationObjectSize.includes("Hoodie");
+              const checkIsWashSweater = variationObjectSize.includes("Sweater");
+  
               if (checkIsWashTShirt) {
-                console.log("is teee",PODKcfVariant.data)
-                const color = variationObject?.color?.split(" ").pop().toUpperCase() // Chuyển đổi màu sang viết hoa
-                console.log("final color", color)
-                PODKcfVariant.data.forEach((variant) => {
-                  if(variant.product_type=="SHIRT"){
-                    console.log(variant.color.toUpperCase());
-                  }
-                });
+                result.variant_id = PODKcfVariant.data.find((item) => {
+                  const colorToCheck = variationObject?.color?.split(" ").pop().toUpperCase();
                 
-                const matchedVariant = PODKcfVariant.data.find(
-                  (item) => item.color.toUpperCase() === color &&  // Chuyển đổi cả màu trong dữ liệu
-                            item.product_type === "SHIRT"
-                );
-                console.log("match", matchedVariant)
-                result.variant_id = matchedVariant?.variant_id;
+                  // Chuẩn hóa tên màu: "khaki" tương đương với "kaki", "grey" tương đương với "gray"
+                  const normalizedColor = colorToCheck === "KHAKI" || colorToCheck === "KAKI" ? "KHAKI" : 
+                                          colorToCheck === "GRAY" || colorToCheck === "GREY" ? "GRAY" : 
+                                          colorToCheck; // Giữ nguyên nếu không phải các trường hợp trên
+                
+                  // Chuẩn hóa cả tên màu từ item.color
+                  const itemColor = item.color.toUpperCase();
+                  const normalizedItemColor = itemColor === "KHAKI" || itemColor === "KAKI" ? "KHAKI" : 
+                                              itemColor === "GRAY" || itemColor === "GREY" ? "GRAY" : 
+                                              itemColor; // Giữ nguyên nếu không phải các trường hợp trên
+                
+                  return normalizedItemColor === normalizedColor && item.product_type === "SHIRT";
+                })?.variant_id;
                 result.product_type = "Washed Tee";
               }
   
               if (checkIsWashSweater) {
-                console.log("is sweater")
-                result.variant_id = PODKcfVariant.data.find(
-                  (item) => item.color === variationObject?.color?.split(" ").pop() && 
-                            item.product_type === "SWEATSHIRT"
-                )?.variant_id;
+                result.variant_id = PODKcfVariant.data.find((item) => {
+                  const colorToCheck = variationObject?.color?.split(" ").pop().toUpperCase();
+                
+                  // Chuẩn hóa tên màu: "khaki" tương đương với "kaki", "grey" tương đương với "gray"
+                  const normalizedColor = colorToCheck === "KHAKI" || colorToCheck === "KAKI" ? "KHAKI" : 
+                                          colorToCheck === "GRAY" || colorToCheck === "GREY" ? "GRAY" : 
+                                          colorToCheck; // Giữ nguyên nếu không phải các trường hợp trên
+                
+                  // Chuẩn hóa cả tên màu từ item.color
+                  const itemColor = item.color.toUpperCase();
+                  const normalizedItemColor = itemColor === "KHAKI" || itemColor === "KAKI" ? "KHAKI" : 
+                                              itemColor === "GRAY" || itemColor === "GREY" ? "GRAY" : 
+                                              itemColor; // Giữ nguyên nếu không phải các trường hợp trên
+                
+                  return normalizedItemColor === normalizedColor && item.product_type === "SWEATSHIRT";
+                })?.variant_id;
+                
                 result.product_type = "Washed Sweater";
+                
               }
   
               if (checkIsWashHoodie) {
-                console.log("hoodie wash")
-                result.variant_id = PODKcfVariant.data.find(
-                  (item) => item.color === variationObject?.color?.split(" ").pop() && 
-                            item.product_type === "HOODIE"
-                )?.variant_id;
+                result.variant_id = PODKcfVariant.data.find((item) => {
+                  const colorToCheck = variationObject?.color?.split(" ").pop().toUpperCase();
+                
+                  // Chuẩn hóa tên màu: "khaki" tương đương với "kaki", "grey" tương đương với "gray"
+                  const normalizedColor = colorToCheck === "KHAKI" || colorToCheck === "KAKI" ? "KHAKI" : 
+                                          colorToCheck === "GRAY" || colorToCheck === "GREY" ? "GRAY" : 
+                                          colorToCheck; // Giữ nguyên nếu không phải các trường hợp trên
+                
+                  // Chuẩn hóa cả tên màu từ item.color
+                  const itemColor = item.color.toUpperCase();
+                  const normalizedItemColor = itemColor === "KHAKI" || itemColor === "KAKI" ? "KHAKI" : 
+                                              itemColor === "GRAY" || itemColor === "GREY" ? "GRAY" : 
+                                              itemColor; // Giữ nguyên nếu không phải các trường hợp trên
+                
+                  return normalizedItemColor === normalizedColor && item.product_type === "HOODIE";
+                })?.variant_id;
+                
                 result.product_type = "Washed Hoodie";
-                console.log("result.variant_id",result.variant_id)
+                console.log("Result.variant_id", result.variant_id);
+                
               }
             }
           }
   
+          // Nếu không phải sản phẩm của KCF, kiểm tra cho FlashShip
           if (!checkProductType.length) {
             isFlashShip = false;
-          } else if (isKcf==false){
+          } else if (!isKcf) {
             const checkColor = checkProductType.filter(
-              (color) => color.color.toUpperCase() === variationObject?.color?.replace(' ', '').toUpperCase(),
+              (color) => color.color.toUpperCase() === variationObject?.color?.replace(' ', '').toUpperCase()
             );
   
             if (checkColor.length) {
@@ -191,6 +226,7 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
         return result;
       });
   
+      // Cập nhật các thông tin đối tác
       orderPartner.buyer_email = dataItem.order_list[0].buyer_email;
       orderPartner.order_list = variations;
       orderPartner.is_FlashShip = isFlashShip;
@@ -208,11 +244,11 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
     const dataPrintCare = orderPartnerResult?.filter((item) => !item.is_FlashShip && !item.is_ckf);
   
     // Cập nhật bảng với dữ liệu đã phân loại
-    console.log("data printcares", dataPrintCare);
     if (dataFlashShip.length) setFlashShipTable(dataFlashShip);
     if (dataKcf.length) setCkfTable(dataKcf);
     if (dataPrintCare.length) setPrintCareTable(dataPrintCare);
   };
+  
   
   const handleDataOCRCheck = () => {
     if (toShipInfor?.data?.length) {

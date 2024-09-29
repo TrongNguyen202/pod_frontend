@@ -174,8 +174,9 @@ export const PageOrders = (props) => {
   };
 
   const onChangeSortCreateTime = () => {
-    const value = getValues('sort.createdTime');
-    setValue('sort.createdTime', value === 'asc' ? 'desc' : 'asc');
+    const value = getValues('filter.createdTime');
+    console.log("value", value)
+    setValue('filter.createdTime', value === 'asc' ? 'desc' : 'asc');
     onFormSubmit();
   };
 
@@ -448,7 +449,7 @@ export const PageOrders = (props) => {
               disabled={
                 !!!ordersSelection?.selected?.length ||
                 loadingTable ||
-                (!isInShop && !isActiveFunction) ||
+                // (!isInShop && !isActiveFunction) ||
                 loadingButton
               }
               onClick={handleCreateLabels}
