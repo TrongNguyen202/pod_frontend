@@ -46,7 +46,7 @@ export default function ProductItem({
   handleCheckChange,
   handleChangeProduct,
   showSkeleton,
-  showOutsideImages,
+  showOutsideImages
 }) {
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [fileList, setFileList] = useState(product.images);
@@ -68,6 +68,7 @@ export default function ProductItem({
     num_favorers,
     hey,
   } = product ?? {};
+  
 
   useEffect(() => {
     handleChangeProduct({ ...product, images: fileList });

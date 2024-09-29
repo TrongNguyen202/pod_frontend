@@ -16,7 +16,7 @@ import { useRouter } from 'next/router';
 import { useSearchParams } from 'next/navigation';
 import { useShopsBrand } from 'src/store/brandStore';
 
-export const PageEditShopProduct = () => {
+const PageEditShopProduct = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const shopId = searchParams.get('id');
@@ -200,3 +200,5 @@ export const PageEditShopProduct = () => {
     </Spin>
   );
 };
+
+export default PageEditShopProduct;

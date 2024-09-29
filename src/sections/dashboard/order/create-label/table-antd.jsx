@@ -50,13 +50,17 @@ export const CreateLabelTableAntd = (props) => {
         const productList = orderItemList?.map((product) => {
           let variationSize = '';
           const variationSplit = product?.sku_name.split(',').map((item) => item.trim());
+          console.log("Da toi day ", variationSplit)
           if (variationSplit.length === 3) {
             variationSize = variationSplit[1] - variationSplit[2];
           } else {
             variationSize = variationSplit[1];
           }
 
-          const variationSizeSplit = variationSize?.split(/[\s-,]/).filter(Boolean);
+          const variationSizeSplit = 
+  typeof variationSize === 'string' 
+  ? variationSize.split(/[\s-,]/).filter(Boolean) 
+  : []; 
           let orderPackageList = dataSizeChart?.find((variant) =>
             variationSizeSplit?.find((item) => item.toUpperCase() === variant.name.toUpperCase()),
           );

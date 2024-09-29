@@ -26,6 +26,7 @@ import { LoadingCustom } from 'src/components/loading';
 import { NoData } from 'src/components/nodata';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { Image } from 'antd';
 
 export const ShopProductsTable = (props) => {
   const {
@@ -100,6 +101,7 @@ export const ShopProductsTable = (props) => {
                 />
               </TableCell>
               <TableCell>Mã sản phẩm</TableCell>
+              {/* <TableCell>Ảnh sản phẩm</TableCell> */}
               <TableCell>Tên sản phẩm </TableCell>
               <TableCell>Giá sản phẩm</TableCell>
               <TableCell>Trạng thái</TableCell>
@@ -119,7 +121,7 @@ export const ShopProductsTable = (props) => {
           <TableBody>
             {items.length ? (
               <>
-                {items.map((product) => {
+                {items.map((product) => {                  
                   const isSelected = selected.includes(product.id);
 
                   return (
@@ -140,6 +142,13 @@ export const ShopProductsTable = (props) => {
                       <TableCell>
                         <Typography variant="body2">{product?.id || ''}</Typography>
                       </TableCell>
+                      {/* <TableCell>
+                        <Image
+                          width={50}
+                          src={product.images}
+                        />
+                      </TableCell> */}
+
                       <TableCell>
                         <Tooltip placement="top" title={product?.name || ''}>
                           <Typography variant="body2" className="line-clamp-2">

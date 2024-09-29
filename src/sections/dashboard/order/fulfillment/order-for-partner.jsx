@@ -8,6 +8,7 @@ import { TableOrderFlashShip } from './table/table-order-flashship';
 import { useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { fetchGetFlashShipPODVariant } from 'src/redux/reducers/flash-ship';
+import { fetchGetCkfVariant } from 'src/redux/reducers/ckf-variant';
 import { useSelection } from 'src/hooks/use-selection';
 import { TableOrderPrintCare } from './table/table-order-printcare';
 import { RepositoryRemote } from 'src/services';
@@ -22,6 +23,7 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
   const [dataOCRCheck, setDataOCRCheck] = useState([]);
   const [flashShipTable, setFlashShipTable] = useState([]);
   const [printCareTable, setPrintCareTable] = useState([]);
+  const [ckfTable, setCkfTable] = useState([]);
   const [openLoginFlashShip, setOpenLoginFlashShip] = useState(false);
   const [allowCreateOrderPartner, setAllowCreateOrderPartner] = useState(false);
   const [loadingTableFlashShip, setLoadingTableFlashShip] = useState(false);
@@ -30,7 +32,8 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
 
   const { designSku, toShipInfor, packageFulfillmentCompleted } = useAppSelector((state) => state.orders);
   const { PODVariant } = useAppSelector((state) => state.flashShip);
-
+  const {PODKcfVariant} = useAppSelector((state)=>state.ckf)
+  console.log("pod variant", PODVariant)
   const orderIds = useMemo(() => {
     return flashShipTable.map((ship) => ship.order_id);
   }, [flashShipTable]);
@@ -38,36 +41,46 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
   const orderIdsPrinterCare = useMemo(() => {
     return printCareTable.map((ship) => ship.order_id);
   }, [printCareTable]);
-
+  const orderIdsKcf = useMemo(() => {
+    return ckfTable.map((ship) => ship.order_id);
+  }, [ckfTable]);
   const ordersSelection = useSelection(orderIds);
   const ordersSelectionPrintCare = useSelection(orderIdsPrinterCare);
-
+  const ordersSelectionKcf = useSelection(orderIdsKcf)
   const handleCreateOrderFlashShip = async () => {};
 
   const checkDataPartner = (data) => {
-    // console.log("da cos data")
     const dataCheck = data
-      .map((order) => {
-        // order.order_list[0].item_list = order.order_list[0].item_list.filter((item) => item.sku_name !== 'Default');
-        return order;
-      })
-      .filter((order) => order.order_list[0].item_list.length > 0);
-
+      .filter((order) => order.order_list[0].item_list.length > 0); // Lọc các đơn có item_list
+  
     const orderPartnerResult = dataCheck?.map((dataItem) => {
       const orderPartner = { ...dataItem };
+      console.log("Original data", dataItem);
+      
+      // Gom các item_list vào một mảng duy nhất
       const itemList = dataItem?.order_list?.flatMap((item) => item.item_list);
+      console.log("Item list", itemList);
+  
+      // Lọc bỏ các item có sku_name là 'Default'
       const itemListRemovePhysical = itemList.filter((item) => item.sku_name !== 'Default');
+      console.log("ItemListRemovePhysical", itemListRemovePhysical);
+      
       let isFlashShip = true;
+      let isKcf = true;
+  
+      // Lặp qua các biến thể để kiểm tra và xử lý dữ liệu
       const variations = itemListRemovePhysical.map((variation) => {
-        if (!isFlashShip) return variation;
         let variationObject = {};
         const result = { ...variation };
         const variationSplit = variation?.sku_name.split(',').map((item) => item.trim());
-
+        console.log("Variant split", variationSplit);
+  
+        // Xử lý dựa trên chiều dài của chuỗi SKU
         if (variationSplit.length === 3) {
           variationObject = {
             color: variationSplit[0],
-            size: variationSplit[1] - variationSplit[2],
+            size: variationSplit[1],
+            other: variationSplit[2],
           };
         } else {
           variationObject = {
@@ -75,29 +88,130 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
             size: variationSplit[1],
           };
         }
-
-        if (variationObject.length < 2) {
+        console.log("Variant object", variationObject);
+  
+        // Kiểm tra số lượng key trong variationObject
+        if (Object.keys(variationObject).length < 2) {
           isFlashShip = false;
         } else {
-          const variationObjectSize = variationObject?.size?.split(/[\s-,]/).filter(Boolean);
+          const variationObjectSize = 
+            typeof variationObject?.size === 'string'
+              ? variationObject.size.split(/[\s-,]/).filter(Boolean)
+              : [];
+  
+          console.log("Variant object size", variationObjectSize);
+  
+          // Kiểm tra biến thể "Wash"
+          const checkIsWashTee = variationObjectSize.includes("Wash") || variationObjectSize.includes("Washed");
+  
+          if (!checkIsWashTee) {
+            isKcf = false;
+          }
+  
           const checkProductType = PODVariant.data?.filter((variant) =>
-            variationObjectSize.find((item) => item.toUpperCase() === variant.product_type.toUpperCase()),
+            variationObjectSize.find((item) => item.toUpperCase() === variant.product_type.toUpperCase())
           );
-
+  
+          // Nếu là Wash Tee, Hoodie, hoặc Sweater
+          if (checkIsWashTee) {
+            isKcf = true;
+            result.size = variationObjectSize[variationObjectSize.length - 1];
+            result.color = variationObject?.color?.split(" ").pop();
+  
+            // Kiểm tra màu sắc và loại sản phẩm trong KCF Variant
+            const checkColorCkf = PODKcfVariant.data.filter((color) => {
+              const variationColor = variationObject?.color?.split(" ").pop().toUpperCase();
+              return color.color.toUpperCase() === variationColor;
+            });
+  
+            if (checkColorCkf.length) {
+              isFlashShip = false;
+              console.log("Is CKF color");
+  
+              const checkIsWashTShirt = variationObjectSize.includes("Tee") || variationObjectSize.includes("T-Shirt");
+              const checkIsWashHoodie = variationObjectSize.includes("Hoodie");
+              const checkIsWashSweater = variationObjectSize.includes("Sweater");
+  
+              if (checkIsWashTShirt) {
+                result.variant_id = PODKcfVariant.data.find((item) => {
+                  const colorToCheck = variationObject?.color?.split(" ").pop().toUpperCase();
+                
+                  // Chuẩn hóa tên màu: "khaki" tương đương với "kaki", "grey" tương đương với "gray"
+                  const normalizedColor = colorToCheck === "KHAKI" || colorToCheck === "KAKI" ? "KHAKI" : 
+                                          colorToCheck === "GRAY" || colorToCheck === "GREY" ? "GRAY" : 
+                                          colorToCheck; // Giữ nguyên nếu không phải các trường hợp trên
+                
+                  // Chuẩn hóa cả tên màu từ item.color
+                  const itemColor = item.color.toUpperCase();
+                  const normalizedItemColor = itemColor === "KHAKI" || itemColor === "KAKI" ? "KHAKI" : 
+                                              itemColor === "GRAY" || itemColor === "GREY" ? "GRAY" : 
+                                              itemColor; // Giữ nguyên nếu không phải các trường hợp trên
+                
+                  return normalizedItemColor === normalizedColor && item.product_type === "SHIRT";
+                })?.variant_id;
+                result.product_type = "Washed Tee";
+              }
+  
+              if (checkIsWashSweater) {
+                result.variant_id = PODKcfVariant.data.find((item) => {
+                  const colorToCheck = variationObject?.color?.split(" ").pop().toUpperCase();
+                
+                  // Chuẩn hóa tên màu: "khaki" tương đương với "kaki", "grey" tương đương với "gray"
+                  const normalizedColor = colorToCheck === "KHAKI" || colorToCheck === "KAKI" ? "KHAKI" : 
+                                          colorToCheck === "GRAY" || colorToCheck === "GREY" ? "GRAY" : 
+                                          colorToCheck; // Giữ nguyên nếu không phải các trường hợp trên
+                
+                  // Chuẩn hóa cả tên màu từ item.color
+                  const itemColor = item.color.toUpperCase();
+                  const normalizedItemColor = itemColor === "KHAKI" || itemColor === "KAKI" ? "KHAKI" : 
+                                              itemColor === "GRAY" || itemColor === "GREY" ? "GRAY" : 
+                                              itemColor; // Giữ nguyên nếu không phải các trường hợp trên
+                
+                  return normalizedItemColor === normalizedColor && item.product_type === "SWEATSHIRT";
+                })?.variant_id;
+                
+                result.product_type = "Washed Sweater";
+                
+              }
+  
+              if (checkIsWashHoodie) {
+                result.variant_id = PODKcfVariant.data.find((item) => {
+                  const colorToCheck = variationObject?.color?.split(" ").pop().toUpperCase();
+                
+                  // Chuẩn hóa tên màu: "khaki" tương đương với "kaki", "grey" tương đương với "gray"
+                  const normalizedColor = colorToCheck === "KHAKI" || colorToCheck === "KAKI" ? "KHAKI" : 
+                                          colorToCheck === "GRAY" || colorToCheck === "GREY" ? "GRAY" : 
+                                          colorToCheck; // Giữ nguyên nếu không phải các trường hợp trên
+                
+                  // Chuẩn hóa cả tên màu từ item.color
+                  const itemColor = item.color.toUpperCase();
+                  const normalizedItemColor = itemColor === "KHAKI" || itemColor === "KAKI" ? "KHAKI" : 
+                                              itemColor === "GRAY" || itemColor === "GREY" ? "GRAY" : 
+                                              itemColor; // Giữ nguyên nếu không phải các trường hợp trên
+                
+                  return normalizedItemColor === normalizedColor && item.product_type === "HOODIE";
+                })?.variant_id;
+                
+                result.product_type = "Washed Hoodie";
+                console.log("Result.variant_id", result.variant_id);
+                
+              }
+            }
+          }
+  
+          // Nếu không phải sản phẩm của KCF, kiểm tra cho FlashShip
           if (!checkProductType.length) {
             isFlashShip = false;
-          }
-
-          if (checkProductType.length) {
+          } else if (!isKcf) {
             const checkColor = checkProductType.filter(
-              (color) => color.color.toUpperCase() === variationObject?.color?.replace(' ', '').toUpperCase(),
+              (color) => color.color.toUpperCase() === variationObject?.color?.replace(' ', '').toUpperCase()
             );
-
+  
             if (checkColor.length) {
               const checkSize = checkColor.find((size) => {
                 return variationObjectSize.find((item) => item.toUpperCase() === size.size.toUpperCase());
               });
-
+  
               if (checkSize) {
                 result.variant_id = checkSize.variant_id;
               } else {
@@ -108,26 +222,34 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
             }
           }
         }
-
+  
         return result;
       });
-
+  
+      // Cập nhật các thông tin đối tác
       orderPartner.buyer_email = dataItem.order_list[0].buyer_email;
       orderPartner.order_list = variations;
       orderPartner.is_FlashShip = isFlashShip;
+      orderPartner.is_ckf = isKcf;
       orderPartner.order_id = dataItem.order_list
         .map((item, index) => (index !== 0 ? `-${item.order_id}` : item.order_id))
         .join('');
+  
       return orderPartner;
     });
-
+  
+    // Phân loại các đơn hàng dựa trên trạng thái FlashShip, KCF, và PrintCare
     const dataFlashShip = orderPartnerResult?.filter((item) => item.is_FlashShip);
-    const dataPrintCare = orderPartnerResult?.filter((item) => !item.is_FlashShip);
-    console.log("data flashship", dataPrintCare)
+    const dataKcf = orderPartnerResult?.filter((item) => item.is_ckf);
+    const dataPrintCare = orderPartnerResult?.filter((item) => !item.is_FlashShip && !item.is_ckf);
+  
+    // Cập nhật bảng với dữ liệu đã phân loại
     if (dataFlashShip.length) setFlashShipTable(dataFlashShip);
+    if (dataKcf.length) setCkfTable(dataKcf);
     if (dataPrintCare.length) setPrintCareTable(dataPrintCare);
   };
-
+  
+  
   const handleDataOCRCheck = () => {
     if (toShipInfor?.data?.length) {
       let errorShown = false;
@@ -164,10 +286,10 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
   }, [toShipInfor.data]);
 
   useEffect(() => {
-    if (dataOCRCheck && PODVariant.data.length > 0) {
+    if (dataOCRCheck && PODVariant.data.length > 0 && PODKcfVariant.data.length > 0 ) {
       checkDataPartner(dataOCRCheck);
     }
-  }, [dataOCRCheck, PODVariant.data]);
+  }, [dataOCRCheck, PODVariant.data, PODKcfVariant.data]);
 
   useEffect(() => {
     if (shopId) {
@@ -191,6 +313,7 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
       dispatch(fetchGetFlashShipPODVariant());
       dispatch(fetchToShipInfor({ shopId: shopId, body: data }));
       dispatch(fetchPackageFulfillmentCompleted(shopId));
+      dispatch(fetchGetCkfVariant());
     }
   }, [toShipInfoData, shopId]);
 
@@ -314,9 +437,14 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
   const handleExportExcelFile = async (data, key) => {
     try {
       setLoadingTableFlashShip(true);
-      const dataFind = (key === 'FlashShip' ? flashShipTable : printCareTable).filter((ship) =>
-        data.includes(ship?.order_id),
-      );
+      const today = new Date();
+      const formattedDate = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+      const dataFind = (key === 'FlashShip' 
+        ? flashShipTable 
+        : key === 'ckf' 
+          ? ckfTable 
+          : printCareTable
+      ).filter((ship) => data.includes(ship?.order_id));
 
       const dataLabel = {
         pdf_name: dataFind.map((item) => `${item.package_id}.pdf`),
@@ -359,7 +487,8 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
           .flat();
 
         const dataExport = productItem.map((product) => {
-          const result = {
+          console.log("final product", product)
+          let result = {
             'External ID': 'POD196',
             'Order ID': product.order_id,
             'Shipping method': 1,
@@ -385,6 +514,36 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
 
           if (key === 'PrintCare') {
             result['Tracking ID'] = product.tracking_id;
+          }
+          if (key ==="ckf"){
+            result ={
+              'Process day':formattedDate,
+              'Sent out day':'',
+              'Order ID':product.order_id,
+              'Label Tiktok':product.label,
+              'Tracking':product.tracking_id,
+              'tracking status':'',
+              '店铺编号':'',
+              'Customer Note':product.note || " ",
+              'Phone (Billing)':'',
+              'Name (Shipping)':product.name_buyer,
+              'Address 1&2 (Shipping)':product.street,
+              'City (Shipping)':product.city,
+              'State Code (Shipping)':product.state,
+              'Postcode Code (Shipping)':product.zip_code,
+              'Country Code (Shipping)':"US",
+              'SKU BASIC':product.variant_id,
+              'SKU Custom':product.seller_sku || '',
+              'Item Name':product.product_name,
+              'Type':product.product_type,
+              "Size":product.size,
+              "Color":product.color,
+              "Quantity":product.quantity,
+              'Design Front': product?.image_design_front || '',
+              'Design Back': product?.image_design_back || '',
+              'Mockup link':product?.mockup_front || ''
+              
+            }
           }
 
           return result;
@@ -483,6 +642,40 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
           onSelectAll={ordersSelectionPrintCare.handleSelectAll}
           onSelectOne={ordersSelectionPrintCare.handleSelectOne}
           selected={ordersSelectionPrintCare.selected}
+          loadingTable={loadingTableFlashShip}
+        />
+      </Card>
+      <Card className="p-3">
+        <Box className="flex items-center justify-between">
+          <Typography
+            sx={{
+              position: 'relative',
+              fontSize: 20,
+              fontWeight: 600,
+            }}
+          >
+            {`Create Order Wash Tee Shirt with KCF (${ckfTable.length ? ckfTable.length : '0'})`}
+          </Typography>
+          <Box className="flex items-center gap-4">
+            <Button disabled={true} variant="contained">
+            Create Order Wash Tee Shirt with KCF 
+            </Button>
+            <Button
+              onClick={() => handleExportExcelFile(ordersSelectionKcf.selected, 'ckf')}
+              disabled={!ordersSelectionKcf.selected.length}
+              variant="contained"
+            >
+              Export to excel file
+            </Button>
+          </Box>
+        </Box>
+        <TableOrderPrintCare
+          items={ckfTable}
+          onDeselectAll={ordersSelectionKcf.handleDeselectAll}
+          onDeselectOne={ordersSelectionKcf.handleDeselectOne}
+          onSelectAll={ordersSelectionKcf.handleSelectAll}
+          onSelectOne={ordersSelectionKcf.handleSelectOne}
+          selected={ordersSelectionKcf.selected}
           loadingTable={loadingTableFlashShip}
         />
       </Card>

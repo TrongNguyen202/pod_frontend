@@ -52,7 +52,7 @@ export const ShopsTable = (props) => {
     }
   };
 
-  const handleDeleteShop = async (shop) => {
+  const handleDeleteShop = async (shop) => {    
     const toastId = toast.loading("Đang xóa cửa hàng. Vui lòng chờ!");
     try {
       await RepositoryRemote.stores.requestUpdateStore(shop.id, {
@@ -204,7 +204,10 @@ export const ShopsTable = (props) => {
                                         size="small"
                                         variant="contained"
                                         color="error"
-                                        onClick={handleDeleteShop}
+                                        onClick={() => {
+                                          handleDeleteShop(shop);
+                                          popupState.close();
+                                        }}
                                       >
                                         Delete
                                       </Button>

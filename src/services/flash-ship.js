@@ -48,10 +48,19 @@ const requestDetailOrderFlashShip = async (id) => {
   return axiosAPIFlashShip(config);
 };
 
+const requestGetCkfVariant = async () => {
+  const config = {
+    method: "GET",
+    url: `/ckf/all`,
+  };
+
+  return axiosAPI(config);
+};
 export const flashShip = {
   requestGetFlashShipPODVariant,
   requestLoginFlashShip,
   requestCreateOrderFlashShip,
   requestCancelOrderFlashShip,
   requestDetailOrderFlashShip,
+  requestGetCkfVariant,
 };

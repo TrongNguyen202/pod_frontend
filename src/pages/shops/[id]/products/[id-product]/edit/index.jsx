@@ -4,9 +4,8 @@ import { useSettings } from 'src/hooks/use-settings';
 import { usePageView } from 'src/hooks/use-page-view';
 import dynamic from 'next/dynamic';
 import { Seo } from '../../../../../../components/seo';
-// import { PageEditShopProduct } from 'src/sections/dashboard/shops/detail/product/edit';
 
-const PageEditShopProduct = dynamic('src/sections/dashboard/shops/detail/product/edit', { ssr: false });
+const PageEditShopProduct = dynamic(() => import('src/sections/dashboard/shops/detail/product/edit'), { ssr: false });
 
 const Page = () => {
   usePageView();
