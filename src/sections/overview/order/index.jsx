@@ -149,6 +149,7 @@ export const OrderStatistics = () => {
 
   const onFormSubmit = () => {
     const values = getValues();
+    console.log('Submitted form values:', values); // Debugging line
     const formState = {
       filter: {
         status: values.status.map((item) => item.value),
@@ -162,6 +163,7 @@ export const OrderStatistics = () => {
     };
     dispatch(fetchGetStatisticsOrder(handleQuery(formState)));
   };
+  
 
   return (
     <Form onSubmit={onFormSubmit} control={control}>
@@ -172,22 +174,23 @@ export const OrderStatistics = () => {
               <Grid item xs={12} md={6}>
                 <Typography variant="h7">{`Khoảng thời gian (UTC +0)`}</Typography>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <Controller
-                    name="createdTime"
-                    control={control}
-                    render={({ field }) => (
-                      <DateTimeRangePicker
-                        {...field}
-                        localeText={{
-                          start: 'Bắt đầu',
-                          end: 'Kết thúc',
-                        }}
-                        onChange={(newValue) => {
-                          return field.onChange(newValue);
-                        }}
-                      />
-                    )}
-                  />
+                <Controller
+  name="createdTime"
+  control={control}
+  render={({ field }) => (
+    <DateTimeRangePicker
+      {...field}
+      localeText={{
+        start: 'Bắt đầu',
+        end: 'Kết thúc',
+      }}
+      onChange={(newValue) => {
+        field.onChange(newValue); // Đảm bảo điều này hoạt động đúng
+        console.log('createdTime đã cập nhật:', newValue); // Dòng kiểm tra để debug
+      }}
+    />
+  )}
+/>
                 </LocalizationProvider>
               </Grid>
               <Grid item xs={12} md={6}>

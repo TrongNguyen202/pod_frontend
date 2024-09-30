@@ -174,9 +174,8 @@ export const PageOrders = (props) => {
   };
 
   const onChangeSortCreateTime = () => {
-    const value = getValues('filter.createdTime');
-    console.log("value", value)
-    setValue('filter.createdTime', value === 'asc' ? 'desc' : 'asc');
+    const value = getValues('sort.createdTime');
+    setValue('sort.createdTime', value === 'asc' ? 'desc' : 'asc');
     onFormSubmit();
   };
 
@@ -395,8 +394,10 @@ export const PageOrders = (props) => {
       offset: values.paging.currentPage || 0,
       filter: {
         status: values.status.map((item) => item.value),
-        startTime: dayjs(values.createdTime[0]).subtract(1, 'day').unix(),
-        endTime: dayjs(values.createdTime[1]).add(1, 'day').unix(),
+        createdTime: {
+          startTime: dayjs(values.createdTime[0]).unix(),
+          endTime: dayjs(values.createdTime[1]).unix(),
+        },
         shop: !isInShop ? values.shop.map((item) => item.value) : [shopId],
         user: values.user.map((item) => item.value),
       },
@@ -407,10 +408,6 @@ export const PageOrders = (props) => {
     };
     dispatch(fetchGetAllOrders(handleQuery(formState)));
   };
-
-  useEffect(() => {
-    onFormSubmit();  
-  }, []);
 
   return (
     <Form onSubmit={onFormSubmit} control={control}>
@@ -449,7 +446,7 @@ export const PageOrders = (props) => {
               disabled={
                 !!!ordersSelection?.selected?.length ||
                 loadingTable ||
-                // (!isInShop && !isActiveFunction) ||
+                (!isInShop && !isActiveFunction) ||
                 loadingButton
               }
               onClick={handleCreateLabels}
@@ -675,7 +672,6 @@ export const PageOrders = (props) => {
             dataOrderDetail={orderDataTable}
             data={combineList}
             handleClose={() => setOpenModalCombine(false)}
-            shopId =  {shopId}
           />
         )}
       </Stack>

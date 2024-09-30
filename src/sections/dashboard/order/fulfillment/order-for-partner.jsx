@@ -121,7 +121,18 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
             // Kiểm tra màu sắc và loại sản phẩm trong KCF Variant
             const checkColorCkf = PODKcfVariant.data.filter((color) => {
               const variationColor = variationObject?.color?.split(" ").pop().toUpperCase();
-              return color.color.toUpperCase() === variationColor;
+            
+              // Chuẩn hóa tên màu: "khaki" tương đương với "kaki", "grey" tương đương với "gray"
+              const normalizedVariationColor = variationColor === "KHAKI" || variationColor === "KAKI" ? "KHAKI" :
+                                               variationColor === "GRAY" || variationColor === "GREY" ? "GRAY" : 
+                                               variationColor; // Giữ nguyên nếu không phải các trường hợp trên
+              
+              const colorToCheck = color.color.toUpperCase();
+              const normalizedColor = colorToCheck === "KHAKI" || colorToCheck === "KAKI" ? "KHAKI" :
+                                      colorToCheck === "GRAY" || colorToCheck === "GREY" ? "GRAY" : 
+                                      colorToCheck; // Giữ nguyên nếu không phải các trường hợp trên
+            
+              return normalizedColor === normalizedVariationColor;
             });
   
             if (checkColorCkf.length) {
