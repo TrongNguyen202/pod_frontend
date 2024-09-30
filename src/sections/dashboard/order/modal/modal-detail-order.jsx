@@ -2,7 +2,7 @@ import { Box, Card, Grid, Modal, Tooltip } from "@mui/material";
 import dayjs from "dayjs";
 import Image from "next/image";
 import Link from "next/link";
-
+import { useSearchParams } from 'src/hooks/use-search-params';
 export const ModalDetailOrder = (props) => {
   const { isOpen, handleClose, order } = props;
 
@@ -21,7 +21,8 @@ export const ModalDetailOrder = (props) => {
     buyer_uid,
     order_id,
   } = order;
-
+  const searchParams = useSearchParams();
+  const shopId = searchParams.get('id');
   return (
     <Modal open={isOpen} onClose={handleClose}>
       <Box
@@ -145,8 +146,8 @@ export const ModalDetailOrder = (props) => {
                             </div>
                             <div>
                               <Link
-                                // href={`/shops/${shopId}/products/${item.product_id}`}
-                                href={`#`}
+                                href={`/shops/${shopId}/products/${item.product_id}`}
+                               
                               >
                                 <Tooltip title={item.product_name}>
                                   <p className="font-semibold line-clamp-1">
