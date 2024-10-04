@@ -29,7 +29,7 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
   const [loadingTableFlashShip, setLoadingTableFlashShip] = useState(false);
   const searchParams = useSearchParams();
   const shopId = searchParams.get('id');
-
+  const userNameCurrent = localStorage.getItem("usernamecurrent")
   const { designSku, toShipInfor, packageFulfillmentCompleted } = useAppSelector((state) => state.orders);
   const { PODVariant } = useAppSelector((state) => state.flashShip);
   const {PODKcfVariant} = useAppSelector((state)=>state.ckf)
@@ -427,8 +427,14 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-    XLSX.writeFile(workbook, `${fileName}-${Date.now()}.xlsx`);
+    const fileNames = {
+      "ckf": "CKF",
+      "Flashship": "FS",
+      "Printcare": "PC"
+    };
 
+    fileName = fileNames[fileName] || fileName;
+    XLSX.writeFile(workbook, `${fileName}-${userNameCurrent}-${Date.now()}.xlsx`);
     const dataPackageCreateConvert = handleConvertDataPackageCreate(dataPackageCreate, fileName, true);
 
     const promise = dataPackageCreateConvert.map(async (item) => {

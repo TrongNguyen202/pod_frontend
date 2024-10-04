@@ -50,6 +50,7 @@ const Page = () => {
         });
 
         if (res?.data?.access && res?.data?.refresh) {
+          localStorage.setItem(LOCAL_STORAGE_KEY.USER_NAME, values.username)
           localStorage.setItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN, res.data.access);
           localStorage.setItem(LOCAL_STORAGE_KEY.REFRESH_TOKEN, res.data.refresh);
           dispatch(setInitialized(true));
