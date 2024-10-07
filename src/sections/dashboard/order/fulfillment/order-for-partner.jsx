@@ -429,8 +429,8 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
     const fileNames = {
       "ckf": "CKF",
-      "Flashship": "FS",
-      "Printcare": "PC"
+      "FlashShip": "FS",
+      "PrintCare": "PC"
     };
 
     fileName = fileNames[fileName] || fileName;

@@ -60,5 +60,8 @@ export default slicer.reducer;
 
 export const fetchUserInfo = createAsyncThunk('/user/info', async () => {
   const response = await RepositoryRemote.auth.requestGetProfileInfor();
+  if(response){
+    localStorage.setItem("usernamecurrent", response.data.username)
+  }
   return response?.data;
 });
