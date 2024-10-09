@@ -172,7 +172,7 @@ export default function TemplateForm({ onSaveTemplate, setShowModalAddTemplate, 
   //   label: item.name,
   // }));
   const categoriesData = buildNestedArraysMenu(categoriesIsLeaf, '0');
-
+   console.log("Categories data", categoriesData)
   useEffect(() => {
     getAllCategoriesIsLeaf();
     if (templateJson?.id) {

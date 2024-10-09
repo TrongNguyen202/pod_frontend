@@ -27,7 +27,7 @@ export const useCategoriesStore = create((set) => ({
     try {
       set({ loading: true });
       const response = await RepositoryRemote.categories.requestGetAllCategoriesIsLeaf();
-      set({ categoriesIsLeaf: response.data.data.category_list });
+      set({ categoriesIsLeaf: response.data.data.categories });
       onSuccess(response.data.data);
     } catch (error) {
       onFail(error?.response?.data?.msg || 'Có lỗi xảy ra!');
