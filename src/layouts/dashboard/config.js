@@ -16,17 +16,17 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import { permission } from '../../constants';
 
 export const pagePermissions = {
-  dashboard: [permission.MANAGER, permission.SELLER, permission.DESIGNER],
-  shops: [permission.MANAGER, permission.SELLER],
-  orders: [permission.MANAGER, permission.SELLER],
-  templates: [permission.MANAGER, permission.SELLER],
-  users: [permission.MANAGER],
-  crawl: [permission.MANAGER, permission.SELLER],
-  google_trends: [permission.MANAGER, permission.SELLER],
-  design_editor: [permission.MANAGER, permission.SELLER],
-  check_label: [permission.MANAGER, permission.SELLER],
-  user_admin: [permission.MANAGER],
-  design_sku: [permission.MANAGER, permission.DESIGNER],
+  dashboard: [permission.ADMIN, permission.CUSTOMER, permission.DESIGNER],
+  shops: [permission.ADMIN, permission.CUSTOMER],
+  orders: [permission.ADMIN, permission.CUSTOMER],
+  templates: [permission.ADMIN, permission.CUSTOMER],
+  users: [permission.ADMIN],
+  crawl: [permission.ADMIN, permission.CUSTOMER],
+  google_trends: [permission.ADMIN, permission.CUSTOMER],
+  design_editor: [permission.ADMIN, permission.CUSTOMER],
+  check_label: [permission.ADMIN, permission.CUSTOMER],
+  user_admin: [permission.ADMIN],
+  design_sku: [permission.ADMIN, permission.DESIGNER],
 };
 
 export const useSections = () => {
@@ -83,6 +83,15 @@ export const useSections = () => {
               </SvgIcon>
             ),
             permissions: pagePermissions.orders,
+          },
+          {
+            title: t(tokens.nav.forgetPassword),
+            path: paths.dashboard.forget_password.index,
+            icon: (
+              <SvgIcon fontSize="small">
+                <CheckDone01Icon />
+              </SvgIcon>
+            ),
           },
           {
             title: t(tokens.nav.manageTemplates),

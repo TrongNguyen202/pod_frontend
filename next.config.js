@@ -1,5 +1,12 @@
-/** @type {import('next').NextConfig} */
-const config = {
+const withTM = require('next-transpile-modules')([
+  'antd',
+  '@ant-design/icons',
+  'rc-util',
+  'rc-pagination',
+  'rc-picker'
+]);
+
+module.exports = withTM({
   reactStrictMode: false,
   images: {
     remotePatterns: [
@@ -20,6 +27,4 @@ const config = {
     });
     return config;
   },
-};
-
-module.exports = config;
+});

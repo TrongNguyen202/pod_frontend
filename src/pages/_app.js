@@ -44,7 +44,7 @@ const CustomApp = (props) => {
   return (
     <CacheProvider value={emotionCache}>
       <Head>
-        <title>Teelover</title>
+        <title>MediaResolver</title>
         <meta name="viewport" content="initial-scale=1, width=device-width" />
       </Head>
       <ProviderCustom>

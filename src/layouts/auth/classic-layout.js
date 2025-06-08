@@ -69,7 +69,7 @@ export const Layout = (props) => {
                   },
                 }}
               >
-                Teelover <span>PRO</span>
+                MediaResolver <span>PRO</span>
               </Box>
             </Stack>
           </Stack>

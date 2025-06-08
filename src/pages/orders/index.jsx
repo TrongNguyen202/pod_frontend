@@ -6,13 +6,17 @@ import { useSettings } from 'src/hooks/use-settings';
 import { pagePermissions } from '../../layouts/dashboard/config';
 import { RoleGuard } from '../../guards/role-guard';
 import { Seo } from '../../components/seo';
+import { useTranslation } from 'react-i18next';
+import { tokens } from '../../locales/tokens';
+
 
 const Page = () => {
   const settings = useSettings();
+  const { t } = useTranslation();
 
   return (
     <>
-      <Seo title="Orders" />
+      <Seo title={t(tokens.nav.orders)} />
       <Box
         component="main"
         sx={{
@@ -30,7 +34,7 @@ const Page = () => {
           >
             <Grid item xs={12}>
               <Stack direction="row" justifyContent="start" spacing={4}>
-                <Typography variant="h4">Danh sách đơn hàng</Typography>
+                <Typography variant="h4">{t(tokens.nav.orders)}</Typography>
               </Stack>
             </Grid>
             <Grid item xs={12}>

@@ -20,22 +20,20 @@ import { RepositoryRemote } from 'src/services';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
 import { fetchUserInfo, setAuthenticate, setInitialized } from 'src/redux/reducers/auth';
 import { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { tokens } from '../../locales/tokens';
+import Link from 'next/link';
 
 const initialValues = {
-  email: '',
-  password: '',
+  username: '',
+  phone: '',
   submit: null,
 };
 
 const validationSchema = Yup.object({
   username: Yup.string().max(255).required('Username is required'),
-  password: Yup.string().max(255).required('Password is required'),
+  phone: Yup.string().max(255).required('Password is required'),
 });
 
 const Page = () => {
-  const { t } = useTranslation();
   const isMounted = useMounted();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -47,21 +45,12 @@ const Page = () => {
     validationSchema,
     onSubmit: async (values, helpers) => {
       try {
-        const res = await RepositoryRemote.auth.requestLogin({
+        const res = await RepositoryRemote.auth.requestResetPassword({
           username: values.username,
-          password: values.password,
         });
-
-        if (res?.data?.access && res?.data?.refresh) {
-          localStorage.setItem(LOCAL_STORAGE_KEY.USER_NAME, values.username);
-          localStorage.setItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN, res.data.access);
-          localStorage.setItem(LOCAL_STORAGE_KEY.REFRESH_TOKEN, res.data.refresh);
-          dispatch(setInitialized(true));
-          dispatch(fetchUserInfo());
-        }
       } catch (err) {
         if (isMounted()) {
-          toast.error('Tên đăng nhập hoặc mật khẩu không đúng!');
+          toast.error('Tên đăng nhập không đúng!');
         }
       }
     },
@@ -81,10 +70,10 @@ const Page = () => {
 
   return (
     <>
-      <Seo title="Login" />
+      <Seo title="Forget Password" />
       <div>
         <Card elevation={16}>
-          <CardHeader sx={{ pb: 0, fontSize: 26 }} title="Log in" className="!text-3xl" />
+          <CardHeader sx={{ pb: 0, fontSize: 26 }} title="Forget Password" className="!text-3xl" />
           <CardContent className='relative'>
             <form noValidate onSubmit={formik.handleSubmit}>
               <Stack spacing={3}>
@@ -93,22 +82,21 @@ const Page = () => {
                   error={!!(formik.touched.username && formik.errors.username)}
                   fullWidth
                   helperText={formik.touched.username && formik.errors.username}
-                  label={`${t(tokens.nav.username)}`}
+                  label="Tên đăng nhập"
                   name="username"
                   onBlur={formik.handleBlur}
                   onChange={formik.handleChange}
                   value={formik.values.username}
                 />
                 <TextField
-                  error={!!(formik.touched.password && formik.errors.password)}
+                  error={!!(formik.touched.phone && formik.errors.phone)}
                   fullWidth
-                  helperText={formik.touched.password && formik.errors.password}
-                  label={`${t(tokens.nav.password)}`}
-                  name="password"
+                  helperText={formik.touched.phone && formik.errors.phone}
+                  label="Số điện thoại"
+                  name="phone"
                   onBlur={formik.handleBlur}
                   onChange={formik.handleChange}
-                  type="password"
-                  value={formik.values.password}
+                  value={formik.values.phone}
                 />
               </Stack>
               {formik.errors.submit && (
@@ -124,9 +112,12 @@ const Page = () => {
                 type="submit"
                 variant="contained"
               >
-                Log In
+                Reset
               </Button>
             </form>
+            <Link href="/auth/login" className="relative bottom-0 text-sm text-blue-600 hover:underline">
+              Đăng nhập?
+            </Link>
           </CardContent>
         </Card>
         {/* <Stack

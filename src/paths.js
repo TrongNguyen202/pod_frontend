@@ -88,6 +88,9 @@ export const paths = {
       profile: '/dashboard/social/profile',
       feed: '/dashboard/social/feed',
     },
+    forget_password: {
+      index: '/forget_password'
+    },
     templates: {
       index: '/templates',
     },

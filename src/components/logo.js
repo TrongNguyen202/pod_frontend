@@ -23,6 +23,6 @@ export const Logo = () => {
     //     fill={fillColor}
     //   />
     // </svg>
-    <Image src="/favicon.ico" width={24} height={24} alt="" className="w-full h-full" />
+    <Image src="/logo.png" width={24} height={24} alt="" className="w-full h-full" />
   );
 };

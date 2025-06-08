@@ -46,13 +46,11 @@ export const AccountPopover = (props) => {
             <Typography color="text.secondary" key={role} variant="body2">
               {role === permission.ADMIN
                 ? 'Admin'
-                : role === permission.MANAGER
-                  ? 'Manager'
-                  : role === permission.SELLER
-                    ? 'Seller'
-                    : role === permission.DESIGNER
-                      ? 'Designer'
-                      : 'Guest'}
+                : role === permission.CUSTOMER
+                  ? 'Customer'
+                  : role === permission.DESIGNER
+                    ? 'Designer'
+                    : 'Guest'}
             </Typography>
           );
         })}

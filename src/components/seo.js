@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 export const Seo = (props) => {
   const { title } = props;
 
-  const fullTitle = title ? title + " | Teelover" : "Teelover PRO";
+  const fullTitle = title ? title + " | MediaResolver" : "MediaResolver PRO";
 
   return (
     <Head>

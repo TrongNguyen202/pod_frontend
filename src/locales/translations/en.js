@@ -61,5 +61,6 @@ export const en = {
   [tokens.nav.manageUser]: "Manage Users",
   [tokens.nav.shops]: "Shops",
   [tokens.nav.manageTemplates]: "Manage Templates",
+  [tokens.nav.forgetPassword]: "Forget Password",
   [tokens.nav.orders]: "Orders",
 };
