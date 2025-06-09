@@ -59,19 +59,19 @@ const requestSendMailOtp = async (data) => {
 
   return axiosAPI(config);
 };
-const requestGetProfileInfor = async () => {
-  const config = {
-    method: "GET",
-    url: "/groups/user_login_infor",
-  };
+// const requestGetProfileInfor = async () => {
+//   const config = {
+//     method: "GET",
+//     url: "/groups/user_login_infor",
+//   };
 
-  return axiosAPI(config);
-};
+//   return axiosAPI(config);
+// };
 
 export const auth = {
   requestLogin,
   requestCheckExits,
-  requestGetProfileInfor,
+  // requestGetProfileInfor,
   requestRegister,
   requestResetPassword,
   requestSendMailOtp,

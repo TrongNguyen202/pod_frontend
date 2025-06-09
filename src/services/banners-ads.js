@@ -1,13 +1,13 @@
 import { axiosAPI } from "src/utils/axios";
 
-const requestGetAllBanner = async () => {
-  const config = {
-    method: "GET",
-    url: "/groups/user_login_infor",
-  };
+// const requestGetAllBanner = async () => {
+//   const config = {
+//     method: "GET",
+//     url: "/groups/user_login_infor",
+//   };
 
-  return axiosAPI(config);
-};
+//   return axiosAPI(config);
+// };
 
 const requestCreateBanner = async (data) => {
   const config = {
@@ -47,7 +47,7 @@ const requestGetBannerById = async (id) => {
 };
 
 export const bannersAds = {
-  requestGetAllBanner,
+  // requestGetAllBanner,
   requestCreateBanner,
   requestDeleteBanner,
   requestUpdateBanner,

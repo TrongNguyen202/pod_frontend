@@ -91,6 +91,9 @@ export const paths = {
     forget_password: {
       index: '/forget_password'
     },
+    ideas: {
+      index: '/ideas'
+    },
     templates: {
       index: '/templates',
     },
