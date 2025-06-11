@@ -1,10 +1,19 @@
 import React from 'react';
 import { Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Divider } from '@mui/material';
 import { ChevronLeft, ChevronRight, Home, Star } from '@mui/icons-material';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 const drawerWidth = 240;
 
 const Sidebar = ({ open, toggleSidebar }) => {
+  const router = useRouter();
+  const { pathname } = router;
+
+  // Hàm check active dựa vào pathname
+  const isActive = (path) => pathname === path;
+
   return (
     <Drawer
       variant="permanent"
@@ -24,32 +33,86 @@ const Sidebar = ({ open, toggleSidebar }) => {
       <Toolbar />
       <Divider />
       <List>
-        <ListItem sx={{ cursor: 'pointer' }} button>
-          <ListItemIcon>
+        <ListItem
+          component={Link}
+          href="/ideas"
+          sx={{
+            cursor: 'pointer',
+            bgcolor: isActive('/ideas') ? 'primary.main' : 'inherit',
+            color: isActive('/ideas') ? 'white' : 'inherit',
+            '&:hover': {
+              bgcolor: isActive('/ideas') ? 'primary.dark' : '#f5f5f5',
+            },
+          }}
+          button
+        >
+          <ListItemIcon sx={{ color: isActive('/ideas') ? 'white' : 'inherit' }}>
             <Home />
           </ListItemIcon>
           <ListItemText
             primary="Ideas"
             sx={{
               opacity: open ? 1 : 0,
-              transition: 'opacity 0.3s',
+              transition: '0.3s',
               minWidth: 0,
               ml: open ? 1 : 0,
+              color: isActive('/ideas') ? 'white' : 'inherit',
             }}
           />
         </ListItem>
 
-        <ListItem sx={{ cursor: 'pointer' }} button>
-          <ListItemIcon>
+        <ListItem
+          component={Link}
+          href="/boards"
+          sx={{
+            cursor: 'pointer',
+            bgcolor: isActive('/boards') ? 'primary.main' : 'inherit',
+            color: isActive('/boards') ? 'white' : 'inherit',
+            '&:hover': {
+              bgcolor: isActive('/boards') ? 'primary.dark' : '#f5f5f5',
+            },
+          }}
+          button
+        >
+          <ListItemIcon sx={{ color: isActive('/boards') ? 'white' : 'inherit' }}>
             <Star />
           </ListItemIcon>
           <ListItemText
             primary="Boards"
             sx={{
               opacity: open ? 1 : 0,
-              transition: 'opacity 0.3s',
+              transition: '0.3s',
               minWidth: 0,
               ml: open ? 1 : 0,
+              color: isActive('/boards') ? 'white' : 'inherit',
+            }}
+          />
+        </ListItem>
+
+        <ListItem
+          component={Link}
+          href="/balances"
+          sx={{
+            cursor: 'pointer',
+            bgcolor: isActive('/balances') ? 'primary.main' : 'inherit',
+            color: isActive('/balances') ? 'white' : 'inherit',
+            '&:hover': {
+              bgcolor: isActive('/balances') ? 'primary.dark' : '#f5f5f5',
+            },
+          }}
+          button
+        >
+          <ListItemIcon sx={{ color: isActive('/balances') ? 'white' : 'inherit' }}>
+            <AccountBalanceWalletIcon />
+          </ListItemIcon>
+          <ListItemText
+            primary="Balances"
+            sx={{
+              opacity: open ? 1 : 0,
+              transition: '0.3s',
+              minWidth: 0,
+              ml: open ? 1 : 0,
+              color: isActive('/balances') ? 'white' : 'inherit',
             }}
           />
         </ListItem>
@@ -67,7 +130,6 @@ const Sidebar = ({ open, toggleSidebar }) => {
             position: 'absolute',
             top: '50%',
             left: '29px',
-            // bottom: 0,
             transform: 'translate(-50%, -50%)',
             zIndex: 1300,
             backgroundColor: 'white',

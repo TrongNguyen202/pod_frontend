@@ -94,6 +94,12 @@ export const paths = {
     ideas: {
       index: '/ideas'
     },
+    boards: {
+      index: '/boards'
+    },
+    balances: {
+      index: '/balances'
+    },
     templates: {
       index: '/templates',
     },

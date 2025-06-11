@@ -1,8 +1,26 @@
-import { axiosAPI } from "src/utils/axios";
+import { axiosAPI } from 'src/utils/axios';
+
+const requestGetAllShop = async (pageNumber) => {
+  const config = {
+    method: 'GET',
+    url: `/free`,
+  };
+
+  return axiosAPI(config);
+};
+
+const requestGetInfoBoardById = async (boardId, pageNumber) => {
+  const config = {
+    method: 'GET',
+    url: `/free/${boardId}`,
+  };
+
+  return axiosAPI(config);
+};
 
 const requestGetAllProducts = async (id, pageNumber) => {
   const config = {
-    method: "GET",
+    method: 'GET',
     url: `/shops/${id}/products/list/page=${pageNumber}`,
   };
 
@@ -11,7 +29,7 @@ const requestGetAllProducts = async (id, pageNumber) => {
 
 const requestGetProductById = async (shopId, productId) => {
   const config = {
-    method: "GET",
+    method: 'GET',
     url: `/shops/${shopId}/products/${productId}`,
   };
 
@@ -20,7 +38,7 @@ const requestGetProductById = async (shopId, productId) => {
 
 const requestChangeStatusProduct = async (id, data) => {
   const config = {
-    method: "PUT",
+    method: 'PUT',
     url: `/admin/v1/products/${id}`,
     data,
   };
@@ -30,7 +48,7 @@ const requestChangeStatusProduct = async (id, data) => {
 
 const requestCreateProductList = async (shopId, data) => {
   const config = {
-    method: "POST",
+    method: 'POST',
     url: `/shops/${shopId}/products/create_product_excel3`,
     data,
   };
@@ -40,7 +58,7 @@ const requestCreateProductList = async (shopId, data) => {
 
 const requestEditProduct = async (shopId, productId, data) => {
   const config = {
-    method: "PUT",
+    method: 'PUT',
     url: `/shops/${shopId}/products/update_product/${productId}`,
     data,
   };
@@ -50,7 +68,7 @@ const requestEditProduct = async (shopId, productId, data) => {
 
 const requestCreateOneProduct = async (shopId, data) => {
   const config = {
-    method: "POST",
+    method: 'POST',
     url: `/shops/${shopId}/products/create_product`,
     data,
   };
@@ -60,7 +78,7 @@ const requestCreateOneProduct = async (shopId, data) => {
 
 const requestCreateOneProductDraff = async (shopId, data) => {
   const config = {
-    method: "POST",
+    method: 'POST',
     url: `/shops/${shopId}/products/create_product_draf`,
     data,
   };
@@ -70,7 +88,7 @@ const requestCreateOneProductDraff = async (shopId, data) => {
 
 const requestChangeProductImageToWhite = async (data) => {
   const config = {
-    method: "POST",
+    method: 'POST',
     url: `/crawl/process_image`,
     data,
   };
@@ -80,7 +98,7 @@ const requestChangeProductImageToWhite = async (data) => {
 
 const requestRemoveProduct = async (shopId, data) => {
   const config = {
-    method: "POST",
+    method: 'POST',
     url: `/shops/${shopId}/products/delete_product`,
     data,
   };
@@ -89,6 +107,8 @@ const requestRemoveProduct = async (shopId, data) => {
 };
 
 export const products = {
+  requestGetAllShop,
+  requestGetInfoBoardById,
   requestGetAllProducts,
   requestGetProductById,
   requestChangeStatusProduct,

@@ -103,6 +103,24 @@ export const useSections = () => {
             ),
           },
           {
+            title: t(tokens.nav.forgetPassword),
+            path: paths.dashboard.boards.index,
+            icon: (
+              <SvgIcon fontSize="small">
+                <CheckDone01Icon />
+              </SvgIcon>
+            ),
+          },
+          {
+            title: t(tokens.nav.forgetPassword),
+            path: paths.dashboard.balances.index,
+            icon: (
+              <SvgIcon fontSize="small">
+                <CheckDone01Icon />
+              </SvgIcon>
+            ),
+          },
+          {
             title: t(tokens.nav.manageTemplates),
             path: paths.dashboard.templates.index,
             icon: (
