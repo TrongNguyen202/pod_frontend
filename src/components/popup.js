@@ -16,7 +16,6 @@ const normalizeInitialData = (initialData, fields) => {
 
   fields.forEach((field) => {
     if (field.type === 'select' && field.multiple && Array.isArray(initialData[field.name])) {
-      // Nếu là array của object → chuyển sang array của string `value`
       const firstItem = initialData[field.name][0];
       if (typeof firstItem === 'object' && firstItem !== null) {
         normalized[field.name] = initialData[field.name].map((item) => item.value);
@@ -27,14 +26,29 @@ const normalizeInitialData = (initialData, fields) => {
   return normalized;
 };
 
-export default function FormDialog({ buttonLabel, title, fields = [], onSubmit, buttonProps = {}, initialData = {} }) {
+export default function FormDialog({
+  buttonLabel,
+  title,
+  fields = [],
+  onSubmit,
+  buttonProps = {},
+  initialData = {},
+  openOverride,
+  onCloseOverride,
+}) {
   const [formData, setFormData] = useState(initialData || {});
   const [open, setOpen] = useState(false);
   const handleOpen = () => {
     setFormData(normalizeInitialData(initialData, fields));
     setOpen(true);
   };
-  const handleClose = () => setOpen(false);
+  const handleClose = () => {
+    if (onCloseOverride) {
+      onCloseOverride();
+    } else {
+      setOpen(false);
+    }
+  };
 
   const handleChange = (name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -51,12 +65,16 @@ export default function FormDialog({ buttonLabel, title, fields = [], onSubmit, 
     }
   }, [open, initialData, fields]);
 
+  const dialogOpen = typeof openOverride === 'boolean' ? openOverride : open;
+
   return (
     <>
-      <Button {...buttonProps} onClick={handleOpen}>
-        {buttonLabel}
-      </Button>
-      <Dialog open={open} onClose={handleClose} maxWidth="sm">
+      {buttonLabel && (
+        <Button {...buttonProps} onClick={handleOpen}>
+          {buttonLabel}
+        </Button>
+      )}
+      <Dialog open={dialogOpen} onClose={handleClose} maxWidth="sm">
         <DialogTitle>{title}</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} mt={1}>

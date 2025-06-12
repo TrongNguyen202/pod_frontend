@@ -1,9 +1,9 @@
-import { axiosAPI } from "src/utils/axios";
+import { axiosAPI } from 'src/utils/axios';
 
 const requestLogin = async (data) => {
   const config = {
-    method: "POST",
-    url: "/login",
+    method: 'POST',
+    url: 'admin/auth/login',
     data: data,
   };
 
@@ -12,8 +12,8 @@ const requestLogin = async (data) => {
 
 const requestRegister = async (data) => {
   const config = {
-    method: "POST",
-    url: "/register",
+    method: 'POST',
+    url: '/register',
     data: data,
   };
 
@@ -22,8 +22,8 @@ const requestRegister = async (data) => {
 
 const requestCheckExits = async (data) => {
   const config = {
-    method: "POST",
-    url: "/login/check_exists",
+    method: 'POST',
+    url: '/login/check_exists',
     data: data,
   };
 
@@ -32,8 +32,8 @@ const requestCheckExits = async (data) => {
 
 const requestResetPassword = async (data) => {
   const config = {
-    method: "POST",
-    url: "/reset_password",
+    method: 'POST',
+    url: '/reset_password',
     data: data,
   };
 
@@ -42,8 +42,8 @@ const requestResetPassword = async (data) => {
 
 const requestSendOtp = async (data) => {
   const config = {
-    method: "POST",
-    url: "/send_otp",
+    method: 'POST',
+    url: '/send_otp',
     data: data,
   };
 
@@ -52,11 +52,19 @@ const requestSendOtp = async (data) => {
 
 const requestSendMailOtp = async (data) => {
   const config = {
-    method: "POST",
-    url: "/send_email_otp",
+    method: 'POST',
+    url: '/send_email_otp',
     data: data,
   };
 
+  return axiosAPI(config);
+};
+
+const requestLogout = async () => {
+  const config = {
+    method: 'POST',
+    url: 'admin/auth/logout',
+  };
   return axiosAPI(config);
 };
 // const requestGetProfileInfor = async () => {
@@ -71,6 +79,7 @@ const requestSendMailOtp = async (data) => {
 export const auth = {
   requestLogin,
   requestCheckExits,
+  requestLogout,
   // requestGetProfileInfor,
   requestRegister,
   requestResetPassword,

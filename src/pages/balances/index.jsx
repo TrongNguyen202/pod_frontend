@@ -25,7 +25,8 @@ import Header from 'src/components/header';
 import Sidebar from 'src/components/sidebar';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-
+import { useTranslation } from 'react-i18next';
+import { tokens } from 'src/locales/tokens';
 const mockData = [
   {
     id: 1,
@@ -58,6 +59,7 @@ const mockData = [
 const Page = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+  const { t } = useTranslation();
 
   const [deposit, setDeposit] = useState('');
   const [startDate, setStartDate] = useState(null);
@@ -80,11 +82,15 @@ const Page = () => {
           <Box sx={{ padding: 2 }}>
             <Typography variant="h4">Balances</Typography>
             <Button variant="contained" color="primary" sx={{ marginBottom: 2 }}>
-              Make Deposit
+              {t(tokens.nav.make_deposit)}
             </Button>
             <Grid container spacing={2}>
-              {/* Account Balance Cards */}
-              {['Account Balance (PINK)', 'Deposited Pink', 'Fulfilled Pink', 'Expired Pink'].map((title, idx) => (
+              {[
+                `${t(tokens.nav.account_balance)}`,
+                `${t(tokens.nav.deposited)}`,
+                `${t(tokens.nav.fulfilled)}`,
+                `${t(tokens.nav.expired)}`,
+              ].map((title, idx) => (
                 <Grid item key={idx} size={3}>
                   <Paper elevation={2} sx={{ padding: 2 }}>
                     <Typography variant="h6">{title}</Typography>

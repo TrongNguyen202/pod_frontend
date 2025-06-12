@@ -8,6 +8,11 @@ const initialState = {
   productById: {},
 };
 
+export const fetchInfoBoardByBoardId = createAsyncThunk('/board/info', async ({ boardId }) => {
+  const res = await RepositoryRemote.products.requestGetInfomationBoards(boardId);
+  return res.data;
+});
+
 export const fetchAllShops = createAsyncThunk('/shop/list', async ({ page }) => {
   const res = await RepositoryRemote.products.requestGetAllShop(page);
   return res.data;
@@ -31,6 +36,20 @@ const slicer = createSlice({
   name: 'products',
   initialState,
   extraReducers: (builder) => {
+    builder.addCase(fetchInfoBoardByBoardId.pending, (state) => {
+      state.loading = true;
+    });
+    builder.addCase(fetchInfoBoardByBoardId.fulfilled, (state, action) => {
+      state.loading = false;
+      state.products = action.payload;
+      state.error = '';
+    });
+    builder.addCase(fetchInfoBoardByBoardId.rejected, (state, action) => {
+      state.loading = false;
+      state.products = {};
+      state.error = action?.error?.message || 'Error while processsing.';
+    });
+
     builder.addCase(fetchAllShops.pending, (state) => {
       state.loading = true;
     });

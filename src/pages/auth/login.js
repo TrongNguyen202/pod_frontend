@@ -30,7 +30,7 @@ const initialValues = {
 };
 
 const validationSchema = Yup.object({
-  username: Yup.string().max(255).required('Username is required'),
+  email: Yup.string().max(255).required('Username is required'),
   password: Yup.string().max(255).required('Password is required'),
 });
 
@@ -48,16 +48,21 @@ const Page = () => {
     onSubmit: async (values, helpers) => {
       try {
         const res = await RepositoryRemote.auth.requestLogin({
-          username: values.username,
+          email: values.email,
           password: values.password,
         });
-
-        if (res?.data?.access && res?.data?.refresh) {
-          localStorage.setItem(LOCAL_STORAGE_KEY.USER_NAME, values.username);
-          localStorage.setItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN, res.data.access);
-          localStorage.setItem(LOCAL_STORAGE_KEY.REFRESH_TOKEN, res.data.refresh);
+        if (res?.data?.accessToken && res?.data?.refreshToken) {
+          localStorage.setItem(LOCAL_STORAGE_KEY.USER_ID, res?.data?.user?.id);
+          localStorage.setItem(LOCAL_STORAGE_KEY.USER_NAME, res?.data?.user?.username);
+          localStorage.setItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN, res.data.accessToken);
+          localStorage.setItem(LOCAL_STORAGE_KEY.REFRESH_TOKEN, res.data.refreshToken);
           dispatch(setInitialized(true));
-          dispatch(fetchUserInfo());
+
+          // const profileRes = await dispatch(fetchUserInfo()).unwrap();
+          dispatch(setAuthenticate({ isAuthenticated: true }));
+
+          toast.success('Đăng nhập thành công!');
+          router.push(returnTo || '/ideas'); 
         }
       } catch (err) {
         if (isMounted()) {
@@ -85,19 +90,19 @@ const Page = () => {
       <div>
         <Card elevation={16}>
           <CardHeader sx={{ pb: 0, fontSize: 26 }} title="Log in" className="!text-3xl" />
-          <CardContent className='relative'>
+          <CardContent className="relative">
             <form noValidate onSubmit={formik.handleSubmit}>
               <Stack spacing={3}>
                 <TextField
                   autoFocus
-                  error={!!(formik.touched.username && formik.errors.username)}
+                  error={!!(formik.touched.email && formik.errors.email)}
                   fullWidth
-                  helperText={formik.touched.username && formik.errors.username}
+                  helperText={formik.touched.email && formik.errors.email}
                   label={`${t(tokens.nav.username)}`}
-                  name="username"
+                  name="email"
                   onBlur={formik.handleBlur}
                   onChange={formik.handleChange}
-                  value={formik.values.username}
+                  value={formik.values.email}
                 />
                 <TextField
                   error={!!(formik.touched.password && formik.errors.password)}
@@ -129,17 +134,6 @@ const Page = () => {
             </form>
           </CardContent>
         </Card>
-        {/* <Stack
-          spacing={3}
-          sx={{ mt: 3 }}
-        >
-          <Alert severity="error">
-            <div>
-              You can use <b>demo@devias.io</b> and password <b>Password123!</b>
-            </div>
-          </Alert>
-          <AuthIssuer issuer={issuer} />
-        </Stack> */}
       </div>
     </>
   );

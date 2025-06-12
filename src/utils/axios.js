@@ -3,6 +3,7 @@ import { ENVIRONMENT_URL, LOCAL_STORAGE_KEY } from 'src/constants';
 
 // const axiosAPI = axios.create({ baseURL: ENVIRONMENT_URL.API_URL });
 const axiosAPI = axios.create({ baseURL: 'https://6848f91945f4c0f5ee6f902e.mockapi.io/api/v1' });
+// const axiosAPI = axios.create({ baseURL: 'http://localhost:8080/v1' });
 
 const axiosAPIFlashShip = axios.create({
   baseURL: ENVIRONMENT_URL.API_FLASH_SHIP,

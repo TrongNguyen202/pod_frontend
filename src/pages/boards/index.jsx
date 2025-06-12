@@ -28,8 +28,10 @@ import Header from 'src/components/header';
 import Sidebar from 'src/components/sidebar';
 import FormDialog from 'src/components/popup';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
-import { fetchShopByBoardId } from 'src/redux/reducers/products';
+import { fetchInfoBoardByBoardId } from 'src/redux/reducers/products';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
+import { tokens } from '../../locales/tokens';
 
 const data = [
   { id: '1', title: 'video board', client: { name: 'Nguyễn Đình Trọng', email: 'trongprotein@gmail.com' } },
@@ -74,6 +76,7 @@ const Page = () => {
   const dispatch = useAppDispatch();
   const { loading, products = [], error } = useAppSelector((state) => state.products);
   const [quickDesignData, setQuickDesignData] = useState({});
+  const { t } = useTranslation();
 
   // Lấy board từ localStorage
   useEffect(() => {
@@ -117,12 +120,13 @@ const Page = () => {
 
   useEffect(() => {
     if (boardId) {
-      dispatch(fetchShopByBoardId({ boardId, page: 1 }));
+      console.log(boardId);
+      dispatch(fetchInfoBoardByBoardId({ boardId }));
+      console.log('by id; ', products);
     }
   }, [dispatch, boardId]);
 
   useEffect(() => {
-    console.log(products, 'info');
     setQuickDesignData(products);
   }, [products, boardId]);
 
@@ -172,7 +176,7 @@ const Page = () => {
               component={Link}
               href="/ideas/create"
             >
-              Add New
+              {t(tokens.nav.addnew)}
             </Button>
           </Grid>
           <Box>
@@ -204,7 +208,7 @@ const Page = () => {
                           color: '#000',
                         },
                       }}
-                      placeholder="Search..."
+                      placeholder={t(tokens.nav.search)}
                       sx={{
                         '& .MuiInputBase-input::placeholder': {
                           color: '#000',
@@ -228,9 +232,9 @@ const Page = () => {
                         <TableCell padding="checkbox">
                           <Checkbox checked={allSelected} onChange={handleSelectAll} disabled={data.length === 0} />
                         </TableCell>
-                        <TableCell>Title</TableCell>
-                        <TableCell>Client</TableCell>
-                        <TableCell>Action</TableCell>
+                        <TableCell>{t(tokens.nav.title)}</TableCell>
+                        <TableCell>{t(tokens.nav.client)}</TableCell>
+                        <TableCell>{t(tokens.nav.action)}</TableCell>
                         <TableCell></TableCell>
                       </TableRow>
                     </TableHead>

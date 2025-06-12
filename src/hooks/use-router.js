@@ -1,3 +1,3 @@
-// NOTE: We only re-export the useRouter to maintain consistency between CRA and Next.js
+import { useRouter as useNextRouter } from 'next/router';
 
-export { useRouter } from 'next/navigation';
+export const useRouter = () => useNextRouter();

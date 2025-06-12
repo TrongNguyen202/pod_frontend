@@ -23,6 +23,8 @@ import FormDialog from 'src/components/popup';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
 import { fetchAllShops } from 'src/redux/reducers/products';
+import { useTranslation } from 'react-i18next';
+import { tokens } from 'src/locales/tokens';
 
 // MOCK DATA
 const ideasMock = [
@@ -136,6 +138,7 @@ const Page = () => {
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
   const [boardId, setBoardId] = useState(null);
   const [ideas, setIdeas] = useState([]);
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const { loading, products = [], error } = useAppSelector((state) => state.products);
 
@@ -253,7 +256,7 @@ const Page = () => {
                 >
                   <Grid width={'15%'} size={4} padding={0} display={'flex'}>
                     <FormDialog
-                      buttonLabel="Create Idea"
+                      buttonLabel={t(tokens.nav.addnew)}
                       title="Create New Idea"
                       fields={[
                         { name: 'title', label: 'Title' },
@@ -309,7 +312,7 @@ const Page = () => {
                           color: '#000',
                         },
                       }}
-                      placeholder="Search..."
+                      placeholder={t(tokens.nav.search)}
                       sx={{
                         '& .MuiInputBase-input::placeholder': {
                           color: '#000',
@@ -320,7 +323,7 @@ const Page = () => {
                         flexGrow: 1,
                       }}
                     />
-                    <Button variant="contained">More filters</Button>
+                    <Button variant="contained">{t(tokens.nav.more_filter)}</Button>
                   </Grid>
                 </Grid>
               </CardContent>

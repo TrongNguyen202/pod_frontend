@@ -1,24 +1,44 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
-import { Drawer, AppBar, Toolbar, Typography, Select, MenuItem, Button, Box } from '@mui/material';
+import {
+  FormControl,
+  InputLabel,
+  Drawer,
+  AppBar,
+  Toolbar,
+  Typography,
+  Select,
+  MenuItem,
+  Button,
+  Box,
+} from '@mui/material';
 import Card from '@mui/material/Card';
 import Link from 'next/link';
 import FormDialog from 'src/components/popup';
 import DropdownMenu from 'src/components/dropdown';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import axios from 'axios';
-
-// Định nghĩa danh sách boards với id và label
-const boards = [
-  { id: null, label: 'All boards' },
-  { id: 1, label: 'Board 1' },
-  { id: 2, label: 'Board 2' },
-  { id: 3, label: 'Board 3' },
-];
+import ClickDropdownMenu from './dropdown_click';
+import { RepositoryRemote } from 'src/services';
+import { useRouter } from 'src/hooks/use-router';
+import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import { tokens } from 'src/locales/tokens';
 
 const Header = ({ onBoardChange, showBoards, quickDesignData, setQuickDesignData, fields, currentBoardId }) => {
+  const router = useRouter();
   const [selectedBoardId, setSelectedBoardId] = useState(null);
   const [openDrawer, setOpenDrawer] = useState(false);
+  const [openChangePassword, setOpenChangePassword] = useState(false);
+  const { t } = useTranslation();
+
+  // Định nghĩa danh sách boards với id và label
+  const boards = [
+    { id: null, label: `${t(tokens.nav.all)}` },
+    { id: 1, label: 'Board 1' },
+    { id: 2, label: 'Board 2' },
+    { id: 3, label: 'Board 3' },
+  ];
 
   const handleSubmit = async (formData, onAfterSubmit) => {
     const { id, ...payload } = formData;
@@ -63,11 +83,38 @@ const Header = ({ onBoardChange, showBoards, quickDesignData, setQuickDesignData
     onBoardChange?.(boardId);
   };
 
-  const handleSelect = (opt) => {
+  const handleSelect = async (opt) => {
     if (opt.value === 'add_pink') {
       setOpenDrawer(true);
+    } else if (opt.value === 'logout') {
+      try {
+        await RepositoryRemote.auth.requestLogout();
+        localStorage.clear();
+        toast.success('Đăng xuất thành công!');
+        router.push('/auth/login');
+      } catch (error) {
+        console.error('Logout failed:', error);
+        toast.error('Đăng xuất thất bại!');
+      }
+    } else if (opt.value === 'changepassword') {
+      setOpenChangePassword(true);
+    } else if (opt.value === 'userprofile') {
+      router.push('/account/profile');
     } else {
       alert(`${opt.label}...`);
+    }
+  };
+
+  const handleChangePassword = async (data) => {
+    try {
+      await RepositoryRemote.auth.changePassword({
+        oldPassword: data.oldPassword,
+        newPassword: data.newPassword,
+      });
+      toast.success('Đổi mật khẩu thành công!');
+      setOpenChangePassword(false);
+    } catch (error) {
+      toast.error('Đổi mật khẩu thất bại!');
     }
   };
 
@@ -98,28 +145,44 @@ const Header = ({ onBoardChange, showBoards, quickDesignData, setQuickDesignData
           </Box>
           {showBoards ? (
             <Box>
-              <Select
-                value={selectedBoardId ?? 'null'}
-                onChange={handleChange}
+              <FormControl
                 variant="outlined"
                 size="medium"
                 sx={{
+                  minWidth: 200,
                   mr: 2,
-                  height: '40px',
-                  '& .MuiSelect-select': {
-                    paddingY: '8px',
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      border: 'none',
+                    },
+                    '&.Mui-focused fieldset': {
+                      border: 'none',
+                    },
                   },
                 }}
               >
-                {boards.map((board) => (
-                  <MenuItem key={board.id ?? 'null'} value={board.id ?? 'null'}>
-                    {board.label ? board.label : 'All Boards'}
-                  </MenuItem>
-                ))}
-              </Select>
+                <InputLabel id="board-select-label">{t(tokens.nav.boards)}</InputLabel>
+                <Select
+                  labelId="board-select-label"
+                  value={selectedBoardId ?? 'null'}
+                  onChange={handleChange}
+                  label={t(tokens.nav.boards)}
+                  sx={{
+                    '& .MuiSelect-select': {
+                      paddingY: '8px',
+                    },
+                  }}
+                >
+                  {boards.map((board) => (
+                    <MenuItem key={board.id ?? 'null'} value={board.id ?? 'null'}>
+                      {board.label ? board.label : `${t(tokens.nav.all)}`}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
               <FormDialog
-                buttonLabel="Quick Design"
+                buttonLabel={t(tokens.nav.quick_design)}
                 title="Edit Board"
                 fields={fields}
                 onSubmit={(data) => handleSubmit(data, handleUpdateIdea)}
@@ -174,10 +237,10 @@ const Header = ({ onBoardChange, showBoards, quickDesignData, setQuickDesignData
               <DropdownMenu
                 buttonLabel={<MoreVertIcon />}
                 options={[
-                  { label: 'Add Pink', value: 'add_pink' },
-                  { label: 'Board Infomation', value: 'board_infomation' },
-                  { label: 'Board Activity', value: 'board_activity' },
-                  { label: 'Monthly Balances', value: 'monthly_balances' },
+                  { label: t(tokens.nav.make_deposit), value: 'make_deposit' },
+                  { label: t(tokens.nav.board_infomation), value: 'board_infomation' },
+                  { label: t(tokens.nav.board_activity), value: 'board_activity' },
+                  { label: t(tokens.nav.monthly_balances), value: 'monthly_balances' },
                 ]}
                 onSelect={handleSelect}
                 buttonProps={{
@@ -221,13 +284,42 @@ const Header = ({ onBoardChange, showBoards, quickDesignData, setQuickDesignData
             </Box>
           </Button>
 
-          <Button sx={{ ml: 1, color: 'black' }} onClick={() => alert('User Profile')}>
-            <Box component="span" sx={{ fontSize: '1.5rem', textAlign: 'center' }}>
-              👤
-            </Box>
-          </Button>
+          <ClickDropdownMenu
+            buttonLabel={'👤'}
+            component="span"
+            options={[
+              { label: 'Change password', value: 'changepassword' },
+              { label: 'User Profile', value: 'userprofile' },
+              { label: 'Log out', value: 'logout' },
+            ]}
+            onSelect={handleSelect}
+            buttonProps={{
+              variant: 'text',
+              sx: {
+                padding: '18px 26px',
+                borderRadius: 10,
+                margin: '0',
+                color: 'white',
+                borderRadius: 0,
+                minWidth: 0,
+              },
+            }}
+          />
         </Box>
       </Toolbar>
+      <FormDialog
+        buttonLabel=""
+        title="Đổi mật khẩu"
+        fields={[
+          { name: 'oldPassword', label: 'Mật khẩu cũ', type: 'text', required: true },
+          { name: 'newPassword', label: 'Mật khẩu mới', type: 'text', required: true },
+        ]}
+        initialData={{ oldPassword: '', newPassword: '' }}
+        onSubmit={handleChangePassword}
+        buttonProps={{ style: { display: 'none' } }}
+        openOverride={openChangePassword}
+        onCloseOverride={() => setOpenChangePassword(false)}
+      />
     </AppBar>
   );
 };

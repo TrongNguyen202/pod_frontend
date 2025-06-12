@@ -9,6 +9,15 @@ const requestGetAllShop = async (pageNumber) => {
   return axiosAPI(config);
 };
 
+const requestGetInfomationBoards = async (boardId) => {
+  const config = {
+    method: 'GET',
+    url: `/boards/${boardId}`,
+  };
+
+  return axiosAPI(config);
+};
+
 const requestGetInfoBoardById = async (boardId, pageNumber) => {
   const config = {
     method: 'GET',
@@ -107,6 +116,7 @@ const requestRemoveProduct = async (shopId, data) => {
 };
 
 export const products = {
+  requestGetInfomationBoards,
   requestGetAllShop,
   requestGetInfoBoardById,
   requestGetAllProducts,

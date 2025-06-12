@@ -3,7 +3,8 @@ export const LOCAL_STORAGE_KEY = {
   REFRESH_TOKEN: 'refreshToken',
   TOKEN_PRINT_CARE: 'print-care-tk',
   TOKEN_FLASH_SHIP: 'flash-ship-tk',
-  USER_NAME:'usernamecurrent'
+  USER_NAME:'usernamecurrent',
+  USER_ID:'uid'
 };
 
 export const ENVIRONMENT_URL = {
