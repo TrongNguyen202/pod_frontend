@@ -156,6 +156,12 @@ export const permission = {
   DESIGNER: 2, // Designer
 };
 
+export const design_types = {
+  CLONE: 'CLONE',
+  RE_DESIGN: 'RE_DESIGN',
+  NEW: 'NEW'
+}
+
 export const senPrintsData = [
   {
     product_sku: 'AMST',

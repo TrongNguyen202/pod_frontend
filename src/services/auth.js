@@ -3,7 +3,7 @@ import { axiosAPI } from 'src/utils/axios';
 const requestLogin = async (data) => {
   const config = {
     method: 'POST',
-    url: 'admin/auth/login',
+    url: '/auth/login',
     data: data,
   };
 
@@ -63,7 +63,7 @@ const requestSendMailOtp = async (data) => {
 const requestLogout = async () => {
   const config = {
     method: 'POST',
-    url: 'admin/auth/logout',
+    url: '/auth/logout',
   };
   return axiosAPI(config);
 };

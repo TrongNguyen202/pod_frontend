@@ -8,6 +8,7 @@ import { bannersAds } from './banners-ads';
 import { badges } from './badges';
 import { warehouses } from './warehouses';
 import { brand } from './brand';
+import { boards } from './boards';
 import { orders } from './oders';
 import { template } from './template';
 import { google } from './google';
@@ -20,6 +21,7 @@ import { statistics } from './statistics';
 import {requestGetGroupUser} from  './user'
 export const RepositoryRemote = {
   auth,
+  boards,
   sellers,
   stores,
   products,

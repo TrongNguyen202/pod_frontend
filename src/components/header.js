@@ -29,6 +29,7 @@ const Header = ({ onBoardChange, showBoards, quickDesignData, setQuickDesignData
   const router = useRouter();
   const [selectedBoardId, setSelectedBoardId] = useState(null);
   const [openDrawer, setOpenDrawer] = useState(false);
+  const [openDrawerBoardInfo, setOpenDrawerBoardInfo] = useState(false);
   const [openChangePassword, setOpenChangePassword] = useState(false);
   const { t } = useTranslation();
 
@@ -84,8 +85,10 @@ const Header = ({ onBoardChange, showBoards, quickDesignData, setQuickDesignData
   };
 
   const handleSelect = async (opt) => {
-    if (opt.value === 'add_pink') {
+    if (opt.value === 'make_deposit') {
       setOpenDrawer(true);
+    } else if (opt.value === 'board_infomation') {
+      setOpenDrawerBoardInfo(true);
     } else if (opt.value === 'logout') {
       try {
         await RepositoryRemote.auth.requestLogout();
@@ -271,6 +274,33 @@ const Header = ({ onBoardChange, showBoards, quickDesignData, setQuickDesignData
                   <input placeholder="Title" style={{ width: '100%', padding: 8 }} />
                   <textarea placeholder="Description" style={{ width: '100%', padding: 8, marginTop: 8 }} />
                   <Button variant="contained" color="primary" sx={{ mt: 2 }} onClick={() => setOpenDrawer(false)}>
+                    Submit
+                  </Button>
+                </Box>
+              </Box>
+            </Drawer>
+
+            <Drawer
+              anchor="right"
+              open={openDrawerBoardInfo}
+              onClose={() => setOpenDrawerBoardInfo(false)}
+              ModalProps={{
+                keepMounted: true, // Better performance on mobile
+              }}
+              sx={{ zIndex: 999999991 }}
+            >
+              <Box sx={{ width: 400, p: 3 }}>
+                <Typography variant="h6">Board Infomation</Typography>
+                {/* Replace this with your actual form */}
+                <Box mt={2}>
+                  <input placeholder="Title" style={{ width: '100%', padding: 8 }} />
+                  <textarea placeholder="Description" style={{ width: '100%', padding: 8, marginTop: 8 }} />
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    sx={{ mt: 2 }}
+                    onClick={() => setOpenDrawerBoardInfo(false)}
+                  >
                     Submit
                   </Button>
                 </Box>

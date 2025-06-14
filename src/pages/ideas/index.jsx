@@ -22,7 +22,7 @@ import Sidebar from 'src/components/sidebar';
 import FormDialog from 'src/components/popup';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
-import { fetchAllShops } from 'src/redux/reducers/products';
+import { fetGetBoardsByUserId } from 'src/redux/reducers/boards';
 import { useTranslation } from 'react-i18next';
 import { tokens } from 'src/locales/tokens';
 
@@ -140,7 +140,7 @@ const Page = () => {
   const [ideas, setIdeas] = useState([]);
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
-  const { loading, products = [], error } = useAppSelector((state) => state.products);
+  const { loading, data = [], error } = useAppSelector((state) => state.data);
 
   const [selectedTab, setSelectedTab] = useState(0);
   const categories = getCategoryCounts(ideas);
@@ -195,9 +195,9 @@ const Page = () => {
   };
 
   useEffect(() => {
-    dispatch(fetchAllShops({ page: 1 }));
+    dispatch(fetGetBoardsByUserId( 8, '' ));
   }, [dispatch]);
-
+  console.log(data);
   useEffect(() => {
     const info = Object.values(products).find((item) => item.BoardId === boardId);
     setQuickDesignData(info);
