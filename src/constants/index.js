@@ -3,8 +3,13 @@ export const LOCAL_STORAGE_KEY = {
   REFRESH_TOKEN: 'refreshToken',
   TOKEN_PRINT_CARE: 'print-care-tk',
   TOKEN_FLASH_SHIP: 'flash-ship-tk',
-  USER_NAME:'usernamecurrent',
-  USER_ID:'uid'
+  USER_NAME: 'usernamecurrent',
+  USER_ID: 'uid',
+  USER_ROLE: 'role',
+  USER_IP: 'ipAdrress',
+  USER_AGENT: 'userAgent',
+  DEVICE_ID: 'deviceId',
+  USER_EMAIL: 'email',
 };
 
 export const ENVIRONMENT_URL = {
@@ -159,8 +164,8 @@ export const permission = {
 export const design_types = {
   CLONE: 'CLONE',
   RE_DESIGN: 'RE_DESIGN',
-  NEW: 'NEW'
-}
+  NEW: 'NEW',
+};
 
 export const senPrintsData = [
   {

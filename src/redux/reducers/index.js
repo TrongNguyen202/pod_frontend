@@ -6,6 +6,7 @@ import shops from "./shops";
 import users from "./user";
 import products from "./products";
 import orders from "./orders";
+import boards from "./boards";
 import warehouses from "./warehouse";
 import statistics from "./statistics";
 import google from "./google";
@@ -16,6 +17,7 @@ import ckf from  "./ckf-variant";
 const rootReducer = combineReducers({
   auth,
   main,
+  boards,
   userAdmin,
   shops,
   users,

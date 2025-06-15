@@ -3,7 +3,7 @@ const withTM = require('next-transpile-modules')([
   '@ant-design/icons',
   'rc-util',
   'rc-pagination',
-  'rc-picker'
+  'rc-picker',
 ]);
 
 module.exports = withTM({
@@ -11,19 +11,27 @@ module.exports = withTM({
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "**.tiktokcdn-us.com",
+        protocol: 'https',
+        hostname: '**.tiktokcdn-us.com',
       },
       {
-        protocol: "http",
-        hostname: "**.localhost",
+        protocol: 'http',
+        hostname: '**.localhost',
       },
     ],
+  },
+  async middleware() {
+    return [
+      {
+        source: '/(.*)',
+        destination: '/middleware.ts',
+      },
+    ];
   },
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/,
-      use: ["@svgr/webpack"],
+      use: ['@svgr/webpack'],
     });
     return config;
   },

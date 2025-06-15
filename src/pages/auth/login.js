@@ -18,10 +18,11 @@ import toast from 'react-hot-toast';
 import { LOCAL_STORAGE_KEY } from 'src/constants';
 import { RepositoryRemote } from 'src/services';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
-import { fetchUserInfo, setAuthenticate, setInitialized } from 'src/redux/reducers/auth';
+import { setAuthenticate, setInitialized } from 'src/redux/reducers/auth';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { tokens } from '../../locales/tokens';
+import { jwtDecode } from 'jwt-decode';
 
 const initialValues = {
   email: '',
@@ -47,22 +48,35 @@ const Page = () => {
     validationSchema,
     onSubmit: async (values, helpers) => {
       try {
+        const userAgent = navigator.userAgent;
+        const deviceId = crypto.randomUUID();
+        const ipRes = await fetch('https://api64.ipify.org?format=json');
+        const { ip } = await ipRes.json();
         const res = await RepositoryRemote.auth.requestLogin({
           email: values.email,
           password: values.password,
+          ipAddress: ip,
+          userAgent,
+          deviceId,
         });
         if (res?.data?.accessToken && res?.data?.refreshToken) {
-          localStorage.setItem(LOCAL_STORAGE_KEY.USER_ID, res?.data?.user?.id);
-          localStorage.setItem(LOCAL_STORAGE_KEY.USER_NAME, res?.data?.user?.username);
+          const decodedToken = jwtDecode(res?.data?.accessToken);
+
           localStorage.setItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN, res.data.accessToken);
           localStorage.setItem(LOCAL_STORAGE_KEY.REFRESH_TOKEN, res.data.refreshToken);
+          localStorage.setItem(LOCAL_STORAGE_KEY.USER_ROLE, decodedToken.roles);
+          localStorage.setItem(LOCAL_STORAGE_KEY.USER_IP, decodedToken.ipAddress);
+          localStorage.setItem(LOCAL_STORAGE_KEY.USER_AGENT, decodedToken.userAgent);
+          localStorage.setItem(LOCAL_STORAGE_KEY.DEVICE_ID, decodedToken.deviceId);
+          localStorage.setItem(LOCAL_STORAGE_KEY.USER_EMAIL, decodedToken.sub);
+
           dispatch(setInitialized(true));
 
           // const profileRes = await dispatch(fetchUserInfo()).unwrap();
           dispatch(setAuthenticate({ isAuthenticated: true }));
 
           toast.success('Đăng nhập thành công!');
-          router.push(returnTo || '/ideas'); 
+          router.push(returnTo || '/ideas');
         }
       } catch (err) {
         if (isMounted()) {

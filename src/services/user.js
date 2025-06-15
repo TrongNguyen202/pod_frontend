@@ -1,5 +1,15 @@
 import { axiosAPI } from "src/utils/axios";
 
+const requestGetUserInfoByEmail = async (data) => {
+  const config = { 
+    method: "POST",
+    url: "/users/get-detail",
+    data,
+  }
+
+  return axiosAPI(config);
+}
+
 const requestGetShopByUser = async () => {
   const config = {
     method: "GET",
@@ -57,6 +67,7 @@ const requestGetUserShopAll = async (groupId) => {
 };
 
 export const users = {
+  requestGetUserInfoByEmail,
   requestGetShopByUser,
   requestGetUserInfo,
   requestUpdateUser,

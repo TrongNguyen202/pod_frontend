@@ -22,9 +22,10 @@ import Sidebar from 'src/components/sidebar';
 import FormDialog from 'src/components/popup';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
-import { fetGetBoardsByUserId } from 'src/redux/reducers/boards';
+import { fetchGetBoardsByUserId } from 'src/redux/reducers/boards';
 import { useTranslation } from 'react-i18next';
 import { tokens } from 'src/locales/tokens';
+import { fetchUserByEmail } from 'src/redux/reducers/user';
 
 // MOCK DATA
 const ideasMock = [
@@ -138,9 +139,25 @@ const Page = () => {
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
   const [boardId, setBoardId] = useState(null);
   const [ideas, setIdeas] = useState([]);
+  const email = localStorage.getItem('email');
+  const bodyToGetUser = { email: email };
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
-  const { loading, data = [], error } = useAppSelector((state) => state.data);
+  useEffect(() => {
+    dispatch(fetchUserByEmail(bodyToGetUser));
+  }, [dispatch]);
+
+  const { loading: userLoading, data: userData, error: userError } = useAppSelector((state) => state.users.userInfo);
+
+  useEffect(() => {
+    dispatch(fetchGetBoardsByUserId({ userId: userData.id, query: '' }));
+  }, [dispatch]);
+
+  const {
+    loading: boardsLoading,
+    data: boardsData,
+    error: boardsError,
+  } = useAppSelector((state) => state.boards.boardService);
 
   const [selectedTab, setSelectedTab] = useState(0);
   const categories = getCategoryCounts(ideas);
@@ -194,14 +211,10 @@ const Page = () => {
     alert(`Select: ${opt.label}`);
   };
 
-  useEffect(() => {
-    dispatch(fetGetBoardsByUserId( 8, '' ));
-  }, [dispatch]);
-  console.log(data);
-  useEffect(() => {
-    const info = Object.values(products).find((item) => item.BoardId === boardId);
-    setQuickDesignData(info);
-  }, [products, boardId]);
+  // useEffect(() => {
+  //   const info = Object.values(products).find((item) => item.BoardId === boardId);
+  //   setQuickDesignData(info);
+  // }, [products, boardId]);
 
   const handleSubmit = async (formData, onAfterSubmit) => {
     const { id, ...payload } = formData;

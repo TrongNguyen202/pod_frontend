@@ -52,6 +52,7 @@
     "formik": "^2.4.6",
     "gray-matter": "^4.0.3",
     "i18next": "^23.16.5",
+    "jwt-decode": "^4.0.0",
     "lodash": "^4.17.21",
     "lodash.debounce": "^4.0.8",
     "lodash.isequal": "^4.5.0",
