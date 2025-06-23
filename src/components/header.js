@@ -447,7 +447,7 @@ const Header = ({ onBoardChange, showBoards, role }) => {
                   options={[
                     { label: t(tokens.nav.make_deposit), value: 'make_deposit' },
                     { label: t(tokens.nav.board_infomation), value: 'board_infomation' },
-                    { label: t(tokens.nav.board_activity), value: 'board_activity' },
+                    // { label: t(tokens.nav.board_activity), value: 'board_activity' },
                     { label: t(tokens.nav.monthly_balances), value: 'monthly_balances' },
                   ]}
                   onSelect={handleMenuSelect}
@@ -546,7 +546,9 @@ const Header = ({ onBoardChange, showBoards, role }) => {
                       Còn lại: {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
                     </Typography>
                   )}
-
+                  <Typography variant="body1" sx={{ mt: 1, color: 'red' }}>
+                    Lưu ý KHÔNG thực hiện chuyển tiền khi mã hết hạn để tránh rủi ro
+                  </Typography>
                   {/* Số tài khoản */}
                   <Typography
                     variant="body2"

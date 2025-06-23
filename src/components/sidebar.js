@@ -7,11 +7,13 @@ import { useRouter } from 'next/router';
 import { checkRole } from 'src/utils';
 
 const drawerWidth = 240;
+const collapsedWidth = 60;
 
 const Sidebar = ({ open, toggleSidebar, role }) => {
   const router = useRouter();
   const { pathname } = router;
   const { isCustomer } = checkRole(role);
+
   // Hàm check active dựa vào pathname
   const isActive = (path) => pathname === path;
 
@@ -20,13 +22,17 @@ const Sidebar = ({ open, toggleSidebar, role }) => {
       variant="permanent"
       sx={{
         height: '100%',
-        width: open ? drawerWidth : 60,
+        width: open ? drawerWidth : collapsedWidth,
         flexShrink: 0,
         boxShadow: '#f5f5f5',
         '& .MuiDrawer-paper': {
-          width: open ? drawerWidth : 60,
-          transition: 'width 0.3s',
+          width: open ? drawerWidth : collapsedWidth,
+          transition: 'width 0.2s ease-in-out',
           overflowX: 'hidden',
+          willChange: 'width',
+          position: 'fixed',
+          height: '100vh',
+          zIndex: 1200,
         },
       }}
       open={open}
@@ -44,20 +50,30 @@ const Sidebar = ({ open, toggleSidebar, role }) => {
             '&:hover': {
               bgcolor: isActive('/ideas') ? 'primary.dark' : '#f5f5f5',
             },
+            // Prevent jumping during state changes
+            minHeight: 48,
+            px: 2,
           }}
           button
         >
-          <ListItemIcon sx={{ color: isActive('/ideas') ? 'white' : 'inherit' }}>
+          <ListItemIcon
+            sx={{
+              color: isActive('/ideas') ? 'white' : 'inherit',
+              minWidth: 40,
+            }}
+          >
             <Home />
           </ListItemIcon>
           <ListItemText
             primary="Ideas"
             sx={{
               opacity: open ? 1 : 0,
-              transition: '0.3s',
+              transition: 'opacity 0.2s ease-in-out',
               minWidth: 0,
               ml: open ? 1 : 0,
               color: isActive('/ideas') ? 'white' : 'inherit',
+              // Prevent text from affecting layout when hidden
+              display: open ? 'block' : 'none',
             }}
           />
         </ListItem>
@@ -73,20 +89,28 @@ const Sidebar = ({ open, toggleSidebar, role }) => {
               '&:hover': {
                 bgcolor: isActive('/boards') ? 'primary.dark' : '#f5f5f5',
               },
+              minHeight: 48,
+              px: 2,
             }}
             button
           >
-            <ListItemIcon sx={{ color: isActive('/boards') ? 'white' : 'inherit' }}>
+            <ListItemIcon
+              sx={{
+                color: isActive('/boards') ? 'white' : 'inherit',
+                minWidth: 40,
+              }}
+            >
               <Star />
             </ListItemIcon>
             <ListItemText
               primary="Boards"
               sx={{
                 opacity: open ? 1 : 0,
-                transition: '0.3s',
+                transition: 'opacity 0.2s ease-in-out',
                 minWidth: 0,
                 ml: open ? 1 : 0,
                 color: isActive('/boards') ? 'white' : 'inherit',
+                display: open ? 'block' : 'none',
               }}
             />
           </ListItem>
@@ -102,20 +126,28 @@ const Sidebar = ({ open, toggleSidebar, role }) => {
             '&:hover': {
               bgcolor: isActive('/balances') ? 'primary.dark' : '#f5f5f5',
             },
+            minHeight: 48,
+            px: 2,
           }}
           button
         >
-          <ListItemIcon sx={{ color: isActive('/balances') ? 'white' : 'inherit' }}>
+          <ListItemIcon
+            sx={{
+              color: isActive('/balances') ? 'white' : 'inherit',
+              minWidth: 40,
+            }}
+          >
             <AccountBalanceWalletIcon />
           </ListItemIcon>
           <ListItemText
             primary="Balances"
             sx={{
               opacity: open ? 1 : 0,
-              transition: '0.3s',
+              transition: 'opacity 0.2s ease-in-out',
               minWidth: 0,
               ml: open ? 1 : 0,
               color: isActive('/balances') ? 'white' : 'inherit',
+              display: open ? 'block' : 'none',
             }}
           />
         </ListItem>

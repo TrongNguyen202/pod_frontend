@@ -29,40 +29,16 @@ import Sidebar from 'src/components/sidebar';
 import FormDialog from 'src/components/popup';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
 import { fetchInfoBoardByBoardId } from 'src/redux/reducers/products';
-import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { tokens } from '../../locales/tokens';
+import { fields } from 'src/constants';
+import { Skeleton, Stack } from '@mui/material';
 
 const data = [
   { id: '1', title: 'video board', client: { name: 'Nguyễn Đình Trọng', email: 'trongprotein@gmail.com' } },
   { id: '2', title: 'video 3123', client: { name: 'Nguyễn Đình Trọng', email: 'trongprotein@gmail.com' } },
   { id: '3', title: 'newboard1', client: { name: 'Nguyễn Đình Trọng', email: 'trongprotein@gmail.com' } },
   { id: '4', title: 'trong nguyen', client: { name: 'Nguyễn Đình Trọng', email: 'trongprotein@gmail.com' } },
-];
-
-const fields = [
-  { name: 'title', label: 'Title', fullWidth: true, required: true },
-  {
-    name: 'product_types',
-    label: 'Product Types',
-    type: 'select',
-    multiple: true,
-    options: [
-      { label: 'T-shirt', value: 'T-shirt' },
-      { label: 'Shirt', value: 'shirt' },
-      { label: 'Sweater', value: 'sweater' },
-    ],
-  },
-  {
-    name: 'design_type',
-    label: 'Default Design Type',
-    type: 'select',
-    options: [
-      { label: 'Clone', value: 'Clone' },
-      { label: 'Redesign', value: 'Redesign' },
-      { label: 'New', value: 'New' },
-    ],
-  },
 ];
 
 const Page = () => {
@@ -77,16 +53,15 @@ const Page = () => {
   const { loading, products = [], error } = useAppSelector((state) => state.products);
   const [quickDesignData, setQuickDesignData] = useState({});
   const { t } = useTranslation();
+  const [role, setRole] = useState('');
+  const { data: userData } = useAppSelector((state) => state.users.userInfo);
+  const { data: boardsData } = useAppSelector((state) => state.boards.boardService);
 
-  // Lấy board từ localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedId = localStorage.getItem('current_board_id');
-      if (savedId) {
-        setBoardId(savedId === 'null' ? null : savedId);
-      }
+    if (userData) {
+      setRole(userData.role_name);
     }
-  }, []);
+  }, [userData]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -140,11 +115,11 @@ const Page = () => {
 
     try {
       if (id) {
-        const res = await axios.put(`https://6848f91945f4c0f5ee6f902e.mockapi.io/api/v1/free/${id}`, payload);
+        // const res = await axios.put(`https://6848f91945f4c0f5ee6f902e.mockapi.io/api/v1/free/${id}`, payload);
         console.log('Updated successfully:', res.data);
         onAfterSubmit?.(res.data);
       } else {
-        const res = await axios.post(`https://6848f91945f4c0f5ee6f902e.mockapi.io/api/v1/free`, payload);
+        // const res = await axios.post(`https://6848f91945f4c0f5ee6f902e.mockapi.io/api/v1/free`, payload);
         console.log('Created successfully:', res.data);
         onAfterSubmit?.(res.data);
       }
@@ -153,13 +128,16 @@ const Page = () => {
     }
   };
 
+  console.log(boardsData);
+  // fetchBoardInfoByBoardId
+
   return (
     <>
       <Seo title="Boards" />
       <Header showBoards={false} />
       <Toolbar />
       <Box sx={{ display: 'flex' }}>
-        <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />
+        {role && <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} role={role} />}
         <Box
           component="main"
           sx={{
@@ -167,37 +145,29 @@ const Page = () => {
             padding: 2,
           }}
         >
-          <Grid position={'relative'} size={4} marginBottom={2} right={0} display={'flex'} justifyContent={'end'}>
-            <Button
-              sx={{ m: 0 }}
-              variant="contained"
-              color="primary"
-              size="medium"
-              component={Link}
-              href="/ideas/create"
-            >
-              {t(tokens.nav.addnew)}
-            </Button>
-          </Grid>
           <Box>
             <Card>
-              <CardContent>
-                <Grid
-                  xs={12}
-                  sm={6}
-                  md={3}
-                  size={12}
-                  sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 0 }}
-                >
+              <CardContent size={12} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Grid size={4}>
+                  <Button
+                    sx={{ m: 0, width: '100%' }}
+                    variant="contained"
+                    color="primary"
+                    size="medium"
+                    component={Link}
+                    href="/ideas/create"
+                  >
+                    {t(tokens.nav.addnew)}
+                  </Button>
+                </Grid>
+                <Grid xs={12} sm={6} md={3} size={8} width="90%">
                   <Grid
-                    size={8}
                     position="static"
                     sx={{
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
                       flexDirection: 'row',
-                      width: '85%',
                       backgroundColor: '#fff',
                     }}
                   >
@@ -223,7 +193,7 @@ const Page = () => {
                 </Grid>
               </CardContent>
             </Card>
-            <Card>
+            <Card sx={{ marginTop: 2 }}>
               <Paper>
                 <TableContainer>
                   <Table>

@@ -21,6 +21,7 @@ import {
   DialogActions,
   DialogContentText,
 } from '@mui/material';
+import { Skeleton, Stack } from '@mui/material';
 import { Delete } from '@mui/icons-material';
 import { Seo } from 'src/components/seo';
 import Header from 'src/components/header';
@@ -90,7 +91,6 @@ const Page = () => {
   const { data: productTypeData } = useAppSelector((state) => state.productTypes.productTypes);
   const { data: orderData } = useAppSelector((state) => state.orders.orderService);
   const { data: templatesData } = useAppSelector((state) => state.templates.templateInfo);
-  const { data: userWalletsData } = useAppSelector((state) => state.userwallets.userWalletInfo);
   const { data: desginerIds } = useGetDesignerIds(dispatch, role);
 
   useEffect(() => {
@@ -379,7 +379,7 @@ const Page = () => {
       <Toolbar />
 
       <Box sx={{ display: 'flex' }}>
-        <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} role={role} />
+        {role && <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} role={role} />}
 
         {!isAdmin && (
           <>

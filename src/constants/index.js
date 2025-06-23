@@ -86,6 +86,32 @@ export const optionsDesignType = [
 export const bankId = 'mbbank';
 export const bankAccountNo = '0399709507';
 
+
+export const fields = [
+  { name: 'title', label: 'Title', fullWidth: true, required: true },
+  {
+    name: 'product_types',
+    label: 'Product Types',
+    type: 'select',
+    multiple: true,
+    options: [
+      { label: 'T-shirt', value: 'T-shirt' },
+      { label: 'Shirt', value: 'shirt' },
+      { label: 'Sweater', value: 'sweater' },
+    ],
+  },
+  {
+    name: 'design_type',
+    label: 'Default Design Type',
+    type: 'select',
+    options: [
+      { label: 'Clone', value: 'Clone' },
+      { label: 'Redesign', value: 'Redesign' },
+      { label: 'New', value: 'New' },
+    ],
+  },
+];
+
 export const statusIdentity = {
   PROGRESSING: 0,
   UNAPPROVED: 1,

@@ -69,7 +69,7 @@ export const Layout = (props) => {
                   },
                 }}
               >
-                MediaResolver <span>PRO</span>
+                Sun Design <span>PRO</span>
               </Box>
             </Stack>
           </Stack>

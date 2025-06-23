@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Card,
@@ -20,6 +20,7 @@ import {
   TableCell,
   TableBody,
 } from '@mui/material';
+import { Skeleton, Stack } from '@mui/material';
 import { Seo } from 'src/components/seo';
 import Header from 'src/components/header';
 import Sidebar from 'src/components/sidebar';
@@ -27,6 +28,7 @@ import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useTranslation } from 'react-i18next';
 import { tokens } from 'src/locales/tokens';
+import { useAppSelector } from 'src/redux/hook';
 const mockData = [
   {
     id: 1,
@@ -60,6 +62,14 @@ const Page = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
   const { t } = useTranslation();
+  const [role, setRole] = useState('');
+  const { data: userData } = useAppSelector((state) => state.users.userInfo);
+
+  useEffect(() => {
+    if (userData) {
+      setRole(userData.role_name);
+    }
+  }, [userData]);
 
   const [deposit, setDeposit] = useState('');
   const [startDate, setStartDate] = useState(null);
@@ -77,7 +87,7 @@ const Page = () => {
       <Seo title="Balances" />
       <Header showBoards={false} />
       <Box sx={{ display: 'flex' }}>
-        <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />
+        {role && <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} role={role} />}
         <Box component="main" sx={{ flexGrow: 1, padding: 2 }}>
           <Box sx={{ padding: 2 }}>
             <Typography variant="h4">Balances</Typography>
