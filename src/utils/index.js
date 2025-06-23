@@ -12,6 +12,7 @@
 import dayjs from 'dayjs';
 import { isArray } from 'lodash';
 import utc from 'dayjs/plugin/utc';
+import { categoryList } from 'src/constants';
 
 dayjs.extend(utc);
 
@@ -35,6 +36,55 @@ export const formatNumber = (str) => {
     return Number(strFormat);
   }
   return '';
+};
+
+export const getCategoryCounts = (ideas, role) => {
+  const visibleCategories = categoryList.filter((label) => {
+    if (role === 'designer' && label === 'DRAFT') return false;
+    if (role === 'customer' && label === 'ARCHIVED') return false;
+    return true;
+  });
+
+  return visibleCategories.map((label) => ({
+    label: formatCategoryLabel(label),
+    value: label,
+    count: label === 'ALL' ? ideas.length : ideas.filter((i) => i.status === label).length,
+  }));
+};
+
+export const formatCategoryLabel = (label) =>
+  label
+    .toLowerCase()
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+
+export const getAllowedStatusOptions = (role, currentStatuses) => {
+  if (currentStatuses.length !== 1) return [];
+
+  const status = currentStatuses[0];
+
+  const transitions = {
+    customer: {
+      DRAFT: ['NEW'],
+      IN_REVIEW: ['NEED_FIX', 'DONE'],
+    },
+    designer: {
+      NEW: ['DOING'],
+      DOING: ['IN_REVIEW'],
+      NEED_FIX: ['IN_REVIEW'],
+    },
+  };
+
+  return transitions[role]?.[status] || [];
+};
+
+export const checkRole = (role) => {
+  return {
+    isAdmin: role === 'admin',
+    isDesigner: role === 'designer',
+    isCustomer: role === 'customer',
+  };
 };
 
 export const formatPriceOrContact = (p) => {
@@ -163,7 +213,7 @@ export const buildNestedArrays = (items, parentId) => {
 };
 
 export const buildNestedArraysMenu = (items) => {
-  console.log("item", items)
+  console.log('item', items);
   const itemsByParentId = items.reduce((acc, item) => {
     if (!acc[item.parent_id]) {
       acc[item.parent_id] = [];
@@ -183,7 +233,7 @@ export const buildNestedArraysMenu = (items) => {
       // console.log("grand childent", grandChildren)
       return grandChildren
         ? {
-          label: item.local_name,
+            label: item.local_name,
             key: item.id,
             children: grandChildren,
             value: item.id,

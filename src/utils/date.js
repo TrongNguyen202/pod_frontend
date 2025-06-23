@@ -22,3 +22,16 @@ export const formatDateTime = (timestamp) => {
   const formatted = `${day}/${month}/${year}, ${hours}:${minutes}:${seconds}`;
   return formatted;
 };
+
+export const formatMiliToDateTime = (timestamp) => {
+  const date = new Date(timestamp);
+
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const yyyy = date.getFullYear();
+
+  const formatted = `${hh}:${mm} ${dd}-${month}-${yyyy}`;
+  return formatted;
+};

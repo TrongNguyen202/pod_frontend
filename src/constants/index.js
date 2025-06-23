@@ -27,6 +27,65 @@ export const ENVIRONMENT_URL = {
   API_PRINT_CARE: process.env.NEXT_PUBLIC_API_PRINT_CARE,
 };
 
+export const categoryList = [
+  'DRAFT',
+  'NEW',
+  // 'TODO',
+  'DOING',
+  // 'CHECK',
+  'IN_REVIEW',
+  'NEED_FIX',
+  'DONE',
+  'ARCHIVED',
+  'ALL',
+];
+
+export const standardizationCategory = {
+  DRAFT: 'Draft',
+  NEW: 'New',
+  TODO: 'Todo',
+  DOING: 'Doing',
+  CHECK: 'Check',
+  IN_REVIEW: 'In review',
+  NEED_FIX: 'Need fix',
+  DONE: 'Done',
+  ARCHIVED: 'Archived',
+  ALL: 'All',
+};
+
+export const validNextStatusMap = {
+  DRAFT: ['NEW'],
+  NEW: ['DOING'],
+  // TODO: ['DOING'],
+  DOING: ['IN_REVIEW'],
+  // CHECK: ['IN_REVIEW'],
+  IN_REVIEW: ['NEED_FIX', 'DONE'],
+  NEED_FIX: ['IN_REVIEW'],
+  DONE: ['ARCHIVED'],
+};
+
+export const categoryColors = {
+  Draft: '#90caf9',
+  New: '#a5d6a7',
+  Todo: '#ffcc80',
+  Doing: '#ffab91',
+  Check: '#ce93d8',
+  'In Review': '#80cbc4',
+  'Need Fix': '#f48fb1',
+  Done: '#b39ddb',
+  Archived: '#721387',
+  All: '#i66sd5',
+};
+
+export const optionsDesignType = [
+  { label: 'CLONE', value: 'CLONE' },
+  { label: 'RE_DESIGN', value: 'RE_DESIGN' },
+  { label: 'NEW', value: 'NEW' },
+];
+
+export const bankId = 'mbbank';
+export const bankAccountNo = '0399709507';
+
 export const statusIdentity = {
   PROGRESSING: 0,
   UNAPPROVED: 1,

@@ -64,9 +64,7 @@ const Page = () => {
 
           localStorage.setItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN, res.data.accessToken);
           localStorage.setItem(LOCAL_STORAGE_KEY.REFRESH_TOKEN, res.data.refreshToken);
-          localStorage.setItem(LOCAL_STORAGE_KEY.USER_ROLE, decodedToken.roles);
           localStorage.setItem(LOCAL_STORAGE_KEY.USER_IP, decodedToken.ipAddress);
-          localStorage.setItem(LOCAL_STORAGE_KEY.USER_AGENT, decodedToken.userAgent);
           localStorage.setItem(LOCAL_STORAGE_KEY.DEVICE_ID, decodedToken.deviceId);
           localStorage.setItem(LOCAL_STORAGE_KEY.USER_EMAIL, decodedToken.sub);
 

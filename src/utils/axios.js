@@ -11,23 +11,48 @@ const axiosAPIPrintCare = axios.create({
   baseURL: ENVIRONMENT_URL.API_PRINT_CARE,
 });
 
+const getCommonHeaders = () => {
+  const headers = {};
+  const deviceId = localStorage.getItem('deviceId') || 'unknown';
+  const userIp = localStorage.getItem('ipAdrress') || '';
+
+  headers['X-Device-Id'] = deviceId;
+  if (userIp) headers['X-Forwarded-For'] = userIp;
+
+  return headers;
+};
+
 const refreshTokenApi = async (config) => {
   const accessToken = localStorage.getItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN) || '';
   config.headers.Authorization = `Bearer ${accessToken}`;
 
-  try {
-    const deviceId = localStorage.getItem('deviceId') || 'unknown';
-    const userIp = localStorage.getItem('ipAdrress') || '';
-    // const userAgent = localStorage.getItem('userAgent') || '';
+  return {
+    ...config,
+    headers: {
+      ...config.headers,
+      ...getCommonHeaders(),
+    },
+  };
+};
 
-    config.headers['X-Device-Id'] = deviceId;
-    // config.headers['User-Agent'] = userAgent;
-    if (userIp) config.headers['X-Forwarded-For'] = userIp;
-  } catch (err) {
-    console.warn('Không thể gắn thông tin client vào headers:', err);
-  }
+const refreshToken = async () => {
+  const refreshToken = localStorage.getItem(LOCAL_STORAGE_KEY.REFRESH_TOKEN);
+  if (!refreshToken) throw new Error('Không tìm thấy refresh token');
 
-  return config;
+  const response = await axios.post(
+    'http://localhost:8080/api/v1/auth/refresh',
+    { refreshToken },
+    { headers: { ...getCommonHeaders(), 'Content-Type': 'application/json' } },
+  );
+
+  const newAccessToken = response.data?.accessToken;
+  const newRefreshToken = response.data?.refreshToken;
+
+  // Cập nhật token mới
+  localStorage.setItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN, newAccessToken);
+  localStorage.setItem(LOCAL_STORAGE_KEY.REFRESH_TOKEN, newRefreshToken);
+
+  return newAccessToken;
 };
 
 const refreshTokenApiFlashShip = async (config) => {
@@ -42,7 +67,60 @@ const refreshTokenApiPrintCare = async (config) => {
   return config;
 };
 
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 axiosAPI.interceptors.request.use(refreshTokenApi, (error) => Promise.reject(error));
+
+axiosAPI.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 403 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return axiosAPI(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const newToken = await refreshToken();
+        processQueue(null, newToken);
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return axiosAPI(originalRequest);
+      } catch (err) {
+        processQueue(err, null);
+        localStorage.clear(); 
+        window.location.href = '/login'; 
+        return Promise.reject(err);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    return Promise.reject(error);
+  },
+);
 axiosAPIFlashShip.interceptors.request.use(refreshTokenApiFlashShip, (error) => Promise.reject(error));
 axiosAPIPrintCare.interceptors.request.use(refreshTokenApiPrintCare, (error) => Promise.reject(error));
 

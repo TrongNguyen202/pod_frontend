@@ -33,7 +33,7 @@ const requestCheckExits = async (data) => {
 const requestResetPassword = async (data) => {
   const config = {
     method: 'POST',
-    url: '/reset_password',
+    url: '/users/reset-pass',
     data: data,
   };
 

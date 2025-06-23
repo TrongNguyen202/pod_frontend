@@ -1,19 +1,27 @@
-import { axiosAPI } from "src/utils/axios";
+import { axiosAPI } from 'src/utils/axios';
 
 const requestGetUserInfoByEmail = async (data) => {
-  const config = { 
-    method: "POST",
-    url: "/users/get-detail",
+  const config = {
+    method: 'POST',
+    url: '/users/get-detail',
     data,
-  }
+  };
 
   return axiosAPI(config);
-}
+};
+
+const requestGetDesignerIds = async () => {
+  const config = {
+    method: 'GET',
+    url: 'users/designers/ids',
+  };
+  return axiosAPI(config);
+};
 
 const requestGetShopByUser = async () => {
   const config = {
-    method: "GET",
-    url: "/user-shops/groups",
+    method: 'GET',
+    url: '/user-shops/groups',
   };
 
   return axiosAPI(config);
@@ -21,7 +29,7 @@ const requestGetShopByUser = async () => {
 
 const requestGetUserInfo = async (userId) => {
   const config = {
-    method: "GET",
+    method: 'GET',
     url: `/user/${userId}/groups/infor`,
   };
 
@@ -30,7 +38,7 @@ const requestGetUserInfo = async (userId) => {
 
 const requestUpdateUser = async (data) => {
   const config = {
-    method: "PUT",
+    method: 'PUT',
     url: `/groups/change_user`,
     data,
   };
@@ -40,7 +48,7 @@ const requestUpdateUser = async (data) => {
 
 const requestCreateUser = async (data) => {
   const config = {
-    method: "POST",
+    method: 'POST',
     url: `/groups/add_user_group`,
     data,
   };
@@ -50,7 +58,7 @@ const requestCreateUser = async (data) => {
 
 const requestGetGroupUser = async () => {
   const config = {
-    method: "GET",
+    method: 'GET',
     url: `/groupcustoms/`,
   };
 
@@ -59,7 +67,7 @@ const requestGetGroupUser = async () => {
 
 const requestGetUserShopAll = async (groupId) => {
   const config = {
-    method: "GET",
+    method: 'GET',
     url: `/user-shop-all/${groupId}`,
   };
 
@@ -68,6 +76,7 @@ const requestGetUserShopAll = async (groupId) => {
 
 export const users = {
   requestGetUserInfoByEmail,
+  requestGetDesignerIds,
   requestGetShopByUser,
   requestGetUserInfo,
   requestUpdateUser,

@@ -4,13 +4,14 @@ import { ChevronLeft, ChevronRight, Home, Star } from '@mui/icons-material';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { checkRole } from 'src/utils';
 
 const drawerWidth = 240;
 
-const Sidebar = ({ open, toggleSidebar }) => {
+const Sidebar = ({ open, toggleSidebar, role }) => {
   const router = useRouter();
   const { pathname } = router;
-
+  const { isCustomer } = checkRole(role);
   // Hàm check active dựa vào pathname
   const isActive = (path) => pathname === path;
 
@@ -61,33 +62,35 @@ const Sidebar = ({ open, toggleSidebar }) => {
           />
         </ListItem>
 
-        <ListItem
-          component={Link}
-          href="/boards"
-          sx={{
-            cursor: 'pointer',
-            bgcolor: isActive('/boards') ? 'primary.main' : 'inherit',
-            color: isActive('/boards') ? 'white' : 'inherit',
-            '&:hover': {
-              bgcolor: isActive('/boards') ? 'primary.dark' : '#f5f5f5',
-            },
-          }}
-          button
-        >
-          <ListItemIcon sx={{ color: isActive('/boards') ? 'white' : 'inherit' }}>
-            <Star />
-          </ListItemIcon>
-          <ListItemText
-            primary="Boards"
+        {isCustomer && (
+          <ListItem
+            component={Link}
+            href="/boards"
             sx={{
-              opacity: open ? 1 : 0,
-              transition: '0.3s',
-              minWidth: 0,
-              ml: open ? 1 : 0,
+              cursor: 'pointer',
+              bgcolor: isActive('/boards') ? 'primary.main' : 'inherit',
               color: isActive('/boards') ? 'white' : 'inherit',
+              '&:hover': {
+                bgcolor: isActive('/boards') ? 'primary.dark' : '#f5f5f5',
+              },
             }}
-          />
-        </ListItem>
+            button
+          >
+            <ListItemIcon sx={{ color: isActive('/boards') ? 'white' : 'inherit' }}>
+              <Star />
+            </ListItemIcon>
+            <ListItemText
+              primary="Boards"
+              sx={{
+                opacity: open ? 1 : 0,
+                transition: '0.3s',
+                minWidth: 0,
+                ml: open ? 1 : 0,
+                color: isActive('/boards') ? 'white' : 'inherit',
+              }}
+            />
+          </ListItem>
+        )}
 
         <ListItem
           component={Link}

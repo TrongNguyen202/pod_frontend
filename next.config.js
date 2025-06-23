@@ -20,14 +20,6 @@ module.exports = withTM({
       },
     ],
   },
-  async middleware() {
-    return [
-      {
-        source: '/(.*)',
-        destination: '/middleware.ts',
-      },
-    ];
-  },
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/,
