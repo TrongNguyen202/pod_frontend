@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, memo, useRef } from 'react';
+import React, { useMemo, useState, useEffect, memo, useRef, Profiler } from 'react';
 import { useRouter } from 'src/hooks/use-router';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
@@ -393,21 +393,26 @@ const Header = ({ onBoardChange, showBoards, role }) => {
                   ))}
                 </Select>
               </FormControl>
-              <FormDialog
-                key={selectedBoardId + '-' + JSON.stringify(initialFormData)}
-                buttonLabel={t(tokens.nav.quick_design)}
-                title="Edit Board"
-                fields={fields}
-                onSubmit={handleSubmitBoardInfo}
-                initialData={initialFormData}
-                buttonProps={{
-                  component: 'span',
-                  variant: 'outlined',
-                  size: 'medium',
-                  disabled: !selectedBoardId,
-                  sx: { ml: 1, mr: 2, color: 'black', height: '40px' },
-                }}
-              />
+              <Profiler
+                id="FormDialog"
+                onRender={(id, phase, actualDuration) => console.log(`${id} ${phase} in ${actualDuration}ms`)}
+              >
+                <FormDialog
+                  // key={selectedBoardId + '-' + JSON.stringify(initialFormData)}
+                  buttonLabel={t(tokens.nav.quick_design)}
+                  title="Edit Board"
+                  fields={fields}
+                  onSubmit={handleSubmitBoardInfo}
+                  initialData={initialFormData}
+                  buttonProps={{
+                    component: 'span',
+                    variant: 'outlined',
+                    size: 'medium',
+                    disabled: !selectedBoardId,
+                    sx: { ml: 1, mr: 2, color: 'black', height: '40px' },
+                  }}
+                />
+              </Profiler>
               <Button
                 variant="outlined"
                 size="medium"
@@ -534,6 +539,15 @@ const Header = ({ onBoardChange, showBoards, role }) => {
                   {/* Số tiền */}
                   <Typography variant="h5" sx={{ mt: 4, fontWeight: 'bold' }}>
                     {Number(amount).toLocaleString('vi-VN')}₫
+                  </Typography>
+
+                  <Typography variant="body2" color="success.main">
+                    Tặng ngay <strong>3% giá trị</strong> – tiết kiệm thêm từ giá gốc!
+                  </Typography>
+
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    Tổng giá trị nhận được:&nbsp;
+                    <strong>{(amount * 1.03).toLocaleString('vi-VN')}₫</strong>
                   </Typography>
 
                   {/* Mã giao dịch */}

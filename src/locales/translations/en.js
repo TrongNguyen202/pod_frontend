@@ -49,6 +49,7 @@ export const en = {
   [tokens.nav.details]: 'Details',
   [tokens.nav.chosseImages]: 'Chosse Images',
   [tokens.nav.uploadImages]: 'Upload Images',
+  [tokens.nav.linkDrive]: 'Link drive',
   [tokens.nav.ecommerce]: 'E-Commerce',
   [tokens.nav.edit]: 'Edit',
   [tokens.nav.error]: 'Error',
@@ -113,4 +114,5 @@ export const en = {
   [tokens.nav.selected]: 'Selected',
   [tokens.nav.status]: 'Status',
   [tokens.nav.changeStatus]: 'Change Status',
+  [tokens.nav.confirmStatusChange]: 'Confirm change order status',
 };

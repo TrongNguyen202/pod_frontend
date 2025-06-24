@@ -53,6 +53,7 @@ export const tokens = {
     description: 'nav.description',
     chosseImages: 'nav.chosseImages',
     uploadImages: 'nav.uploadImages',
+    linkDrive: 'nav.linkDrive',
     ecommerce: 'nav.ecommerce',
     edit: 'nav.edit',
     error: 'nav.error',
@@ -118,5 +119,6 @@ export const tokens = {
     selected: 'nav.selected',
     status: 'nav.status',
     changeStatus: 'nav.changeStatus',
+    confirmStatusChange: 'nav.confirmStatusChange',
   },
 };

@@ -11,7 +11,7 @@ const initialState = {
   },
 };
 
-export const fetchSendPushNotifications = createAsyncThunk('/notifications/send-push', async ({ data }) => {
+export const fetchSendPushNotifications = createAsyncThunk('/notifications/send-push', async ( data ) => {
   const res = await RepositoryRemote.notifications.requestSendPushNotifications(data);
   return res?.data?.data;
 });

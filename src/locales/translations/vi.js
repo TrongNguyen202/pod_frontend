@@ -47,6 +47,7 @@ export const vi = {
   [tokens.nav.details]: 'Chi tiết',
   [tokens.nav.chosseImages]: 'Chọn ảnh',
   [tokens.nav.uploadImages]: 'Tải ảnh',
+  [tokens.nav.linkDrive]: 'Link drive',
   [tokens.nav.ecommerce]: 'Thương mại điện tử',
   [tokens.nav.edit]: 'Chỉnh sửa',
   [tokens.nav.error]: 'Lỗi',
@@ -116,4 +117,5 @@ export const vi = {
   [tokens.nav.selected]: 'Đã chọn',
   [tokens.nav.status]: 'Trạng thái',
   [tokens.nav.changeStatus]: 'Cập nhật trạng thái',
+  [tokens.nav.confirmStatusChange]: 'Xác nhận chuyển trạng thái đơn hàng',
 };

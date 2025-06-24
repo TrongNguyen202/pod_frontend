@@ -41,16 +41,14 @@ export const categoryList = [
 ];
 
 export const standardizationCategory = {
-  DRAFT: 'Draft',
-  NEW: 'New',
-  TODO: 'Todo',
-  DOING: 'Doing',
-  CHECK: 'Check',
-  IN_REVIEW: 'In review',
-  NEED_FIX: 'Need fix',
-  DONE: 'Done',
-  ARCHIVED: 'Archived',
-  ALL: 'All',
+  DRAFT: 'Nháp',
+  NEW: 'Mới',
+  DOING: 'Đang xử lý',
+  IN_REVIEW: 'Kiểm tra',
+  NEED_FIX: 'Cần sửa',
+  DONE: 'Hoàn thành',
+  ARCHIVED: 'Lưu trữ ',
+  ALL: 'Tất cả',
 };
 
 export const validNextStatusMap = {
@@ -65,16 +63,32 @@ export const validNextStatusMap = {
 };
 
 export const categoryColors = {
-  Draft: '#90caf9',
-  New: '#a5d6a7',
-  Todo: '#ffcc80',
-  Doing: '#ffab91',
-  Check: '#ce93d8',
-  'In Review': '#80cbc4',
-  'Need Fix': '#f48fb1',
-  Done: '#b39ddb',
-  Archived: '#721387',
-  All: '#i66sd5',
+  DRAFT: '#90caf9',
+  NEW: '#a5d6a7',
+  TODO: '#ffcc80',
+  DOING: '#ffab91',
+  CHECK: '#ce93d8',
+  IN_REVIEW: '#80cbc4',
+  NEED_FIX: '#f48fb1',
+  DONE: '#b39ddb',
+  ARCHIVED: '#721387',
+  ALL: '#i66sd5',
+};
+
+export const categoryLabelsVi = {
+  NEW: 'Tạo mới',
+  RE_DESIGN: 'Thiết kế lại',
+  CLONE: 'Tạo bản sao',
+};
+
+export const categoryStatusVi = {
+  DRAFT: 'Nháp',
+  NEW: 'Mới',
+  DOING: 'Đang xử lý',
+  IN_REVIEW: 'Kiểm tra',
+  NEED_FIX: 'Cần sửa',
+  DONE: 'Hoàn thành',
+  ARCHIVED: 'Lưu trữ ',
 };
 
 export const optionsDesignType = [
@@ -85,7 +99,6 @@ export const optionsDesignType = [
 
 export const bankId = 'mbbank';
 export const bankAccountNo = '0399709507';
-
 
 export const fields = [
   { name: 'title', label: 'Title', fullWidth: true, required: true },
@@ -110,6 +123,14 @@ export const fields = [
       { label: 'New', value: 'New' },
     ],
   },
+];
+
+export const PRICE_OPTIONS = [
+  { id: 1, label: '20,000', value: 20000 },
+  { id: 2, label: '25,000', value: 25000 },
+  { id: 3, label: '27,000', value: 27000 },
+  { id: 4, label: '32,000', value: 32000 },
+  { id: 5, label: '35,000', value: 35000 },
 ];
 
 export const statusIdentity = {

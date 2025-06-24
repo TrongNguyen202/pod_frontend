@@ -12,7 +12,7 @@
 import dayjs from 'dayjs';
 import { isArray } from 'lodash';
 import utc from 'dayjs/plugin/utc';
-import { categoryList } from 'src/constants';
+import { categoryList, standardizationCategory } from 'src/constants';
 
 dayjs.extend(utc);
 
@@ -52,12 +52,7 @@ export const getCategoryCounts = (ideas, role) => {
   }));
 };
 
-export const formatCategoryLabel = (label) =>
-  label
-    .toLowerCase()
-    .split('_')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+export const formatCategoryLabel = (label) => standardizationCategory[label];
 
 export const getAllowedStatusOptions = (role, currentStatuses) => {
   if (currentStatuses.length !== 1) return [];

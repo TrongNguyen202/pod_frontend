@@ -21,7 +21,6 @@ import {
   DialogActions,
   DialogContentText,
 } from '@mui/material';
-import { Skeleton, Stack } from '@mui/material';
 import { Delete } from '@mui/icons-material';
 import { Seo } from 'src/components/seo';
 import Header from 'src/components/header';
@@ -49,7 +48,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import toast from 'react-hot-toast';
 import handleAmountFormat from 'src/utils/amount-vnd';
 import OrderDetailModal from 'src/components/modal-order-detail';
-import { categoryColors, validNextStatusMap, standardizationCategory } from 'src/constants';
+import { categoryColors } from 'src/constants';
 import { requestPermissionAndListen } from 'src/services/firebase';
 import { checkRole, formatCategoryLabel, getAllowedStatusOptions, getCategoryCounts } from 'src/utils';
 import { fetchGetDesginerIds, fetchUserByEmail, resetDataDesginerIds } from 'src/redux/reducers/user';
@@ -92,7 +91,7 @@ const Page = () => {
   const { data: orderData } = useAppSelector((state) => state.orders.orderService);
   const { data: templatesData } = useAppSelector((state) => state.templates.templateInfo);
   const { data: desginerIds } = useGetDesignerIds(dispatch, role);
-
+  const { data: boardData } = useAppSelector((state) => state.boards.boardInfo);
   useEffect(() => {
     if (userData) {
       setRole(userData.role_name);
@@ -102,10 +101,10 @@ const Page = () => {
   const { isAdmin, isDesigner, isCustomer } = checkRole(role);
 
   useEffect(() => {
-    if (userData) {
+    if (userData?.id) {
       requestPermissionAndListen(userData.id, dispatch);
     }
-  }, []);
+  }, [userData?.id]);
 
   const categories = getCategoryCounts(orderData.length > 0 ? orderData : [], role);
   const selectedCategory = categories[selectedTab].value;
@@ -116,6 +115,8 @@ const Page = () => {
         ? orderData.filter((i) => i.status === selectedCategory)
         : [];
   const filteredOrders = orderData.filter((item) => selectedCategory === 'ALL' || item.status === selectedCategory);
+
+  const canDeleteOrder = (userRole, status) => userRole === 'customer' && ['DRAFT', 'NEW'].includes(status);
 
   const handleToggleCheck = (id) => {
     setCheckedOrderIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
@@ -149,14 +150,15 @@ const Page = () => {
       title: '',
       description: '',
       images: '',
-      designType: 'CLONE',
-      productTypeId: 0,
+      designType: boardData.designType,
+      productTypeId: boardData?.productTypeIds?.[0] || '',
       quantity: 1,
       number: 1,
+      price: 35000,
       completed_at: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
       templates: [],
     }),
-    [],
+    [boardData],
   );
 
   useEffect(() => {
@@ -175,7 +177,8 @@ const Page = () => {
       const query = `boardId=${boardId}`;
       dispatch(fetchGetOrdersByBoardId({ query }));
     } else if (isDesigner && userData?.id) {
-      const query = `designerId=${userData.id}`;
+      // const query = `designerId=${userData.id}`;
+      const query = ``;
       dispatch(fetchGetOrdersByBoardId({ query }));
     }
   }, [role, boardId, dispatch]);
@@ -240,7 +243,7 @@ const Page = () => {
             title: 'Có đơn hàng mới',
             message: 'Có đơn hàng mới được lên sàn, vào nhận ngay!',
           };
-          await dispatch(fetchSendPushNotifications({ data }));
+          await dispatch(fetchSendPushNotifications(data));
         }
         toast.success('Order created successfully!');
       } else {
@@ -294,12 +297,6 @@ const Page = () => {
 
   const selectedOrders = filteredOrders.filter((item) => checkedOrderIds.includes(item.id));
   const currentStatuses = [...new Set(selectedOrders.map((item) => item.status))];
-  let availableOptions = [];
-
-  if (currentStatuses.length === 1) {
-    const current = currentStatuses[0];
-    availableOptions = validNextStatusMap[current] || [];
-  }
 
   const allowedStatuses = getAllowedStatusOptions(role, currentStatuses);
   const statusOptions = allowedStatuses.map((s) => ({
@@ -313,22 +310,24 @@ const Page = () => {
     [...new Set(selectedOrders.map((item) => item.status))].length === 1 &&
     selectedOrders[0].status === 'NEW';
 
-  const confirmAssignOrders = async () => {
+  const confirmAssignOrders = async (userIds) => {
     try {
-      const designerId = userData?.id;
-      if (!designerId) return;
+      const notificationMessage = {
+        customerIds: userIds || [],
+        title: 'Trạng thái đơn hàng',
+        message: 'Có đơn hàng của bạn thay đổi trạng thái, vào xem ngay!',
+      };
+      await dispatch(fetchSendPushNotifications(notificationMessage));
 
       const data = {
         orderIds: checkedOrderIds,
-        designerId,
       };
-
       const response = await dispatch(fetchAssignOrdersForDesigner({ data }));
 
       if (response.meta.requestStatus === 'fulfilled') {
         toast.success('Nhận đơn thành công!');
         setCheckedOrderIds([]);
-        dispatch(fetchGetOrdersByBoardId({ query: `designerId=${userData.id}` }));
+        dispatch(fetchGetOrdersByBoardId({ query: `` }));
       } else {
         toast.error(response.message || 'Nhận đơn thất bại');
       }
@@ -356,10 +355,12 @@ const Page = () => {
               title: 'Có đơn hàng mới',
               message: 'Có đơn hàng mới được lên sàn, vào nhận ngay!',
             };
-            await dispatch(fetchSendPushNotifications({ data }));
+            await dispatch(fetchUserByEmail({ email: userData?.email }));
+            await dispatch(fetchSendPushNotifications(data));
           }
         } else if (isDesigner) {
-          const query = `designerId=${userData?.id}`;
+          // const query = `designerId=${userData?.id}`;
+          const query = ``;
           await dispatch(fetchGetOrdersByBoardId({ query }));
           setCheckedOrderIds([]);
         }
@@ -478,108 +479,118 @@ const Page = () => {
                   </CardContent>
                 </Card>
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Tabs
-                    value={selectedTab}
-                    onChange={(e, v) => setSelectedTab(v)}
-                    sx={{ mt: 2 }}
-                    textColor="primary"
-                    variant="scrollable"
-                    scrollButtons="auto"
-                  >
-                    {categories.map((category, idx) => (
-                      <Tab
-                        key={idx}
-                        label={`${category.label} ${category.count}`}
-                        sx={{
-                          color: categoryColors[category.label],
-                          borderRadius: 1,
-                          mx: 0.5,
-                          minHeight: '36px',
-                          padding: 1,
-                          fontWeight: 500,
-                          '&.Mui-selected': {
-                            backgroundColor: '#f3f3f3',
-                            color: '#1976d2',
-                          },
-                        }}
-                      />
-                    ))}
-                  </Tabs>
-                  <Card variant="outlined" sx={{ display: 'flex', alignItems: 'center', border: 0 }}>
-                    <Checkbox
-                      sx={{ mr: 2 }}
-                      checked={
-                        filteredOrders.length > 0 && filteredOrders.every((item) => checkedOrderIds.includes(item.id))
-                      }
-                      indeterminate={
-                        filteredOrders.some((item) => checkedOrderIds.includes(item.id)) &&
-                        !filteredOrders.every((item) => checkedOrderIds.includes(item.id))
-                      }
-                      onChange={handleToggleCheckAll}
-                    />
-                    <Card variant="outlined" sx={{ pl: 2, borderRadius: 2 }}>
-                      {filteredOrders.filter((item) => checkedOrderIds.includes(item.id)).length}{' '}
-                      {t(tokens.nav.selected)}
-                      {isAcceptableToAssign ? (
-                        <>
-                          <Button
-                            onClick={() => setOpenConfirmAsgin(true)}
-                            variant="contained"
-                            color="primary"
-                            size="small"
-                            sx={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0, m: 0 }}
-                          >
-                            Nhận đơn
-                          </Button>
-
-                          {/* Confirm Dialog */}
-                          <Dialog open={openConfirmAsgin} onClose={() => setOpenConfirmAsgin(false)}>
-                            <DialogTitle>Xác nhận nhận đơn</DialogTitle>
-                            <DialogContent>
-                              <DialogContentText>
-                                Bạn có chắc chắn muốn nhận {checkedOrderIds.length} đơn hàng?
-                              </DialogContentText>
-                            </DialogContent>
-                            <DialogActions>
-                              <Button onClick={() => setOpenConfirmAsgin(false)} color="inherit">
-                                Hủy
-                              </Button>
-                              <Button onClick={confirmAssignOrders} color="primary" variant="contained">
-                                Xác nhận
-                              </Button>
-                            </DialogActions>
-                          </Dialog>
-                        </>
-                      ) : (
-                        // statusOptions.length > 0 && (
-                        <FormDialog
-                          buttonLabel={<MoreVertIcon />}
-                          title={t(tokens.nav.changeStatus)}
-                          fields={[
-                            {
-                              name: 'status',
-                              label: t(tokens.nav.status),
-                              type: 'select',
-                              options: statusOptions,
+                {role && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Tabs
+                      value={selectedTab}
+                      onChange={(e, v) => setSelectedTab(v)}
+                      sx={{ mt: 2 }}
+                      // textColor="primary"
+                      variant="scrollable"
+                      scrollButtons="auto"
+                    >
+                      {categories.map((category, idx) => (
+                        <Tab
+                          key={idx}
+                          label={`${category.label} ${category.count}`}
+                          sx={{
+                            color: categoryColors[category.value],
+                            borderRadius: 1,
+                            mx: 0.5,
+                            minHeight: '36px',
+                            padding: 1,
+                            fontWeight: 500,
+                            '&.Mui-selected': {
+                              backgroundColor: '#f3f3f3',
+                              // color: '#1976d2',
                             },
-                          ]}
-                          onSubmit={(data) => {
-                            handleChangeStatusOrders(data, checkedOrderIds);
-                          }}
-                          buttonProps={{
-                            sx: { borderTopLeftRadius: 0, borderBottomLeftRadius: 0, m: 0 },
-                            variant: 'text',
-                            color: 'primary',
-                            size: 'medium',
                           }}
                         />
-                        // )
-                      )}
-                      {/* )} */}
+                      ))}
+                    </Tabs>
+                    <Card variant="outlined" sx={{ display: 'flex', alignItems: 'center', border: 0 }}>
+                      <Checkbox
+                        sx={{ mr: 2 }}
+                        checked={
+                          filteredOrders.length > 0 && filteredOrders.every((item) => checkedOrderIds.includes(item.id))
+                        }
+                        indeterminate={
+                          filteredOrders.some((item) => checkedOrderIds.includes(item.id)) &&
+                          !filteredOrders.every((item) => checkedOrderIds.includes(item.id))
+                        }
+                        onChange={handleToggleCheckAll}
+                      />
+                      <Card variant="outlined" sx={{ pl: 2, borderRadius: 2 }}>
+                        {filteredOrders.filter((item) => checkedOrderIds.includes(item.id)).length}{' '}
+                        {t(tokens.nav.selected)}
+                        {isAcceptableToAssign ? (
+                          <>
+                            <Button
+                              onClick={() => setOpenConfirmAsgin(true)}
+                              variant="contained"
+                              color="primary"
+                              size="small"
+                              sx={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0, m: 0 }}
+                            >
+                              Nhận đơn
+                            </Button>
+
+                            {/* Confirm Dialog */}
+                            <Dialog open={openConfirmAsgin} onClose={() => setOpenConfirmAsgin(false)}>
+                              <DialogTitle>Xác nhận nhận đơn</DialogTitle>
+                              <DialogContent>
+                                <DialogContentText>
+                                  Bạn có chắc chắn muốn nhận {checkedOrderIds.length} đơn hàng?
+                                </DialogContentText>
+                              </DialogContent>
+                              <DialogActions>
+                                <Button onClick={() => setOpenConfirmAsgin(false)} color="inherit">
+                                  Hủy
+                                </Button>
+                                <Button
+                                  onClick={() => {
+                                    const selectedUserIds = orderData
+                                      .filter((order) => checkedOrderIds.includes(order.id))
+                                      .map((order) => order.userid)
+                                      .filter((v, i, self) => v && self.indexOf(v) === i);
+
+                                    confirmAssignOrders(selectedUserIds);
+                                  }}
+                                  color="primary"
+                                  variant="contained"
+                                >
+                                  Xác nhận
+                                </Button>
+                              </DialogActions>
+                            </Dialog>
+                          </>
+                        ) : (
+                          <FormDialog
+                            buttonLabel={<MoreVertIcon />}
+                            title={t(tokens.nav.changeStatus)}
+                            fields={[
+                              {
+                                name: 'status',
+                                label: t(tokens.nav.status),
+                                type: 'select',
+                                options: statusOptions,
+                              },
+                            ]}
+                            onSubmit={(data) => {
+                              handleChangeStatusOrders(data, checkedOrderIds);
+                            }}
+                            buttonProps={{
+                              sx: { borderTopLeftRadius: 0, borderBottomLeftRadius: 0, m: 0 },
+                              variant: 'text',
+                              color: 'primary',
+                              size: 'medium',
+                            }}
+                          />
+                        )}
+                      </Card>
                     </Card>
-                  </Card>
-                </Box>
+                  </Box>
+                )}
 
                 <Grid container spacing={2} sx={{ marginTop: 2 }}>
                   {orderData
@@ -622,15 +633,15 @@ const Page = () => {
                                 onClick={(e) => handleCheckboxItem(e, item.id)}
                               />
 
-                              {item.status === 'DRAFT' && (
-                                <Box>
-                                  <Delete
-                                    sx={{ color: 'red', cursor: 'pointer' }}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleClickDeleteIcon(item.id);
-                                    }}
-                                  />
+                              {canDeleteOrder(role, item.status) && (
+                                <Box
+                                  sx={{ padding: '14px 16px', cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleClickDeleteIcon(item.id);
+                                  }}
+                                >
+                                  <Delete sx={{ color: 'red' }} />
                                 </Box>
                               )}
                             </Box>
@@ -759,7 +770,7 @@ const Page = () => {
                                   </Typography>
                                 </Box>
                                 <Typography noWrap variant="body1" fontSize="20px" marginLeft="4px" title="Files">
-                                  {handleAmountFormat(item.price)} đ
+                                  {handleAmountFormat(isCustomer ? item.price : isDesigner ? item.pricede : 0)} đ
                                 </Typography>
                               </Box>
                             </Box>

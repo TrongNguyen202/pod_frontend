@@ -1,3 +1,5 @@
+import { PRICE_OPTIONS } from "src/constants";
+
 export const getFields = (productTypeData = []) => [
   { name: 'title', label: 'Title', fullWidth: true, required: true },
   {
@@ -80,6 +82,15 @@ export const getFieldsIdeas = (productTypeData = [], templatesData = []) => [
     type: 'date',
     width: '25%',
     location: 'right',
+  },
+  {
+    name: 'price',
+    label: 'Price',
+    type: 'select',
+    width: '25%',
+    location: 'right',
+    required: true,
+    options: PRICE_OPTIONS,
   },
   {
     name: 'templates',

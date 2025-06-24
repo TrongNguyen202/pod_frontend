@@ -14,7 +14,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { tokens } from 'src/locales/tokens';
 import { Box } from '@mui/system';
-import { optionsDesignType } from 'src/constants';
+import { optionsDesignType, PRICE_OPTIONS } from 'src/constants';
 import handleAmountFormat from 'src/utils/amount-vnd';
 
 const normalizeInitialData = (initialData = {}, fields = []) => {
@@ -49,7 +49,6 @@ const FormDialogSplitLayout = ({
   const [formData, setFormData] = useState(() => normalizeInitialData(initialData, fields));
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [descriptionByTemplates, setDescriptionByTemplates] = useState('');
 
   const handleOpen = useCallback(() => {
     setFormData(normalizeInitialData(initialData, fields));
@@ -91,8 +90,6 @@ const FormDialogSplitLayout = ({
         .filter((desc) => desc.trim() !== '')
         .join('\n');
 
-      setDescriptionByTemplates(mergedDescription);
-
       const formDataToSubmit = new FormData();
       for (const key in formData) {
         let value = formData[key];
@@ -128,8 +125,6 @@ const FormDialogSplitLayout = ({
       })
       .filter((desc) => desc.trim() !== '')
       .join('\n');
-
-    setDescriptionByTemplates(mergedDescription);
 
     handleChange('description', mergedDescription);
   }, [formData['templates'], templatesData]);
@@ -324,21 +319,21 @@ const FormDialogSplitLayout = ({
               </Box>
               <Box sx={{ mb: 2, border: '1px solid #e0e0e0', borderRadius: 1, bgcolor: '#fafafa' }}>
                 <TextField
+                  select
                   fullWidth
                   label="Price"
-                  type="text"
-                  value={handleAmountFormat(formData['price'])}
-                  onChange={handlePriceInput('price')}
-                  inputProps={{
-                    inputMode: 'numeric',
-                    pattern: '[0-9]*',
-                    onKeyPress: (e) => {
-                      if (!/[0-9]/.test(e.key)) {
-                        e.preventDefault();
-                      }
-                    },
+                  SelectProps={{
+                    renderValue: (selected) => PRICE_OPTIONS.find((opt) => opt.value === selected)?.label || selected,
                   }}
-                />
+                  value={formData['price'] || ''}
+                  onChange={(e) => handleChange('price', e.target.value)}
+                >
+                  {PRICE_OPTIONS.map((option, i) => (
+                    <MenuItem key={option.id} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
               </Box>
               <Box sx={{ mb: 2, borderRadius: 1, bgcolor: '#fafafa' }}>
                 <TextField

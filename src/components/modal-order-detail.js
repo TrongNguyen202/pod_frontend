@@ -9,6 +9,7 @@ import {
   Box,
   IconButton,
   TextField,
+  Chip,
 } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,13 +25,10 @@ import {
 import { useAppDispatch, useAppSelector, shallowEqual } from 'src/redux/hook';
 import CommentList from './comments/CommentList';
 import CommentInput from './comments/CommentInput';
-import { checkRole } from 'src/utils';
-
-const categoryLabelsVi = {
-  NEW: 'Tạo mới',
-  RE_DESIGN: 'Thiết kế lại',
-  CLONE: 'Tạo bản sao',
-};
+import { checkRole, getAllowedStatusOptions } from 'src/utils';
+import { categoryColors, categoryLabelsVi, categoryStatusVi } from 'src/constants';
+import { changeStatusOrders, fetchGetOrdersByBoardId } from 'src/redux/reducers/orders';
+import toast from 'react-hot-toast';
 
 const OrderDetailModal = ({
   open,
@@ -48,7 +46,7 @@ const OrderDetailModal = ({
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploadFiles, setUploadFiles] = useState([]);
   const inputCommentRef = useRef(null);
-  const { isDesigner } = checkRole(role);
+  const { isCustomer, isDesigner } = checkRole(role);
   // const [comments, setComments] = useState([]);
   const dispatch = useAppDispatch();
 
@@ -57,8 +55,10 @@ const OrderDetailModal = ({
   const imagesList = JSON.parse(order.images || '[]');
 
   useEffect(() => {
-    dispatch(fetchGetCommentsByOrderId(order.id));
-  }, [dispatch, order, open]);
+    if (order?.id) {
+      dispatch(fetchGetCommentsByOrderId(order.id));
+    }
+  }, [dispatch, order?.id, open]);
 
   const comments = useAppSelector((state) => state.comments.commentsInfo.data, shallowEqual);
 
@@ -77,6 +77,12 @@ const OrderDetailModal = ({
     }
     setCommentText('');
   };
+
+  useEffect(() => {
+    if (order?.status === 'NEED_FIX') {
+      setShowComments(true);
+    }
+  }, [order?.status]);
 
   useEffect(() => {
     if (showComments !== null && inputCommentRef.current) {
@@ -131,6 +137,65 @@ const OrderDetailModal = ({
       onClose();
     }
   };
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmStatus, setConfirmStatus] = useState('');
+  const currentStatuses = [order.status];
+  const allowedStatuses = getAllowedStatusOptions(role, currentStatuses);
+  const statusOptions = allowedStatuses.map((s) => ({
+    label: categoryStatusVi[s] || s,
+    value: s,
+  }));
+  const sendNotification = (userId, designerId) => {
+    const data = {
+      designerIds: designerId ? [designerId] : [],
+      customerIds: userId ? [userId] : [],
+      title: 'Trạng thái đơn hàng',
+      message: 'Có đơn hàng của bạn thay đổi trạng thái, vào xem ngay!',
+    };
+    dispatch(fetchSendPushNotifications( data ));
+  };
+
+  const handleChangeSingleOrderStatus = async (newStatus, optionalComment = '') => {
+    if (!order?.id) return;
+
+    const data = {
+      ids: [order.id],
+      status: newStatus,
+    };
+
+    const response = await dispatch(changeStatusOrders({ data }));
+    const { status, message } = response.payload || {};
+
+    if (status === 200) {
+      toast.success('Cập nhật trạng thái thành công');
+      switch (newStatus) {
+        case 'DOING':
+          sendNotification(order.userid, null);
+          break;
+        case 'IN_REVIEW':
+          sendNotification(order.userid, null);
+          break;
+        case 'NEED_FIX':
+          sendNotification(null, order.designerId);
+          break;
+        default:
+      }
+      // Gửi comment nếu là NEED_FIX và có comment
+      if (newStatus === 'NEED_FIX' && optionalComment.trim() !== '') {
+        await handleSubmitComment(optionalComment);
+      }
+
+      if (isCustomer && order?.boardid) {
+        await dispatch(fetchGetOrdersByBoardId({ query: `boardId=${order.boardid}` }));
+      } else if (isDesigner) {
+        await dispatch(fetchGetOrdersByBoardId({ query: `` }));
+      }
+
+      onClose();
+    } else {
+      toast.error(message || 'Đổi trạng thái thất bại');
+    }
+  };
 
   return (
     <Dialog
@@ -147,7 +212,21 @@ const OrderDetailModal = ({
         },
       }}
     >
-      <DialogTitle>{t(tokens.nav.details)}</DialogTitle>
+      <DialogTitle display="flex" justifyContent="space-between" alignItems="center">
+        <Box>{t(tokens.nav.details)}</Box>
+        <Box display="flex" alignItems="center" gap={1}>
+          <Chip
+            label={categoryStatusVi[order.status] || order.status}
+            size="small"
+            sx={{
+              textTransform: 'capitalize',
+              fontWeight: 500,
+              bgcolor: categoryColors[order.status || ''] || '#e0e0e0',
+              color: 'white',
+            }}
+          />
+        </Box>
+      </DialogTitle>
       <DialogContent
         dividers
         sx={{
@@ -156,40 +235,54 @@ const OrderDetailModal = ({
       >
         <Box display="flex" flexDirection="column" gap={1}>
           <Box display="flex">
-            <Typography sx={{ width: 140, fontWeight: 'bold' }}>{t(tokens.nav.creator)}:</Typography>
-            <Typography>{order.usercreate}</Typography>
+            <Typography sx={{ width: 140, fontWeight: 'bold', flexShrink: 0 }}>{t(tokens.nav.creator)}:</Typography>
+            <Typography sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', flex: 1 }}>
+              {order.usercreate}
+            </Typography>
           </Box>
           <Box display="flex">
-            <Typography sx={{ width: 140, fontWeight: 'bold' }}>{t(tokens.nav.designer)}:</Typography>
-            <Typography>{order.designername}</Typography>
+            <Typography sx={{ width: 140, fontWeight: 'bold', flexShrink: 0 }}>{t(tokens.nav.designer)}:</Typography>
+            <Typography sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', flex: 1 }}>
+              {order.designername}
+            </Typography>
           </Box>
           <Box display="flex">
-            <Typography sx={{ width: 140, fontWeight: 'bold' }}>{t(tokens.nav.nameProduct)}:</Typography>
-            <Typography>{order.name}</Typography>
+            <Typography sx={{ width: 140, fontWeight: 'bold', flexShrink: 0 }}>{t(tokens.nav.nameProduct)}:</Typography>
+            <Typography sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', flex: 1 }}>{order.name}</Typography>
+          </Box>
+          <Box display="flex" alignItems="flex-start">
+            <Typography sx={{ width: 140, fontWeight: 'bold', flexShrink: 0 }}>{t(tokens.nav.description)}:</Typography>
+            <Typography sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', flex: 1 }}>
+              {order.description}
+            </Typography>
           </Box>
           <Box display="flex">
-            <Typography sx={{ width: 140, fontWeight: 'bold' }}>{t(tokens.nav.description)}:</Typography>
-            <Typography>{order.description}</Typography>
+            <Typography sx={{ width: 140, fontWeight: 'bold', flexShrink: 0 }}>{t(tokens.nav.faceNumber)}:</Typography>
+            <Typography sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', flex: 1 }}>{order.quantity}</Typography>
           </Box>
           <Box display="flex">
-            <Typography sx={{ width: 140, fontWeight: 'bold' }}>{t(tokens.nav.faceNumber)}:</Typography>
-            <Typography>{order.quantity}</Typography>
+            <Typography sx={{ width: 140, fontWeight: 'bold', flexShrink: 0 }}>{t(tokens.nav.price)}:</Typography>
+            <Typography sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', flex: 1 }}>
+              {handleAmountFormat(isCustomer ? order.price : isDesigner ? order.pricede : 0)} đ
+            </Typography>
           </Box>
           <Box display="flex">
-            <Typography sx={{ width: 140, fontWeight: 'bold' }}>{t(tokens.nav.price)}:</Typography>
-            <Typography>{handleAmountFormat(order.price)} VNĐ</Typography>
+            <Typography sx={{ width: 140, fontWeight: 'bold', flexShrink: 0 }}>
+              {t(tokens.nav.product_type)}:
+            </Typography>
+            <Typography sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', flex: 1 }}>
+              {productTypeData.find((pt) => pt.id === order.producttypeid)?.name}
+            </Typography>
           </Box>
           <Box display="flex">
-            <Typography sx={{ width: 140, fontWeight: 'bold' }}>{t(tokens.nav.product_type)}:</Typography>
-            <Typography>{productTypeData.find((pt) => pt.id === order.producttypeid)?.name}</Typography>
+            <Typography sx={{ width: 140, fontWeight: 'bold', flexShrink: 0 }}>{t(tokens.nav.design_type)}:</Typography>
+            <Typography sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', flex: 1 }}>
+              {categoryLabelsVi[order.designtype]}
+            </Typography>
           </Box>
           <Box display="flex">
-            <Typography sx={{ width: 140, fontWeight: 'bold' }}>{t(tokens.nav.design_type)}:</Typography>
-            <Typography>{categoryLabelsVi[order.designtype]}</Typography>
-          </Box>
-          <Box display="flex">
-            <Typography sx={{ width: 140, fontWeight: 'bold' }}>{t(tokens.nav.createdDate)}:</Typography>
-            <Typography>
+            <Typography sx={{ width: 140, fontWeight: 'bold', flexShrink: 0 }}>{t(tokens.nav.createdDate)}:</Typography>
+            <Typography sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', flex: 1 }}>
               {order.createddate.slice(11, 16)} {order.createddate.slice(8, 10)}-{order.createddate.slice(5, 7)}-
               {order.createddate.slice(0, 4)}
             </Typography>
@@ -234,65 +327,156 @@ const OrderDetailModal = ({
               </Box>
             )}
           </Box>
-          {isDesigner && (
+          {isCustomer ? (
             <Box>
               <Typography fontWeight="bold" mb={1} mt={2}>
-                {t(tokens.nav.uploadImages)}
+                {t(tokens.nav.linkDrive)}
               </Typography>
               <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center">
-                <Button variant="contained" component="label" size="small">
-                  {t(tokens.nav.chosseImages)}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    hidden
-                    onChange={(e) => handleUploadImages(e.target.files)}
-                  />
-                </Button>
-                {uploadedImages.length > 0 && (
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      gap: 0.5,
-                      mt: 1,
-                      overflowX: 'auto',
-                      p: 1,
-                      width: '100%',
-                      bgcolor: '#f5f5f5',
+                <Box
+                  variant="contained"
+                  size="small"
+                  component="a"
+                  sx={{
+                    textDecoration: 'underline',
+                    color: 'primary.main',
+                    '&:hover': { opacity: '0.6', transition: '0.2s ease in out' },
+                  }}
+                  href={order.link || 'https://drive.google.com/'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {order.link || 'https://drive.google.com/'}
+                </Box>
+              </Box>
+            </Box>
+          ) : (
+            <Box></Box>
+          )}
+          {statusOptions.length > 0 && (
+            <Box mt={2}>
+              <Typography fontWeight="bold" mb={1}>
+                {t(tokens.nav.changeStatus)}
+              </Typography>
+              <Box display="flex" flexWrap="wrap" justifyContent="center" gap={1}>
+                {statusOptions.map((option) => (
+                  <Button
+                    key={option.value}
+                    variant="contained"
+                    size="small"
+                    onClick={() => {
+                      setConfirmStatus(option.value);
+                      setConfirmOpen(true);
                     }}
                   >
-                    {uploadedImages.map((fileUrl, index) => (
-                      <Box
-                        key={index}
-                        sx={{
-                          width: 100,
-                          height: 100,
-                          borderRadius: 1,
-                          overflow: 'hidden',
-                          flexShrink: 0,
-                          border: '1px solid #ccc',
-                        }}
-                      >
-                        <img
-                          src={fileUrl}
-                          alt={`uploaded-${index}`}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                      </Box>
-                    ))}
-                  </Box>
-                )}
-              </Box>
-              {uploadedImages.length > 0 && (
-                <Box sx={{ right: '100%', display: 'flex', justifyContent: 'end' }}>
-                  <Button variant="contained" size="small" onClick={handleSendImages}>
-                    {t(tokens.nav.send)}
+                    {option.label}
                   </Button>
-                </Box>
-              )}
+                ))}
+              </Box>
             </Box>
           )}
+
+          <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+            <DialogTitle>{t(tokens.nav.confirmStatusChange)}</DialogTitle>
+            <DialogContent>
+              <Box sx={{ textAlign: 'center', mb: 2, fontSize: 20, fontWeight: 'bold' }}>
+                {statusOptions.find((opt) => opt.value === confirmStatus)?.label || confirmStatus}?
+              </Box>
+
+              {confirmStatus === 'NEED_FIX' && (
+                <TextField
+                  autoFocus
+                  fullWidth
+                  multiline
+                  rows={3}
+                  label={t(tokens.nav.commentRequired)}
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder={t(tokens.nav.typing)}
+                  sx={{ mb: 2 }}
+                />
+              )}
+
+              {/* Nếu là designer và chuyển từ DOING/NEED_FIX sang IN_REVIEW thì cho upload ảnh */}
+              {isDesigner &&
+                ((order.status === 'DOING' && confirmStatus === 'IN_REVIEW') ||
+                  (order.status === 'NEED_FIX' && confirmStatus === 'IN_REVIEW')) && (
+                  <Box>
+                    <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center">
+                      <Button variant="contained" component="label" size="small">
+                        {t(tokens.nav.chosseImages)}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          hidden
+                          onChange={(e) => handleUploadImages(e.target.files)}
+                        />
+                      </Button>
+
+                      {uploadedImages.length > 0 && (
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            gap: 0.5,
+                            mt: 1,
+                            overflowX: 'auto',
+                            p: 1,
+                            width: '100%',
+                            bgcolor: '#f5f5f5',
+                          }}
+                        >
+                          {uploadedImages.map((fileUrl, index) => (
+                            <Box
+                              key={index}
+                              sx={{
+                                width: 100,
+                                height: 100,
+                                borderRadius: 1,
+                                overflow: 'hidden',
+                                flexShrink: 0,
+                                border: '1px solid #ccc',
+                              }}
+                            >
+                              <img
+                                src={fileUrl}
+                                alt={`uploaded-${index}`}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            </Box>
+                          ))}
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
+                )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setConfirmOpen(false)}>{t(tokens.nav.cancel)}</Button>
+              <Button
+                onClick={async () => {
+                  await handleChangeSingleOrderStatus(confirmStatus, commentText);
+                  if (
+                    isDesigner &&
+                    ((order.status === 'DOING' && confirmStatus === 'IN_REVIEW') ||
+                      (order.status === 'NEED_FIX' && confirmStatus === 'IN_REVIEW')) &&
+                    uploadFiles.length > 0
+                  ) {
+                    await handleSendImages();
+                  }
+
+                  setConfirmOpen(false);
+                  setCommentText('');
+                }}
+                variant="contained"
+                color="primary"
+                disabled={confirmStatus === 'NEED_FIX' && commentText.trim() === ''}
+              >
+                {t(tokens.nav.submit)}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
           <Box textAlign="right" mt={2}>
             <Button variant="outlined" onClick={() => setShowComments((prev) => !prev)} size="small">
               {showComments ? `${t(tokens.nav.hideComment)}` : `${t(tokens.nav.showComment)}`}
@@ -300,16 +484,12 @@ const OrderDetailModal = ({
           </Box>
           {showComments && (
             <Box sx={{ padding: '8px 4px' }}>
-              {showComments && (
-                <Box sx={{ padding: '8px 4px' }}>
-                  <CommentList comments={comments} />
-                  <CommentInput
-                    onSubmit={(text) => handleSubmitComment(text)}
-                    placeholder={t(tokens.nav.typing)}
-                    t={t(tokens.nav.send)}
-                  />
-                </Box>
-              )}
+              <CommentList comments={comments} />
+              <CommentInput
+                onSubmit={(text) => handleSubmitComment(text)}
+                placeholder={t(tokens.nav.typing)}
+                t={t(tokens.nav.send)}
+              />
             </Box>
           )}
         </Box>
