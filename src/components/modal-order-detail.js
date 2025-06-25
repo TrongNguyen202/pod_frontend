@@ -39,44 +39,25 @@ const OrderDetailModal = ({
   role,
   productTypeData,
 }) => {
-  if (!order) return null;
   const [showComments, setShowComments] = useState(false);
   const [zoomImageIndex, setZoomImageIndex] = useState(null);
   const [commentText, setCommentText] = useState('');
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploadFiles, setUploadFiles] = useState([]);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmStatus, setConfirmStatus] = useState('');
   const inputCommentRef = useRef(null);
-  const { isCustomer, isDesigner } = checkRole(role);
-  // const [comments, setComments] = useState([]);
+  const seenCommentIdsRef = useRef(new Set());
   const dispatch = useAppDispatch();
-
   const { t } = useTranslation();
-
-  const imagesList = JSON.parse(order.images || '[]');
+  const comments = useAppSelector((state) => state.comments.commentsInfo.data, shallowEqual);
+  const { isCustomer, isDesigner } = checkRole(role);
 
   useEffect(() => {
     if (order?.id) {
       dispatch(fetchGetCommentsByOrderId(order.id));
     }
   }, [dispatch, order?.id, open]);
-
-  const comments = useAppSelector((state) => state.comments.commentsInfo.data, shallowEqual);
-
-  const handleSubmitComment = async (commentText) => {
-    const data = {
-      message: commentText,
-      orderId: order.id,
-      userId: userData.id,
-      username: userData.username,
-      role: userData.role_name,
-    };
-    const response = await dispatch(fetchPostCommentFirebase(data));
-    if (response.meta.requestStatus === 'fulfilled') {
-      await dispatch(fetchPostCommentPosgres(response.payload));
-      // await dispatch(fetchGetCommentsByOrderId(order.id));
-    }
-    setCommentText('');
-  };
 
   useEffect(() => {
     if (order?.status === 'NEED_FIX') {
@@ -85,12 +66,10 @@ const OrderDetailModal = ({
   }, [order?.status]);
 
   useEffect(() => {
-    if (showComments !== null && inputCommentRef.current) {
+    if (showComments && inputCommentRef.current) {
       inputCommentRef.current.focus();
     }
   }, [showComments]);
-
-  const seenCommentIdsRef = useRef(new Set());
 
   useEffect(() => {
     if (!order?.id) return;
@@ -104,9 +83,35 @@ const OrderDetailModal = ({
 
     return () => {
       unsubscribe?.();
-      seenCommentIdsRef.current.clear(); // dọn dẹp
+      const currentSeenIds = seenCommentIdsRef.current;
+      currentSeenIds.clear();
     };
-  }, [order?.id]);
+  }, [dispatch, order?.id]);
+
+  if (!order) return null;
+
+  const imagesList = JSON.parse(order.images || '[]');
+  const currentStatuses = [order.status];
+  const allowedStatuses = getAllowedStatusOptions(role, currentStatuses);
+  const statusOptions = allowedStatuses.map((s) => ({
+    label: categoryStatusVi[s] || s,
+    value: s,
+  }));
+
+  const handleSubmitComment = async (commentText) => {
+    const data = {
+      message: commentText,
+      orderId: order.id,
+      userId: userData.id,
+      username: userData.username,
+      role: userData.role_name,
+    };
+    const response = await dispatch(fetchPostCommentFirebase(data));
+    if (response.meta.requestStatus === 'fulfilled') {
+      await dispatch(fetchPostCommentPosgres(response.payload));
+    }
+    setCommentText('');
+  };
 
   const handleUploadImages = (files) => {
     const fileArray = Array.from(files);
@@ -124,7 +129,7 @@ const OrderDetailModal = ({
     });
 
     try {
-      // const res = await RepositoryRemote.uploadImages(formData); // gọi API backend thật sự ở đây
+      // const res = await RepositoryRemote.uploadImages(formData);
       for (let pair of formData.entries()) {
         console.log(`${pair[0]}:`, pair[1]);
       }
@@ -137,14 +142,7 @@ const OrderDetailModal = ({
       onClose();
     }
   };
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmStatus, setConfirmStatus] = useState('');
-  const currentStatuses = [order.status];
-  const allowedStatuses = getAllowedStatusOptions(role, currentStatuses);
-  const statusOptions = allowedStatuses.map((s) => ({
-    label: categoryStatusVi[s] || s,
-    value: s,
-  }));
+
   const sendNotification = (userId, designerId) => {
     const data = {
       designerIds: designerId ? [designerId] : [],
@@ -152,7 +150,7 @@ const OrderDetailModal = ({
       title: 'Trạng thái đơn hàng',
       message: 'Có đơn hàng của bạn thay đổi trạng thái, vào xem ngay!',
     };
-    dispatch(fetchSendPushNotifications( data ));
+    dispatch(fetchSendPushNotifications(data));
   };
 
   const handleChangeSingleOrderStatus = async (newStatus, optionalComment = '') => {
@@ -180,7 +178,6 @@ const OrderDetailModal = ({
           break;
         default:
       }
-      // Gửi comment nếu là NEED_FIX và có comment
       if (newStatus === 'NEED_FIX' && optionalComment.trim() !== '') {
         await handleSubmitComment(optionalComment);
       }
