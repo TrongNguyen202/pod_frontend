@@ -23,7 +23,7 @@ import { ModalEditDesign } from "../modal/modal-edit-design";
 import { useState } from "react";
 import PopupState, { bindPopover, bindTrigger } from "material-ui-popup-state";
 import toast from "react-hot-toast";
-import { fetchGetDesignSku } from "src/redux/reducers/orders";
+// import { fetchGetDesignSku } from "src/redux/reducers/orders";
 import { useAppDispatch, useAppSelector } from "src/redux/hook";
 import { RepositoryRemote } from "src/services";
 export const DesignTable = (props) => {
@@ -49,7 +49,7 @@ export const DesignTable = (props) => {
         );
         if (res.data) {
           toast.success("Xóa thiết kế thành công");
-          dispatch(fetchGetDesignSku());
+          // dispatch(fetchGetDesignSku());
         } else {
           toast.error("Xóa thiết kết thất bại vui lòng thử lại!.");
         }

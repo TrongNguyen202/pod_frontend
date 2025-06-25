@@ -2,7 +2,7 @@ import { Button, Card, Checkbox, Stack } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
 import { usePageView } from 'src/hooks/use-page-view';
-import { fetchGetAllOrders, fetchGetPackageBought, resetDataListOrder } from 'src/redux/reducers/orders';
+import { resetDataListOrder } from 'src/redux/reducers/orders';
 import dayjs from 'dayjs';
 import { useSelection } from 'src/hooks/use-selection';
 import { fetchGetShopByUser } from 'src/redux/reducers/user';
@@ -150,7 +150,7 @@ export const PageOrders = (props) => {
   }, [shops, optionUser]);
 
   useEffect(() => {
-    dispatch(fetchGetPackageBought());
+    // dispatch(fetchGetPackageBought());
     dispatch(fetchGetShopByUser());
     dispatch(fetchGetListShops());
 
@@ -406,7 +406,7 @@ export const PageOrders = (props) => {
       },
       ...state,
     };
-    dispatch(fetchGetAllOrders(handleQuery(formState)));
+    // dispatch(fetchGetAllOrders(handleQuery(formState)));
   };
 
   return (

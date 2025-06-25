@@ -4,7 +4,7 @@ import { useSettings } from 'src/hooks/use-settings';
 import { usePageView } from 'src/hooks/use-page-view';
 import { pagePermissions } from '../../layouts/dashboard/config';
 import { RoleGuard } from '../../guards/role-guard';
-import DesignSku from '../../sections/dashboard/design-sku';
+// import DesignSku from '../../sections/dashboard/design-sku';
 import { Seo } from '../../components/seo';
 
 const Page = () => {
@@ -36,7 +36,7 @@ const Page = () => {
               </Stack>
             </Grid>
             <Grid item xs={12}>
-              <DesignSku />
+              {/* <DesignSku /> */}
             </Grid>
           </Grid>
         </Container>

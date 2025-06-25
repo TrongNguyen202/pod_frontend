@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useAppDispatch } from "src/redux/hook";
-import { fetchGetDesignSku } from "src/redux/reducers/orders";
+// import { fetchGetDesignSku } from "src/redux/reducers/orders";
 import { RepositoryRemote } from "src/services";
 
 export const ModalEditDesign = (props) => {
@@ -39,7 +39,7 @@ export const ModalEditDesign = (props) => {
       const res = await RepositoryRemote.orders.requestPutDesignSku(updateItem,  design.id);
       if (res.data) {
         toast.success("Cập nhật thiết kế thành công");
-        dispatch(fetchGetDesignSku());
+        // dispatch(fetchGetDesignSku());
         handleClose();
       } else {
         toast.error("Cập nhật thiết kết thất bại vui lòng thử lại!.");

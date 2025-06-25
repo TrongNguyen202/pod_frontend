@@ -82,9 +82,9 @@ export const OrderCheckDesign = (props) => {
     if (designSku?.initial) handleCheckDesign(toShipInfoData);
   }, [toShipInfoData, designSku?.initial]);
 
-  useEffect(() => {
-    dispatch(fetchGetDesignSku());
-  }, [dispatch]);
+  // useEffect(() => {
+  //   dispatch(fetchGetDesignSku());
+  // }, [dispatch]);
 
   useEffect(() => {
     handleDataTable();

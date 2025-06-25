@@ -28,7 +28,7 @@ import Header from 'src/components/header';
 import Sidebar from 'src/components/sidebar';
 import FormDialog from 'src/components/popup';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
-import { fetchInfoBoardByBoardId } from 'src/redux/reducers/products';
+
 import { useTranslation } from 'react-i18next';
 import { tokens } from '../../locales/tokens';
 import { fields } from 'src/constants';
@@ -96,7 +96,7 @@ const Page = () => {
   useEffect(() => {
     if (boardId) {
       console.log(boardId);
-      dispatch(fetchInfoBoardByBoardId({ boardId }));
+      // dispatch(fetchInfoBoardByBoardId({ boardId }));
       console.log('by id; ', products);
     }
   }, [dispatch, boardId]);

@@ -21,7 +21,7 @@ import { LoadingCustom } from 'src/components/loading';
 import { NoData } from 'src/components/nodata';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useAppDispatch } from 'src/redux/hook';
-import { fetchGetDesignSku } from 'src/redux/reducers/orders';
+// import { fetchGetDesignSku } from 'src/redux/reducers/orders';
 import { RepositoryRemote } from 'src/services';
 
 export const ModalAddDesign = (props) => {
@@ -66,7 +66,7 @@ export const ModalAddDesign = (props) => {
       const res = await RepositoryRemote.orders.requestPostDesignSku(convertData);
       if (res.data) {
         toast.success('Thêm thiết kế thành công');
-        dispatch(fetchGetDesignSku());
+        // dispatch(fetchGetDesignSku());
         handleClose();
       } else {
         toast.error('Thêm thiết kết thất bại vui lòng thử lại!.');

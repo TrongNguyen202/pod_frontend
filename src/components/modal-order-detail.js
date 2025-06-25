@@ -22,7 +22,7 @@ import {
   fetchGetCommentsByOrderId,
   addComment,
 } from 'src/redux/reducers/comments';
-import { useAppDispatch, useAppSelector, shallowEqual } from 'src/redux/hook';
+import { useAppDispatch, useAppSelector } from 'src/redux/hook';
 import CommentList from './comments/CommentList';
 import CommentInput from './comments/CommentInput';
 import { checkRole, getAllowedStatusOptions } from 'src/utils';
@@ -50,7 +50,8 @@ const OrderDetailModal = ({
   const seenCommentIdsRef = useRef(new Set());
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
-  const comments = useAppSelector((state) => state.comments.commentsInfo.data, shallowEqual);
+  // const comments = useAppSelector((state) => state.comments.commentsInfo.data, shallowEqual);
+  const comments = useAppSelector((state) => state.comments.commentsInfo.data);
   const { isCustomer, isDesigner } = checkRole(role);
 
   useEffect(() => {

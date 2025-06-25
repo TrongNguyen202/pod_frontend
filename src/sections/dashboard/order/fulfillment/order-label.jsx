@@ -17,7 +17,7 @@ import { NoData } from 'src/components/nodata';
 import { Scrollbar } from 'src/components/scrollbar';
 import { ModalDetailOrder } from '../modal/modal-detail-order';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
-import { fetchPackageFulfillmentCompleted } from 'src/redux/reducers/orders';
+// import { fetchPackageFulfillmentCompleted } from 'src/redux/reducers/orders';
 import { useSearchParams } from 'next/navigation';
 
 export const OrderLabelComponent = (props) => {
@@ -60,7 +60,7 @@ export const OrderLabelComponent = (props) => {
 
   useEffect(() => {
     if (shopId) {
-      dispatch(fetchPackageFulfillmentCompleted('6'));
+      // dispatch(fetchPackageFulfillmentCompleted('6'));
     }
   }, [shopId]);
 

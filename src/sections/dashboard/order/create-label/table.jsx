@@ -145,9 +145,9 @@ export const CreateLabelTable = (props) => {
     return [];
   };
 
-  useEffect(() => {
-    dispatch(fetchGetPackageBought());
-  }, []);
+  // useEffect(() => {
+  //   dispatch(fetchGetPackageBought());
+  // }, []);
 
   useEffect(() => {
     const updatedTableData = dataTableWeightSize(items);
