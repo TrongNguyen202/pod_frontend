@@ -20,6 +20,10 @@ import {
   DialogContent,
   DialogActions,
   DialogContentText,
+  MenuItem,
+  ToggleButtonGroup,
+  ToggleButton,
+  Drawer,
 } from '@mui/material';
 import { Delete } from '@mui/icons-material';
 import { Seo } from 'src/components/seo';
@@ -35,6 +39,7 @@ import FormDialogSplitLayout from 'src/components/form-split';
 import {
   changeStatusOrders,
   fetchAssignOrdersForDesigner,
+  fetchGetAllStatus,
   fetchGetOrdersByBoardId,
   postOrder,
   requestDeleteOrders,
@@ -53,6 +58,8 @@ import { requestPermissionAndListen } from 'src/services/firebase';
 import { checkRole, formatCategoryLabel, getAllowedStatusOptions, getCategoryCounts } from 'src/utils';
 import { fetchGetDesginerIds, fetchUserByEmail, resetDataDesginerIds } from 'src/redux/reducers/user';
 import { fetchSendPushNotifications } from 'src/redux/reducers/notifications';
+import { useGetAllStatus } from 'src/hooks/useGetAllStatus';
+import { Select } from 'antd';
 
 const useGetDesignerIds = (dispatch, role) => {
   const { isCustomer } = checkRole(role);
@@ -81,6 +88,11 @@ const Page = () => {
   const [openDetailModal, setOpenDetailModal] = useState(false);
   const [checkedOrderIds, setCheckedOrderIds] = useState([]);
   const [role, setRole] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [openDrawerFilter, setOpenDrawerFilter] = useState(false);
+  const [sortBy, setSortBy] = useState('lastModifiedDate');
+  const [sortDirection, setSortDirection] = useState('desc');
 
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
@@ -88,10 +100,16 @@ const Page = () => {
   const [selectedTab, setSelectedTab] = useState(0);
   const { data: userData } = useAppSelector((state) => state.users.userInfo);
   const { data: productTypeData } = useAppSelector((state) => state.productTypes.productTypes);
-  const { data: orderData } = useAppSelector((state) => state.orders.orderService);
+  const {
+    data: orderData,
+    total: totalOrders,
+    totalPages: totalPages,
+  } = useAppSelector((state) => state.orders.orderService);
   const { data: templatesData } = useAppSelector((state) => state.templates.templateInfo);
   const { data: desginerIds } = useGetDesignerIds(dispatch, role);
   const { data: boardData } = useAppSelector((state) => state.boards.boardInfo);
+  const { data: statusCount } = useGetAllStatus(dispatch, boardId, orderData, role);
+
   useEffect(() => {
     if (userData) {
       setRole(userData.role_name);
@@ -106,15 +124,15 @@ const Page = () => {
     }
   }, [userData?.id]);
 
-  const categories = getCategoryCounts(orderData.length > 0 ? orderData : [], role);
+  const categories = getCategoryCounts(role, statusCount);
   const selectedCategory = categories[selectedTab].value;
-  const filteredIdeas =
-    Array.isArray(orderData) && orderData.length > 0 && selectedCategory === 'ALL'
-      ? orderData
-      : Array.isArray(orderData)
-        ? orderData.filter((i) => i.status === selectedCategory)
-        : [];
-  const filteredOrders = orderData.filter((item) => selectedCategory === 'ALL' || item.status === selectedCategory);
+
+  const filteredOrders =
+    Array.isArray(orderData) && orderData.length > 0
+      ? selectedCategory === 'ALL'
+        ? orderData
+        : orderData.filter((item) => item.status === selectedCategory)
+      : [];
 
   const canDeleteOrder = (userRole, status) => userRole === 'customer' && ['DRAFT', 'NEW'].includes(status);
 
@@ -123,13 +141,13 @@ const Page = () => {
   };
 
   const handleToggleCheckAll = () => {
-    const filteredIds = filteredOrders.map((item) => item.id);
-    const allChecked = filteredIds.every((id) => checkedOrderIds.includes(id));
+    const currentPageIds = orderData.map((item) => item.id);
+    const allChecked = currentPageIds.every((id) => checkedOrderIds.includes(id));
 
     if (allChecked) {
-      setCheckedOrderIds((prev) => prev.filter((id) => !filteredIds.includes(id)));
+      setCheckedOrderIds((prev) => prev.filter((id) => !currentPageIds.includes(id)));
     } else {
-      const newChecked = [...new Set([...checkedOrderIds, ...filteredIds])];
+      const newChecked = [...new Set([...checkedOrderIds, ...currentPageIds])];
       setCheckedOrderIds(newChecked);
     }
   };
@@ -172,16 +190,24 @@ const Page = () => {
 
   useEffect(() => {
     if (!role) return;
+
     dispatch(resetDataListOrder());
-    if (!isDesigner && isCustomer && boardId) {
-      const query = `boardId=${boardId}`;
-      dispatch(fetchGetOrdersByBoardId({ query }));
-    } else if (isDesigner && userData?.id) {
-      // const query = `designerId=${userData.id}`;
-      const query = ``;
-      dispatch(fetchGetOrdersByBoardId({ query }));
-    }
-  }, [role, boardId, dispatch]);
+
+    const queryParams = new URLSearchParams();
+
+    if (selectedCategory !== 'ALL') queryParams.append('status', selectedCategory);
+    if (boardId !== 0 && isCustomer) queryParams.append('boardId', boardId);
+    queryParams.append('pageNumber', String(page));
+    queryParams.append('pageSize', String(limit));
+    // if (sortBy) queryParams.append('sortBy', sortBy);
+    // if (sortDirection) queryParams.append('sortDirection', sortDirection);
+    dispatch(fetchGetOrdersByBoardId({ query: queryParams.toString() }));
+  }, [role, boardId, selectedCategory, page, limit, sortBy, sortDirection]);
+
+  const handleTabChange = (event, newTabIndex) => {
+    setSelectedTab(newTabIndex);
+    setPage(1);
+  };
 
   const requiredFields = fieldIdeas.filter((f) => f.required && f.name !== 'images').map((f) => f.name);
 
@@ -371,7 +397,13 @@ const Page = () => {
     }
   };
 
-  const handleMoreFilter = async () => {};
+  const handleSetLimitPerPage = (data) => {
+    setLimit(data);
+  };
+
+  const handleMoreFilter = async () => {
+    setOpenDrawerFilter(true);
+  };
 
   return (
     <>
@@ -417,27 +449,6 @@ const Page = () => {
                               disabled: !boardId,
                             }}
                           />
-                          {/* <ClickDropdownMenu
-                              buttonLabel={<MoreVertIcon />}
-                              options={[
-                                { label: 'Import From CSV', value: 'import_csv' },
-                                { label: 'Import From Folder', value: 'import_folder' },
-                              ]}
-                              onSelect={handleSelect}
-                              buttonProps={{
-                                variant: 'contained',
-                                disabled: boardId === null || boardId === 0,
-                                sx: {
-                                  padding: '8px 16px',
-                                  backgroundColor: 'primary.main',
-                                  color: 'white',
-                                  borderRadius: 0,
-                                  borderTopRightRadius: 12,
-                                  borderBottomRightRadius: 12,
-                                  minWidth: 0,
-                                },
-                              }}
-                            /> */}
                         </Grid>
                       )}
 
@@ -474,6 +485,101 @@ const Page = () => {
                         <Button variant="contained" onClick={handleMoreFilter}>
                           {t(tokens.nav.more_filter)}
                         </Button>
+                        <Drawer
+                          anchor="right"
+                          open={openDrawerFilter}
+                          onClose={() => setOpenDrawerFilter(false)}
+                          sx={{ zIndex: 999999999999999 }}
+                        >
+                          <Box sx={{ width: 300, p: 3 }}>
+                            <Typography variant="h6" gutterBottom>
+                              Sắp xếp theo
+                            </Typography>
+
+                            {/* Ngày tạo */}
+                            <Box sx={{ mb: 3 }}>
+                              <Typography variant="subtitle2">Ngày tạo</Typography>
+                              <ToggleButtonGroup
+                                value={sortBy === 'createdDate' ? sortDirection : ''}
+                                exclusive
+                                onChange={(e, val) => {
+                                  if (val) {
+                                    setSortBy('createdDate');
+                                    setSortDirection(val);
+                                  }
+                                }}
+                                sx={{ mt: 1 }}
+                                fullWidth
+                              >
+                                <ToggleButton value="asc">Tăng dần</ToggleButton>
+                                <ToggleButton value="desc">Giảm dần</ToggleButton>
+                              </ToggleButtonGroup>
+                            </Box>
+
+                            {/* Ngày cập nhật */}
+                            <Box sx={{ mb: 3 }}>
+                              <Typography variant="subtitle2">Ngày cập nhật</Typography>
+                              <ToggleButtonGroup
+                                value={sortBy === 'lastModifiedDate' ? sortDirection : ''}
+                                exclusive
+                                onChange={(e, val) => {
+                                  if (val) {
+                                    setSortBy('lastModifiedDate');
+                                    setSortDirection(val);
+                                  }
+                                }}
+                                sx={{ mt: 1 }}
+                                fullWidth
+                              >
+                                <ToggleButton value="asc">Tăng dần</ToggleButton>
+                                <ToggleButton value="desc">Giảm dần</ToggleButton>
+                              </ToggleButtonGroup>
+                            </Box>
+
+                            {/* Giá (theo role) */}
+                            {role === 'customer' && (
+                              <Box sx={{ mb: 3 }}>
+                                <Typography variant="subtitle2">Giá</Typography>
+                                <ToggleButtonGroup
+                                  value={sortBy === 'price' ? sortDirection : ''}
+                                  exclusive
+                                  onChange={(e, val) => {
+                                    if (val) {
+                                      setSortBy('price');
+                                      setSortDirection(val);
+                                    }
+                                  }}
+                                  sx={{ mt: 1 }}
+                                  fullWidth
+                                >
+                                  <ToggleButton value="asc">Tăng dần</ToggleButton>
+                                  <ToggleButton value="desc">Giảm dần</ToggleButton>
+                                </ToggleButtonGroup>
+                              </Box>
+                            )}
+
+                            {role === 'designer' && (
+                              <Box sx={{ mb: 3 }}>
+                                <Typography variant="subtitle2">Giá nhận</Typography>
+                                <ToggleButtonGroup
+                                  value={sortBy === 'pricede' ? sortDirection : ''}
+                                  exclusive
+                                  onChange={(e, val) => {
+                                    if (val) {
+                                      setSortBy('pricede');
+                                      setSortDirection(val);
+                                    }
+                                  }}
+                                  sx={{ mt: 1 }}
+                                  fullWidth
+                                >
+                                  <ToggleButton value="asc">Tăng dần</ToggleButton>
+                                  <ToggleButton value="desc">Giảm dần</ToggleButton>
+                                </ToggleButtonGroup>
+                              </Box>
+                            )}
+                          </Box>
+                        </Drawer>
                       </Grid>
                     </Grid>
                   </CardContent>
@@ -483,7 +589,9 @@ const Page = () => {
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Tabs
                       value={selectedTab}
-                      onChange={(e, v) => setSelectedTab(v)}
+                      onChange={(e, v) => {
+                        handleTabChange(e, v);
+                      }}
                       sx={{ mt: 2 }}
                       // textColor="primary"
                       variant="scrollable"
@@ -508,276 +616,272 @@ const Page = () => {
                         />
                       ))}
                     </Tabs>
-                    <Card variant="outlined" sx={{ display: 'flex', alignItems: 'center', border: 0 }}>
-                      <Checkbox
-                        sx={{ mr: 2 }}
-                        checked={
-                          filteredOrders.length > 0 && filteredOrders.every((item) => checkedOrderIds.includes(item.id))
-                        }
-                        indeterminate={
-                          filteredOrders.some((item) => checkedOrderIds.includes(item.id)) &&
-                          !filteredOrders.every((item) => checkedOrderIds.includes(item.id))
-                        }
-                        onChange={handleToggleCheckAll}
-                      />
-                      <Card variant="outlined" sx={{ pl: 2, borderRadius: 2 }}>
-                        {filteredOrders.filter((item) => checkedOrderIds.includes(item.id)).length}{' '}
-                        {t(tokens.nav.selected)}
-                        {isAcceptableToAssign ? (
-                          <>
-                            <Button
-                              onClick={() => setOpenConfirmAsgin(true)}
-                              variant="contained"
-                              color="primary"
-                              size="small"
-                              sx={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0, m: 0 }}
-                            >
-                              Nhận đơn
-                            </Button>
+                    {(selectedCategory === 'NEW' || selectedCategory === 'DRAFT') && (
+                      <Card variant="outlined" sx={{ display: 'flex', alignItems: 'center', border: 0 }}>
+                        <Checkbox
+                          sx={{ mr: 2 }}
+                          checked={orderData.length > 0 && orderData.every((item) => checkedOrderIds.includes(item.id))}
+                          indeterminate={
+                            orderData.some((item) => checkedOrderIds.includes(item.id)) &&
+                            !orderData.every((item) => checkedOrderIds.includes(item.id))
+                          }
+                          onChange={handleToggleCheckAll}
+                        />
 
-                            {/* Confirm Dialog */}
-                            <Dialog open={openConfirmAsgin} onClose={() => setOpenConfirmAsgin(false)}>
-                              <DialogTitle>Xác nhận nhận đơn</DialogTitle>
-                              <DialogContent>
-                                <DialogContentText>
-                                  Bạn có chắc chắn muốn nhận {checkedOrderIds.length} đơn hàng?
-                                </DialogContentText>
-                              </DialogContent>
-                              <DialogActions>
-                                <Button onClick={() => setOpenConfirmAsgin(false)} color="inherit">
-                                  Hủy
-                                </Button>
-                                <Button
-                                  onClick={() => {
-                                    const selectedUserIds = orderData
-                                      .filter((order) => checkedOrderIds.includes(order.id))
-                                      .map((order) => order.userid)
-                                      .filter((v, i, self) => v && self.indexOf(v) === i);
+                        <Card variant="outlined" sx={{ pl: 2, borderRadius: 2 }}>
+                          {filteredOrders.filter((item) => checkedOrderIds.includes(item.id)).length}{' '}
+                          {t(tokens.nav.selected)}
+                          {isAcceptableToAssign ? (
+                            <>
+                              <Button
+                                onClick={() => setOpenConfirmAsgin(true)}
+                                variant="contained"
+                                color="primary"
+                                size="small"
+                                sx={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0, m: 0 }}
+                              >
+                                Nhận đơn
+                              </Button>
 
-                                    confirmAssignOrders(selectedUserIds);
-                                  }}
-                                  color="primary"
-                                  variant="contained"
-                                >
-                                  Xác nhận
-                                </Button>
-                              </DialogActions>
-                            </Dialog>
-                          </>
-                        ) : (
-                          <FormDialog
-                            buttonLabel={<MoreVertIcon />}
-                            title={t(tokens.nav.changeStatus)}
-                            fields={[
-                              {
-                                name: 'status',
-                                label: t(tokens.nav.status),
-                                type: 'select',
-                                options: statusOptions,
-                              },
-                            ]}
-                            onSubmit={(data) => {
-                              handleChangeStatusOrders(data, checkedOrderIds);
-                            }}
-                            buttonProps={{
-                              sx: { borderTopLeftRadius: 0, borderBottomLeftRadius: 0, m: 0 },
-                              variant: 'text',
-                              color: 'primary',
-                              size: 'medium',
-                            }}
-                          />
-                        )}
+                              {/* Confirm Dialog */}
+                              <Dialog open={openConfirmAsgin} onClose={() => setOpenConfirmAsgin(false)}>
+                                <DialogTitle>Xác nhận nhận đơn</DialogTitle>
+                                <DialogContent>
+                                  <DialogContentText>
+                                    Bạn có chắc chắn muốn nhận {checkedOrderIds.length} đơn hàng?
+                                  </DialogContentText>
+                                </DialogContent>
+                                <DialogActions>
+                                  <Button onClick={() => setOpenConfirmAsgin(false)} color="inherit">
+                                    Hủy
+                                  </Button>
+                                  <Button
+                                    onClick={() => {
+                                      const selectedUserIds = orderData
+                                        .filter((order) => checkedOrderIds.includes(order.id))
+                                        .map((order) => order.userid)
+                                        .filter((v, i, self) => v && self.indexOf(v) === i);
+
+                                      confirmAssignOrders(selectedUserIds);
+                                    }}
+                                    color="primary"
+                                    variant="contained"
+                                  >
+                                    Xác nhận
+                                  </Button>
+                                </DialogActions>
+                              </Dialog>
+                            </>
+                          ) : (
+                            <FormDialog
+                              buttonLabel={<MoreVertIcon />}
+                              title={t(tokens.nav.changeStatus)}
+                              fields={[
+                                {
+                                  name: 'status',
+                                  label: t(tokens.nav.status),
+                                  type: 'select',
+                                  options: statusOptions,
+                                },
+                              ]}
+                              onSubmit={(data) => {
+                                handleChangeStatusOrders(data, checkedOrderIds);
+                              }}
+                              buttonProps={{
+                                sx: { borderTopLeftRadius: 0, borderBottomLeftRadius: 0, m: 0 },
+                                variant: 'text',
+                                color: 'primary',
+                                size: 'medium',
+                              }}
+                            />
+                          )}
+                        </Card>
                       </Card>
-                    </Card>
+                    )}
                   </Box>
                 )}
 
                 <Grid container spacing={2} sx={{ marginTop: 2 }}>
-                  {orderData
-                    .filter((item) => {
-                      const selectedCategory = categories[selectedTab].value;
-                      return selectedCategory === 'ALL' || item.status === selectedCategory;
-                    })
-                    .map((item) => {
-                      let itemImages = [];
-                      try {
-                        itemImages = JSON.parse(item.images || '[]');
-                      } catch (e) {
-                        itemImages = [];
-                      }
-                      return (
-                        <Grid item size={3} xs={12} sm={6} md={3} key={item.id} position="relative">
-                          <Paper
-                            variant="outlined"
-                            onClick={() => handleClickOpenDetail(item)}
+                  {orderData.map((item) => {
+                    let itemImages = [];
+                    try {
+                      itemImages = JSON.parse(item.images || '[]');
+                    } catch (e) {
+                      itemImages = [];
+                    }
+                    return (
+                      <Grid item size={3} xs={12} sm={6} md={3} key={item.id} position="relative">
+                        <Paper
+                          variant="outlined"
+                          onClick={() => handleClickOpenDetail(item)}
+                          sx={{
+                            height: 330,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            backgroundColor: '#f5f5f5',
+                            overflow: 'hidden',
+                            borderRadius: 2,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Box
                             sx={{
-                              height: 330,
                               display: 'flex',
-                              flexDirection: 'column',
-                              backgroundColor: '#f5f5f5',
-                              overflow: 'hidden',
-                              borderRadius: 2,
-                              cursor: 'pointer',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              margin: '0 8px',
                             }}
                           >
+                            <Checkbox
+                              checked={!!checkedOrderIds.includes(item.id)}
+                              onClick={(e) => handleCheckboxItem(e, item.id)}
+                            />
+
+                            {canDeleteOrder(role, item.status) && (
+                              <Box
+                                sx={{ padding: '14px 16px', cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleClickDeleteIcon(item.id);
+                                }}
+                              >
+                                <Delete sx={{ color: 'red' }} />
+                              </Box>
+                            )}
+                          </Box>
+
+                          {/* Vùng ảnh chính */}
+                          <Box sx={{ width: '100%', overflow: 'hidden' }}>
+                            <img
+                              src={itemImages[0] || '/fallback.png'}
+                              alt={item.title}
+                              style={{
+                                width: '100%',
+                                height: '330px',
+                                objectFit: 'cover',
+                              }}
+                            />
+                          </Box>
+
+                          {itemImages.length > 1 && (
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                gap: 0.5,
+                                p: 1,
+                                overflowX: 'auto',
+                                maxHeight: 60,
+                                bgcolor: '#fafafa',
+                              }}
+                            >
+                              {itemImages.slice(1, 4).map((url, idx) => (
+                                <Box
+                                  key={idx}
+                                  sx={{
+                                    width: 50,
+                                    height: 50,
+                                    borderRadius: 1,
+                                    overflow: 'hidden',
+                                    flexShrink: 0,
+                                    border: '1px solid #ccc',
+                                  }}
+                                >
+                                  <img
+                                    src={url}
+                                    alt={`preview-${idx}`}
+                                    style={{
+                                      width: '100%',
+                                      height: '100%',
+                                      objectFit: 'cover',
+                                    }}
+                                  />
+                                </Box>
+                              ))}
+                            </Box>
+                          )}
+
+                          {/* Thông tin đơn */}
+                          <Box
+                            sx={{
+                              flex: 1,
+                              p: 1,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'space-between',
+                              fontSize: '0.75rem',
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                              <Typography noWrap variant="body1" fontWeight="bold" color="text.secondary">
+                                {item.usercreate}
+                              </Typography>
+                              <Typography noWrap variant="body2" fontWeight="bold" color="text.secondary">
+                                {item.name}
+                              </Typography>
+                            </Box>
+
                             <Box
                               sx={{
                                 display: 'flex',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
-                                margin: '0 8px',
+                                margin: '4px 0',
                               }}
                             >
-                              <Checkbox
-                                checked={!!checkedOrderIds.includes(item.id)}
-                                onClick={(e) => handleCheckboxItem(e, item.id)}
-                              />
-
-                              {canDeleteOrder(role, item.status) && (
-                                <Box
-                                  sx={{ padding: '14px 16px', cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleClickDeleteIcon(item.id);
+                              <Box>
+                                <Typography
+                                  noWrap
+                                  variant="body3"
+                                  color="text.secondary"
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
                                   }}
                                 >
-                                  <Delete sx={{ color: 'red' }} />
-                                </Box>
-                              )}
-                            </Box>
-
-                            {/* Vùng ảnh chính */}
-                            <Box sx={{ width: '100%', overflow: 'hidden' }}>
-                              <img
-                                src={itemImages[0] || '/fallback.png'}
-                                alt={item.title}
-                                style={{
-                                  width: '100%',
-                                  height: '330px',
-                                  objectFit: 'cover',
-                                }}
-                              />
-                            </Box>
-
-                            {itemImages.length > 1 && (
-                              <Box
-                                sx={{
-                                  display: 'flex',
-                                  gap: 0.5,
-                                  p: 1,
-                                  overflowX: 'auto',
-                                  maxHeight: 60,
-                                  bgcolor: '#fafafa',
-                                }}
-                              >
-                                {itemImages.slice(1, 4).map((url, idx) => (
-                                  <Box
-                                    key={idx}
-                                    sx={{
-                                      width: 50,
-                                      height: 50,
-                                      borderRadius: 1,
-                                      overflow: 'hidden',
-                                      flexShrink: 0,
-                                      border: '1px solid #ccc',
-                                    }}
-                                  >
-                                    <img
-                                      src={url}
-                                      alt={`preview-${idx}`}
-                                      style={{
-                                        width: '100%',
-                                        height: '100%',
-                                        objectFit: 'cover',
-                                      }}
-                                    />
-                                  </Box>
-                                ))}
+                                  <CalendarMonthIcon />
+                                  {new Date(item.createddate).toLocaleDateString('vi-VN')}
+                                </Typography>
                               </Box>
-                            )}
+                              <Box>
+                                <Typography noWrap variant="body4" marginLeft="4px" title="Files">
+                                  <AttachFileIcon />
+                                  {itemImages.length}
+                                </Typography>
+                                <Typography noWrap variant="body4" marginLeft="4px" title="Quantity">
+                                  <LayersIcon />
+                                  {item.quantity}
+                                </Typography>
+                                <Typography noWrap variant="body4" marginLeft="4px" title="Number">
+                                  <NumbersIcon /> {item.number}
+                                </Typography>
+                              </Box>
+                            </Box>
 
-                            {/* Thông tin đơn */}
                             <Box
                               sx={{
-                                flex: 1,
-                                p: 1,
                                 display: 'flex',
-                                flexDirection: 'column',
                                 justifyContent: 'space-between',
-                                fontSize: '0.75rem',
+                                alignItems: 'center',
+                                margin: '4px 0',
                               }}
                             >
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Typography noWrap variant="body1" fontWeight="bold" color="text.secondary">
-                                  {item.usercreate}
+                              <Box>
+                                <Typography noWrap variant="body4" title="ProductType">
+                                  {productTypeData.find((pt) => pt.id === item.producttypeid)?.name}
                                 </Typography>
-                                <Typography noWrap variant="body2" fontWeight="bold" color="text.secondary">
-                                  {item.name}
-                                </Typography>
-                              </Box>
-
-                              <Box
-                                sx={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  margin: '4px 0',
-                                }}
-                              >
-                                <Box>
-                                  <Typography
-                                    noWrap
-                                    variant="body3"
-                                    color="text.secondary"
-                                    sx={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                    }}
-                                  >
-                                    <CalendarMonthIcon />
-                                    {new Date(item.createddate).toLocaleDateString('vi-VN')}
-                                  </Typography>
-                                </Box>
-                                <Box>
-                                  <Typography noWrap variant="body4" marginLeft="4px" title="Files">
-                                    <AttachFileIcon />
-                                    {itemImages.length}
-                                  </Typography>
-                                  <Typography noWrap variant="body4" marginLeft="4px" title="Quantity">
-                                    <LayersIcon />
-                                    {item.quantity}
-                                  </Typography>
-                                  <Typography noWrap variant="body4" marginLeft="4px" title="Number">
-                                    <NumbersIcon /> {item.number}
-                                  </Typography>
-                                </Box>
-                              </Box>
-
-                              <Box
-                                sx={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  margin: '4px 0',
-                                }}
-                              >
-                                <Box>
-                                  <Typography noWrap variant="body4" title="ProductType">
-                                    {productTypeData.find((pt) => pt.id === item.producttypeid)?.name}
-                                  </Typography>
-                                  <Typography noWrap variant="body4" marginLeft="12px" title="DesignType">
-                                    {item.designtype}
-                                  </Typography>
-                                </Box>
-                                <Typography noWrap variant="body1" fontSize="20px" marginLeft="4px" title="Files">
-                                  {handleAmountFormat(isCustomer ? item.price : isDesigner ? item.pricede : 0)} đ
+                                <Typography noWrap variant="body4" marginLeft="12px" title="DesignType">
+                                  {item.designtype}
                                 </Typography>
                               </Box>
+                              <Typography noWrap variant="body1" fontSize="20px" marginLeft="4px" title="Files">
+                                {handleAmountFormat(isCustomer ? item.price : isDesigner ? item.pricede : 0)} đ
+                              </Typography>
                             </Box>
-                          </Paper>
-                        </Grid>
-                      );
-                    })}
+                          </Box>
+                        </Paper>
+                      </Grid>
+                    );
+                  })}
                 </Grid>
                 <OrderDetailModal
                   open={openDetailModal}
@@ -791,22 +895,41 @@ const Page = () => {
 
                 {/* Pagination Footer */}
                 <Paper variant="outlined" sx={{ mt: 2, p: 2, pr: 8 }}>
-                  <Grid container spacing={2} justifyContent="flex-end">
+                  <Grid container spacing={2} justifyContent="flex-end" alignItems="center">
                     <Grid item>
-                      <Typography>{`1-1 of ${filteredIdeas.length} items`}</Typography>
+                      <Typography>
+                        {(page - 1) * limit + 1} - {Math.min(page * limit, totalOrders)} of {totalOrders} items
+                      </Typography>
                     </Grid>
                     <Grid item>
-                      <Button variant="contained" size="small">
+                      <Button variant="contained" size="small" disabled={page === 1} onClick={() => setPage(page - 1)}>
                         &lt;
                       </Button>
                     </Grid>
                     <Grid item>
-                      <Button variant="contained" size="small">
+                      <Button
+                        variant="contained"
+                        size="small"
+                        disabled={page >= totalPages}
+                        onClick={() => setPage(page + 1)}
+                      >
                         &gt;
                       </Button>
                     </Grid>
+                    <Select
+                      options={[
+                        { value: 20, label: <span>20</span> },
+                        { value: 30, label: <span>30</span> },
+                        { value: 50, label: <span>50</span> },
+                      ]}
+                      onChange={handleSetLimitPerPage}
+                      defaultValue={20}
+                      placeholder="20"
+                    />
                     <Grid item>
-                      <Typography>Page 1 of 1</Typography>
+                      <Typography>
+                        Page {page} of {totalPages}
+                      </Typography>
                     </Grid>
                   </Grid>
                 </Paper>

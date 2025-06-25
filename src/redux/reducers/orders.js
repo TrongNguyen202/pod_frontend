@@ -8,6 +8,14 @@ const initialState = {
     loading: false,
     error: '',
     data: [],
+    total: 0,
+    page: 1,
+    totalPages: 1,
+  },
+  orderStatus: {
+    loading: false,
+    error: '',
+    data: [],
   },
   orderPostSignle: {
     loading: false,
@@ -43,6 +51,11 @@ const initialState = {
 
 export const fetchGetOrdersByBoardId = createAsyncThunk('/get/order/boardId', async ({ query }) => {
   const res = await RepositoryRemote.orders.requestGetOrdersByBoardId(query);
+  return res?.data?.data;
+});
+
+export const fetchGetAllStatus = createAsyncThunk('/get/order/status', async (query) => {
+  const res = await RepositoryRemote.orders.requestGetAllStatus(query);
   return res?.data?.data;
 });
 
@@ -101,14 +114,38 @@ const slicer = createSlice({
       state.orderService.loading = true;
     });
     builder.addCase(fetchGetOrdersByBoardId.fulfilled, (state, action) => {
+      const { bodyData, total, currentPage, lastPage } = action.payload;
+
       state.orderService.loading = false;
-      state.orderService.data = action.payload.bodyData;
+      state.orderService.data = bodyData || [];
+      state.orderService.total = total ?? 0;
+      state.orderService.page = currentPage ?? 1;
+      state.orderService.totalPages = lastPage ?? 1;
       state.orderService.error = '';
     });
+
     builder.addCase(fetchGetOrdersByBoardId.rejected, (state, action) => {
       state.orderService.loading = false;
       state.orderService.data = [];
+      state.orderService.total = 0;
+      state.orderService.page = 1;
+      state.orderService.totalPages = 1;
       state.orderService.error = action?.error?.message || 'Error while processing.';
+    });
+
+    // Lay so luong don hang theo tung trang thai
+    builder.addCase(fetchGetAllStatus.pending, (state) => {
+      state.orderStatus.loading = true;
+    });
+    builder.addCase(fetchGetAllStatus.fulfilled, (state, action) => {
+      state.orderStatus.loading = false;
+      state.orderStatus.data = action.payload;
+      state.orderStatus.error = '';
+    });
+    builder.addCase(fetchGetAllStatus.rejected, (state, action) => {
+      state.orderStatus.loading = false;
+      state.orderStatus.data = [];
+      state.orderStatus.error = action?.error?.message || 'Error while processing.';
     });
 
     // Tao 1 order

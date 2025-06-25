@@ -38,18 +38,26 @@ export const formatNumber = (str) => {
   return '';
 };
 
-export const getCategoryCounts = (ideas, role) => {
+export const getCategoryCounts = (
+  role,
+  statusCountMap = {},
+) => {
   const visibleCategories = categoryList.filter((label) => {
     if (role === 'designer' && label === 'DRAFT') return false;
     if (role === 'customer' && label === 'ARCHIVED') return false;
     return true;
   });
 
-  return visibleCategories.map((label) => ({
-    label: formatCategoryLabel(label),
-    value: label,
-    count: label === 'ALL' ? ideas.length : ideas.filter((i) => i.status === label).length,
-  }));
+  return visibleCategories.map((label) => {
+    const count =
+      label === 'ALL' ? Object.values(statusCountMap).reduce((sum, val) => sum + val, 0) : statusCountMap[label] || 0;
+
+    return {
+      label: formatCategoryLabel(label),
+      value: label,
+      count,
+    };
+  });
 };
 
 export const formatCategoryLabel = (label) => standardizationCategory[label];
@@ -81,6 +89,14 @@ export const checkRole = (role) => {
     isCustomer: role === 'customer',
   };
 };
+
+export const transformBoardToFormInitialData = (boardInfoData) => ({
+  title: boardInfoData.title || '',
+  designType: boardInfoData.designType?.toUpperCase() || '',
+  productTypeIds: Array.isArray(boardInfoData.productTypeIds)
+    ? boardInfoData.productTypeIds.filter((id) => id != null).map(Number)
+    : [],
+});
 
 export const formatPriceOrContact = (p) => {
   if (!p) return 'Liên hệ';

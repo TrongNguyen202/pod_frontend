@@ -1,7 +1,7 @@
-import React, { useMemo, useState, useEffect, memo, useRef, Profiler } from 'react';
+import React, { useMemo, useState, useEffect, useRef, Profiler } from 'react';
 import { useRouter } from 'src/hooks/use-router';
 import { useTranslation } from 'react-i18next';
-import { useAppDispatch, useAppSelector } from 'src/redux/hook';
+import { useAppDispatch } from 'src/redux/hook';
 import { AppBar, Toolbar, Typography, FormControl, Select, MenuItem, Button, Box, Drawer, Dialog } from '@mui/material';
 import Card from '@mui/material/Card';
 import Link from 'next/link';
@@ -13,109 +13,24 @@ import FormDialog from 'src/components/popup';
 import DropdownMenu from 'src/components/dropdown';
 import ClickDropdownMenu from './dropdown_click';
 import TableModalDialog from './table-modal';
-import { fetchUserByEmail } from 'src/redux/reducers/user';
-import { fetchBoardInfoByBoardId, fetchGetBoardsByUserId, putBoardInfoByBoardId } from 'src/redux/reducers/boards';
-import { fetchGetAllProductTypes } from 'src/redux/reducers/product-types';
+import { putBoardInfoByBoardId } from 'src/redux/reducers/boards';
 import { postTemplate } from 'src/redux/reducers/templates';
 import { getFields } from 'src/utils/fields-edit.board';
 import generateTransactionCode from 'src/utils/generate';
-import { resetBoardInfo } from 'src/redux/reducers/boards';
-import { resetDataListOrder } from 'src/redux/reducers/orders';
 import handleAmountFormat from 'src/utils/amount-vnd';
 import { fetchCreateQr, fetchGetInfoPayment } from 'src/redux/reducers/qrtransaction';
-import { fetchGetWalletInfoByUserId } from 'src/redux/reducers/userwallets';
-import { checkRole } from 'src/utils';
-
-const transformBoardToFormInitialData = (boardInfoData) => ({
-  title: boardInfoData.title || '',
-  designType: boardInfoData.designType?.toUpperCase() || '',
-  productTypeIds: Array.isArray(boardInfoData.productTypeIds)
-    ? boardInfoData.productTypeIds.filter((id) => id != null).map(Number)
-    : [],
-});
-
-const useUserData = (dispatch, setEmail, walletUpdated) => {
-  useEffect(() => {
-    const storedEmail = localStorage.getItem('email');
-    if (storedEmail) {
-      setEmail(storedEmail);
-      dispatch(fetchUserByEmail({ email: storedEmail }));
-    }
-  }, [dispatch, setEmail, walletUpdated]);
-
-  return useAppSelector((state) => state.users.userInfo);
-};
-
-const useBoardsData = (dispatch, userId, role) => {
-  const { isCustomer } = checkRole(role);
-
-  useEffect(() => {
-    if (userId && isCustomer) {
-      dispatch(fetchGetBoardsByUserId({ userId, query: '' }));
-    }
-  }, [dispatch, userId, isCustomer]);
-
-  return useAppSelector((state) => state.boards.boardService);
-};
-
-const useProductTypes = (dispatch) => {
-  useEffect(() => {
-    dispatch(fetchGetAllProductTypes({ query: '' }));
-  }, []);
-  return useAppSelector((state) => state.productTypes.productTypes);
-};
-
-const useBoardInfo = (dispatch, selectedBoardId, productTypeData, setInitialFormData) => {
-  const boardInfo = useAppSelector((state) => state.boards.boardInfo);
-
-  useEffect(() => {
-    if (typeof selectedBoardId === 'number' && selectedBoardId > 0) {
-      dispatch(fetchBoardInfoByBoardId({ boardId: selectedBoardId }));
-    } else {
-      dispatch(resetBoardInfo());
-      dispatch(resetDataListOrder());
-    }
-  }, [dispatch, selectedBoardId]);
-
-  useEffect(() => {
-    if (boardInfo?.data) {
-      setInitialFormData(transformBoardToFormInitialData(boardInfo.data));
-    } else {
-      setInitialFormData({});
-    }
-  }, [boardInfo.data, productTypeData, setInitialFormData]);
-
-  return boardInfo;
-};
-
-const ChangePasswordDialog = memo(({ open, onClose, onSubmit, t, email }) => (
-  <FormDialog
-    buttonLabel=""
-    title={t(tokens.nav.resetPassword)}
-    fields={[
-      { name: 'oldPassword', label: t(tokens.nav.password), type: 'password', required: true },
-      { name: 'newPassword', label: t(tokens.nav.newPassword), type: 'password', required: true },
-      { name: 'confirmPassword', label: t(tokens.nav.confirmPassword), type: 'password', required: true },
-    ]}
-    initialData={{ oldPassword: '', newPassword: '', confirmPassword: '' }}
-    onSubmit={(data) => onSubmit(data, email)}
-    buttonProps={{ style: { display: 'none' } }}
-    openOverride={open}
-    onCloseOverride={onClose}
-  />
-));
-
-ChangePasswordDialog.displayName = 'ChangePasswordDialog';
+import { useProductTypes } from 'src/hooks/Header/useProductTypes';
+import { useBoardInfo } from 'src/hooks/Header/useBoardInfo';
+import { useBoardsData } from 'src/hooks/Header/useBoardsData';
+import { useUserData } from 'src/hooks/Header/useUserData';
+import ChangePasswordDialog from './header/components/ChangePasswordDialog';
+import { useDialogHandlers } from './header/handlers/useDialogHandlers';
 
 const Header = ({ onBoardChange, showBoards, role }) => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const router = useRouter();
   const [selectedBoardId, setSelectedBoardId] = useState(null);
-  const [openDrawer, setOpenDrawer] = useState(false);
-  const [openDrawerBoardInfo, setOpenDrawerBoardInfo] = useState(false);
-  const [openChangePassword, setOpenChangePassword] = useState(false);
-  const [openModalTemplate, setOpenModalTemplate] = useState(false);
   const [email, setEmail] = useState(null);
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -127,6 +42,16 @@ const Header = ({ onBoardChange, showBoards, role }) => {
   const [expiresAt, setExpiresAt] = useState(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [initialFormData, setInitialFormData] = useState({});
+  const {
+    openDrawer,
+    openDrawerBoardInfo,
+    openChangePassword,
+    openModalTemplate,
+    handleToggleDrawer,
+    handleDrawerBoardInfo,
+    handleChangePassword: toggleChangePassword,
+    handleOpenModalTemplate,
+  } = useDialogHandlers();
 
   const { data: userData } = useUserData(dispatch, setEmail, walletUpdated);
   const { data: boardsData } = useBoardsData(dispatch, userData?.id, role);
@@ -142,6 +67,11 @@ const Header = ({ onBoardChange, showBoards, role }) => {
     }
   }, []);
 
+  const matchedNames =
+    Array.isArray(boardInfoData?.productTypeIds) && productTypeData?.length
+      ? productTypeData.filter((pt) => boardInfoData.productTypeIds.includes(pt.id)).map((pt) => pt.name)
+      : [];
+
   const fields = useMemo(() => getFields(productTypeData, boardInfoData), [productTypeData, boardInfoData]);
   const length = 12;
   useEffect(() => {
@@ -155,7 +85,7 @@ const Header = ({ onBoardChange, showBoards, role }) => {
   useEffect(() => {
     if (openDrawerBoardInfo && !selectedBoardId) {
       toast.error(t(tokens.nav.no_board));
-      setOpenDrawerBoardInfo(false);
+      handleDrawerBoardInfo(false);
     }
   }, [openDrawerBoardInfo, selectedBoardId, t]);
 
@@ -206,7 +136,7 @@ const Header = ({ onBoardChange, showBoards, role }) => {
     }
   };
 
-  const handleChangePassword = async (data, email) => {
+  const submitChangePassword = async (data, email) => {
     try {
       if (data.newPassword !== data.confirmPassword) {
         toast.error('Mật khẩu mới và mật khẩu xác nhận phải giống nhau.');
@@ -224,18 +154,18 @@ const Header = ({ onBoardChange, showBoards, role }) => {
     } catch (error) {
       toast.error('Đổi mật khẩu thất bại. Vui lòng kiểm tra lại thông tin!');
     } finally {
-      setOpenChangePassword(false);
+      toggleChangePassword(false);
     }
   };
 
   const handleMenuSelect = async (opt) => {
     switch (opt.value) {
       case 'make_deposit':
-        setOpenDrawer(true);
+        handleToggleDrawer();
         amountRef.current.focus();
         break;
       case 'board_infomation':
-        setOpenDrawerBoardInfo(true);
+        handleDrawerBoardInfo(true);
         break;
       case 'logout':
         try {
@@ -249,7 +179,7 @@ const Header = ({ onBoardChange, showBoards, role }) => {
         }
         break;
       case 'changepassword':
-        setOpenChangePassword(true);
+        toggleChangePassword(true);
         break;
       case 'userprofile':
         router.push('/account/profile');
@@ -281,7 +211,7 @@ const Header = ({ onBoardChange, showBoards, role }) => {
 
       setQrCode(response.payload.qrCodeBase64);
       setExpiresAt(expiresAtDate);
-      setOpenDrawer(false);
+      handleToggleDrawer();
       setTimeout(() => setOpenQRDialog(true), 500);
     } catch (error) {
       toast.error('Lỗi tạo QR:', error);
@@ -423,7 +353,7 @@ const Header = ({ onBoardChange, showBoards, role }) => {
                   height: '40px',
                   borderColor: 'primary.main',
                 }}
-                onClick={() => setOpenModalTemplate(true)}
+                onClick={() => handleOpenModalTemplate(true)}
               >
                 {t(tokens.nav.templates)}
               </Button>
@@ -471,7 +401,7 @@ const Header = ({ onBoardChange, showBoards, role }) => {
               <Drawer
                 anchor="right"
                 open={openDrawer}
-                onClose={() => setOpenDrawer(false)}
+                onClose={() => handleToggleDrawer()}
                 ModalProps={{ keepMounted: true }}
                 sx={{ zIndex: 999999991 }}
               >
@@ -595,14 +525,14 @@ const Header = ({ onBoardChange, showBoards, role }) => {
             <Drawer
               anchor="right"
               open={openDrawerBoardInfo}
-              onClose={() => setOpenDrawerBoardInfo(false)}
+              onClose={() => handleDrawerBoardInfo(false)}
               ModalProps={{ keepMounted: true }}
               sx={{ transition: '0.3s ease in out', zIndex: 999999991 }}
             >
               <Box sx={{ width: 400, p: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Typography variant="h6">{t(tokens.nav.board_infomation)}</Typography>
-                  <Button sx={{ color: '#a2a2a2' }} onClick={() => setOpenDrawerBoardInfo(false)}>
+                  <Button sx={{ color: '#a2a2a2' }} onClick={() => handleDrawerBoardInfo(false)}>
                     X
                   </Button>
                 </Box>
@@ -635,9 +565,7 @@ const Header = ({ onBoardChange, showBoards, role }) => {
                     <Typography variant="caption" color="text.secondary">
                       {t(tokens.nav.product_type)}
                     </Typography>
-                    <Typography variant="body1">
-                      {productTypeData.find((pt) => pt.id === boardInfoData.productTypeIds)?.name || '-'}
-                    </Typography>
+                    <Typography variant="body1">{matchedNames.length > 0 ? matchedNames.join(', ') : '-'}</Typography>
                   </Box>
                 </Box>
               </Box>
@@ -645,7 +573,7 @@ const Header = ({ onBoardChange, showBoards, role }) => {
           )}
           <TableModalDialog
             open={openModalTemplate}
-            onClose={() => setOpenModalTemplate(false)}
+            onClose={() => handleOpenModalTemplate(false)}
             onSubmit={handlePostTemplate}
             selectedBoardId={selectedBoardId}
           />
@@ -679,8 +607,8 @@ const Header = ({ onBoardChange, showBoards, role }) => {
       </Toolbar>
       <ChangePasswordDialog
         open={openChangePassword}
-        onClose={() => setOpenChangePassword(false)}
-        onSubmit={handleChangePassword}
+        onClose={() => toggleChangePassword(false)}
+        onSubmit={submitChangePassword}
         t={t}
         email={email}
       />
@@ -688,4 +616,4 @@ const Header = ({ onBoardChange, showBoards, role }) => {
   );
 };
 
-export default Header;
+export default React.memo(Header);

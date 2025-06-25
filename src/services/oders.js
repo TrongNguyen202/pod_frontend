@@ -9,6 +9,15 @@ const requestGetOrdersByBoardId = async (query) => {
   return axiosAPI(config);
 };
 
+const requestGetAllStatus = async (query) => {
+  const config = {
+    method: 'GET',
+    url: `/order/status-count?${query}`,
+  };
+
+  return axiosAPI(config);
+};
+
 const requestPostOrder = async (data) => {
   const config = {
     method: 'POST',
@@ -76,6 +85,7 @@ const requestAssignOrdersForDesigner = async (data) => {
 
 export const orders = {
   requestGetOrdersByBoardId,
+  requestGetAllStatus,
   requestPostOrder,
   requestPostOrders,
   requestPutOrder,

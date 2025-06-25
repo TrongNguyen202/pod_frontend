@@ -29,6 +29,7 @@ import { checkRole, getAllowedStatusOptions } from 'src/utils';
 import { categoryColors, categoryLabelsVi, categoryStatusVi } from 'src/constants';
 import { changeStatusOrders, fetchGetOrdersByBoardId } from 'src/redux/reducers/orders';
 import toast from 'react-hot-toast';
+import { fetchSendPushNotifications } from 'src/redux/reducers/notifications';
 
 const OrderDetailModal = ({
   open,
