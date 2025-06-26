@@ -39,6 +39,8 @@ const OrderDetailModal = ({
   userData,
   role,
   productTypeData,
+  buildQueryString,
+  onStatusChanged,
 }) => {
   const [showComments, setShowComments] = useState(false);
   const [zoomImageIndex, setZoomImageIndex] = useState(null);
@@ -145,13 +147,14 @@ const OrderDetailModal = ({
     }
   };
 
-  const sendNotification = (userId, designerId) => {
+  const sendNotification = async (userId, designerId) => {
     const data = {
-      designerIds: designerId ? [designerId] : [],
-      customerIds: userId ? [userId] : [],
+      designerIds: Array.isArray(designerId) ? designerId : [designerId ?? 0],
+      customerIds: Array.isArray(userId) ? userId : [userId ?? 0],
       title: 'Trạng thái đơn hàng',
       message: 'Có đơn hàng của bạn thay đổi trạng thái, vào xem ngay!',
     };
+
     dispatch(fetchSendPushNotifications(data));
   };
 
@@ -170,13 +173,11 @@ const OrderDetailModal = ({
       toast.success('Cập nhật trạng thái thành công');
       switch (newStatus) {
         case 'DOING':
-          sendNotification(order.userid, null);
-          break;
         case 'IN_REVIEW':
-          sendNotification(order.userid, null);
+          await sendNotification(order.userid, null);
           break;
         case 'NEED_FIX':
-          sendNotification(null, order.designerId);
+          await sendNotification(null, order.designerId);
           break;
         default:
       }
@@ -184,10 +185,9 @@ const OrderDetailModal = ({
         await handleSubmitComment(optionalComment);
       }
 
-      if (isCustomer && order?.boardid) {
-        await dispatch(fetchGetOrdersByBoardId({ query: `boardId=${order.boardid}` }));
-      } else if (isDesigner) {
-        await dispatch(fetchGetOrdersByBoardId({ query: `` }));
+      await dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() }));
+      if (onStatusChanged) {
+        onStatusChanged();
       }
 
       onClose();
@@ -256,13 +256,13 @@ const OrderDetailModal = ({
             </Typography>
           </Box>
           <Box display="flex">
-            <Typography sx={{ width: 140, fontWeight: 'bold', flexShrink: 0 }}>{t(tokens.nav.faceNumber)}:</Typography>
+            <Typography sx={{ width: 140, fontWeight: 'bold', flexShrink: 0 }}>{t(tokens.nav.quantity)}:</Typography>
             <Typography sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', flex: 1 }}>{order.quantity}</Typography>
           </Box>
           <Box display="flex">
             <Typography sx={{ width: 140, fontWeight: 'bold', flexShrink: 0 }}>{t(tokens.nav.price)}:</Typography>
             <Typography sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', flex: 1 }}>
-              {handleAmountFormat(isCustomer ? order.price : isDesigner ? order.pricede : 0)} đ
+              {handleAmountFormat(isCustomer ? order.price : isDesigner ? order.price_ : 0)} đ
             </Typography>
           </Box>
           <Box display="flex">
@@ -282,8 +282,7 @@ const OrderDetailModal = ({
           <Box display="flex">
             <Typography sx={{ width: 140, fontWeight: 'bold', flexShrink: 0 }}>{t(tokens.nav.createdDate)}:</Typography>
             <Typography sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', flex: 1 }}>
-              {order.createddate.slice(11, 16)} {order.createddate.slice(8, 10)}-{order.createddate.slice(5, 7)}-
-              {order.createddate.slice(0, 4)}
+              {new Date(order.createddate * 1000).toLocaleString('vi-VN')}
             </Typography>
           </Box>
           <Box>

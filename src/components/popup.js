@@ -16,17 +16,23 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { tokens } from 'src/locales/tokens';
 import { useTranslation } from 'react-i18next';
 
-// Normalize initial data for form fields
 const normalizeInitialData = (initialData = {}, fields = []) => {
-  const normalized = { ...initialData };
+  const safeData = initialData || {};
+  const normalized = { ...safeData };
+
   fields.forEach((field) => {
-    if (field.type === 'select' && field.multiple && Array.isArray(initialData[field.name])) {
-      const firstItem = initialData[field.name][0];
+    if (
+      field.type === 'select' &&
+      field.multiple &&
+      Array.isArray(safeData[field.name])
+    ) {
+      const firstItem = safeData[field.name][0];
       if (typeof firstItem === 'object' && firstItem !== null) {
-        normalized[field.name] = initialData[field.name].map((item) => item.value);
+        normalized[field.name] = safeData[field.name].map((item) => item.value);
       }
     }
   });
+
   return normalized;
 };
 

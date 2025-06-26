@@ -98,7 +98,6 @@ const Header = ({ onBoardChange, showBoards, role }) => {
 
   const handleSubmitBoardInfo = async (formData) => {
     try {
-      formData.userId = userData.id;
       const response = await dispatch(putBoardInfoByBoardId({ boardId: selectedBoardId, data: formData }));
       if (response.payload.status === 200) {
         window.location.reload();
@@ -266,6 +265,18 @@ const Header = ({ onBoardChange, showBoards, role }) => {
     return () => clearInterval(interval);
   }, [expiresAt]);
 
+  let op1 = [
+    { label: t(tokens.nav.make_deposit), value: 'make_deposit' },
+    { label: t(tokens.nav.board_infomation), value: 'board_infomation' },
+    { label: t(tokens.nav.monthly_balances), value: 'monthly_balances' },
+  ];
+  let op2 = [
+    { label: t(tokens.nav.make_deposit), value: 'make_deposit' },
+    { label: t(tokens.nav.monthly_balances), value: 'monthly_balances' },
+  ];
+
+  const optionsSelect = role === 'customer' ? op1 : role === 'designer' ? op2 : [];
+
   return (
     <AppBar position="fixed" sx={{ backgroundColor: 'white', boxShadow: '#f5f5f5', zIndex: 9999 }}>
       <Toolbar sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -379,12 +390,7 @@ const Header = ({ onBoardChange, showBoards, role }) => {
                 </Button>
                 <DropdownMenu
                   buttonLabel={<MoreVertIcon />}
-                  options={[
-                    { label: t(tokens.nav.make_deposit), value: 'make_deposit' },
-                    { label: t(tokens.nav.board_infomation), value: 'board_infomation' },
-                    // { label: t(tokens.nav.board_activity), value: 'board_activity' },
-                    { label: t(tokens.nav.monthly_balances), value: 'monthly_balances' },
-                  ]}
+                  options={optionsSelect}
                   onSelect={handleMenuSelect}
                   buttonProps={{
                     variant: 'contained',

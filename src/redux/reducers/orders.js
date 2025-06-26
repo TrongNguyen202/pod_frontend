@@ -107,6 +107,13 @@ const slicer = createSlice({
         data: [],
       };
     },
+    resetCountStatus(state) {
+      state.orderStatus = {
+        loading: false,
+        error: '',
+        data: [],
+      };
+    },
   },
   extraReducers: (builder) => {
     // Lay thong tin cac order tu boardId
@@ -255,6 +262,6 @@ const slicer = createSlice({
   },
 });
 
-export const { setQueryAllOrders, resetDataListOrder } = slicer.actions;
+export const { setQueryAllOrders, resetDataListOrder, resetCountStatus } = slicer.actions;
 
 export default slicer.reducer;

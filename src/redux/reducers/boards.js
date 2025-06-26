@@ -19,6 +19,16 @@ const initialState = {
     error: '',
     data: [],
   },
+  boardCreate: {
+    loading: false,
+    error: '',
+    data: [],
+  },
+  boardDelete: {
+    loading: false,
+    error: '',
+    data: [],
+  },
 };
 
 export const fetchGetBoardsByUserId = createAsyncThunk('/get/board/user', async ({ userId, query }) => {
@@ -33,6 +43,16 @@ export const fetchBoardInfoByBoardId = createAsyncThunk('/board/info/id', async 
 
 export const putBoardInfoByBoardId = createAsyncThunk('/put/board/id', async ({ boardId, data }) => {
   const res = await RepositoryRemote.boards.updateBoardInfoById(boardId, data);
+  return res.data;
+});
+
+export const fetchPostBoard = createAsyncThunk('/post/board', async ({ data }) => {
+  const res = await RepositoryRemote.boards.postBoard(data);
+  return res.data;
+});
+
+export const fetchDeleteBoardByIds = createAsyncThunk('/delete/board/id', async ({ data }) => {
+  const res = await RepositoryRemote.boards.deleteBoardByIds(data);
   return res.data;
 });
 
@@ -98,6 +118,36 @@ const slicer = createSlice({
       state.boardUpdate.loading = false;
       state.boardUpdate.data = [];
       state.boardUpdate.error = action?.error?.message || 'Error while processing.';
+    });
+
+    // Tao moi board
+    builder.addCase(fetchPostBoard.pending, (state) => {
+      state.boardCreate.loading = true;
+    });
+    builder.addCase(fetchPostBoard.fulfilled, (state, action) => {
+      state.boardCreate.loading = false;
+      state.boardCreate.data = action.payload.data;
+      state.boardCreate.error = '';
+    });
+    builder.addCase(fetchPostBoard.rejected, (state, action) => {
+      state.boardCreate.loading = false;
+      state.boardCreate.data = [];
+      state.boardCreate.error = action?.error?.message || 'Error while processing.';
+    });
+
+    // Xoa board
+    builder.addCase(fetchDeleteBoardByIds.pending, (state) => {
+      state.boardDelete.loading = true;
+    });
+    builder.addCase(fetchDeleteBoardByIds.fulfilled, (state, action) => {
+      state.boardDelete.loading = false;
+      state.boardDelete.data = action.payload.data;
+      state.boardDelete.error = '';
+    });
+    builder.addCase(fetchDeleteBoardByIds.rejected, (state, action) => {
+      state.boardDelete.loading = false;
+      state.boardDelete.data = [];
+      state.boardDelete.error = action?.error?.message || 'Error while processing.';
     });
   },
 });

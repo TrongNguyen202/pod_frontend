@@ -28,8 +28,30 @@ const updateBoardInfoById = async (boardId, data) => {
   return axiosAPI(config);
 };
 
+const postBoard = async (data) => {
+  const config = {
+    method: 'POST',
+    url: `/board/create`,
+    data,
+  };
+
+  return axiosAPI(config);
+};
+
+const deleteBoardByIds = async (data) => {
+  const config = {
+    method: 'DELETE',
+    url: `/board/delete-multiple`,
+    data,
+  };
+
+  return axiosAPI(config);
+};
+
 export const boards = {
   requestGetBoardsByUserId,
   requestGetBoardInfoById,
   updateBoardInfoById,
+  postBoard,
+  deleteBoardByIds,
 };

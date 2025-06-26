@@ -24,6 +24,7 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   Drawer,
+  CircularProgress,
 } from '@mui/material';
 import { Delete } from '@mui/icons-material';
 import { Seo } from 'src/components/seo';
@@ -43,6 +44,7 @@ import {
   fetchGetOrdersByBoardId,
   postOrder,
   requestDeleteOrders,
+  resetCountStatus,
   resetDataListOrder,
 } from 'src/redux/reducers/orders';
 import { requestUploadImages } from 'src/redux/reducers/images';
@@ -60,6 +62,7 @@ import { fetchGetDesginerIds, fetchUserByEmail, resetDataDesginerIds } from 'src
 import { fetchSendPushNotifications } from 'src/redux/reducers/notifications';
 import { useGetAllStatus } from 'src/hooks/useGetAllStatus';
 import { Select } from 'antd';
+import OrderFilterDrawer from 'src/components/filter-layout';
 
 const useGetDesignerIds = (dispatch, role) => {
   const { isCustomer } = checkRole(role);
@@ -91,8 +94,16 @@ const Page = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
   const [openDrawerFilter, setOpenDrawerFilter] = useState(false);
-  const [sortBy, setSortBy] = useState('lastModifiedDate');
+  const [sortBy, setSortBy] = useState('created_date');
   const [sortDirection, setSortDirection] = useState('desc');
+  const [minPrice, setMinPrice] = useState();
+  const [maxPrice, setMaxPrice] = useState();
+  const [minPriceDe, setMinPriceDe] = useState();
+  const [maxPriceDe, setMaxPriceDe] = useState();
+  const [startCreateDate, setStartCreateDate] = useState(null);
+  const [endCreateDate, setEndCreateDate] = useState(null);
+  const [startUpdateDate, setStartUpdateDate] = useState(null);
+  const [endUpdateDate, setEndUpdateDate] = useState(null);
 
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
@@ -104,11 +115,12 @@ const Page = () => {
     data: orderData,
     total: totalOrders,
     totalPages: totalPages,
+    loading: isLoading,
   } = useAppSelector((state) => state.orders.orderService);
   const { data: templatesData } = useAppSelector((state) => state.templates.templateInfo);
   const { data: desginerIds } = useGetDesignerIds(dispatch, role);
   const { data: boardData } = useAppSelector((state) => state.boards.boardInfo);
-  const { data: statusCount } = useGetAllStatus(dispatch, boardId, orderData, role);
+  const { data: statusCount } = useGetAllStatus(dispatch, boardId, role);
 
   useEffect(() => {
     if (userData) {
@@ -188,21 +200,51 @@ const Page = () => {
     }
   }, []);
 
-  useEffect(() => {
-    if (!role) return;
-
-    dispatch(resetDataListOrder());
-
+  const buildQueryString = () => {
     const queryParams = new URLSearchParams();
 
     if (selectedCategory !== 'ALL') queryParams.append('status', selectedCategory);
     if (boardId !== 0 && isCustomer) queryParams.append('boardId', boardId);
     queryParams.append('pageNumber', String(page));
     queryParams.append('pageSize', String(limit));
-    // if (sortBy) queryParams.append('sortBy', sortBy);
-    // if (sortDirection) queryParams.append('sortDirection', sortDirection);
-    dispatch(fetchGetOrdersByBoardId({ query: queryParams.toString() }));
-  }, [role, boardId, selectedCategory, page, limit, sortBy, sortDirection]);
+    if (sortBy) queryParams.append('sortBy', sortBy);
+    if (sortDirection) queryParams.append('sortDirection', sortDirection);
+    if (minPrice) queryParams.append('minPrice', String(minPrice));
+    if (maxPrice) queryParams.append('maxPrice', String(maxPrice));
+    if (minPriceDe) queryParams.append('minPriceDe', String(minPriceDe));
+    if (maxPriceDe) queryParams.append('maxPriceDe', String(maxPriceDe));
+    if (startCreateDate) queryParams.append('startCreateDate', startCreateDate.toISOString());
+    if (endCreateDate) queryParams.append('endCreateDate', endCreateDate.toISOString());
+    if (startUpdateDate) queryParams.append('startUpdateDate', startUpdateDate.toISOString());
+    if (endUpdateDate) queryParams.append('endUpdateDate', endUpdateDate.toISOString());
+
+    return queryParams.toString();
+  };
+
+  useEffect(() => {
+    if (!role) return;
+    if (isCustomer && !boardId) {
+      dispatch(resetDataListOrder());
+      dispatch(resetCountStatus());
+      return;
+    }
+
+    dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() }));
+  }, [
+    role,
+    boardId,
+    selectedCategory,
+    page,
+    limit,
+    sortBy,
+    sortDirection,
+    minPrice,
+    maxPrice,
+    startCreateDate,
+    endCreateDate,
+    startUpdateDate,
+    endUpdateDate,
+  ]);
 
   const handleTabChange = (event, newTabIndex) => {
     setSelectedTab(newTabIndex);
@@ -216,6 +258,17 @@ const Page = () => {
       const value = formData.get(field);
       return value !== undefined && value !== null && value.toString().trim() !== '';
     });
+  };
+
+  const fetchAllStatuses = async (boardId, role) => {
+    if (role === 'designer') {
+      await dispatch(fetchGetAllStatus(''));
+    }
+
+    if (role === 'customer' && boardId) {
+      const query = `boardId=${boardId}`;
+      await dispatch(fetchGetAllStatus(query));
+    }
   };
 
   const handleSubmitIdeas = async (formData, status) => {
@@ -260,9 +313,9 @@ const Page = () => {
 
       const response = await dispatch(postOrder({ data: finalPayload }));
       if (response.payload?.status === 200) {
-        const query = `boardId=${boardId}`;
-        await dispatch(fetchGetOrdersByBoardId({ query }));
+        await dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() }));
         await dispatch(fetchUserByEmail({ email: userData?.email }));
+        await fetchAllStatuses(boardId, role);
         if (status === 'NEW') {
           const data = {
             designerIds: desginerIds,
@@ -296,8 +349,8 @@ const Page = () => {
       const response = await dispatch(requestDeleteOrders({ ids }));
 
       if (response.payload?.status === 200) {
-        const query = `boardId=${boardId}`;
-        await dispatch(fetchGetOrdersByBoardId({ query }));
+        await dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() }));
+        await fetchAllStatuses(boardId, role);
         toast.success('Delete successfully!');
       } else {
         toast.error('Delete failed!');
@@ -353,7 +406,8 @@ const Page = () => {
       if (response.meta.requestStatus === 'fulfilled') {
         toast.success('Nhận đơn thành công!');
         setCheckedOrderIds([]);
-        dispatch(fetchGetOrdersByBoardId({ query: `` }));
+        await dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() }));
+        await fetchAllStatuses(boardId, role);
       } else {
         toast.error(response.message || 'Nhận đơn thất bại');
       }
@@ -372,8 +426,7 @@ const Page = () => {
 
       if (status === 200) {
         if (isCustomer) {
-          const query = `boardId=${boardId}`;
-          await dispatch(fetchGetOrdersByBoardId({ query }));
+          await dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() }));
           setCheckedOrderIds([]);
           if (data.status === 'NEW') {
             const data = {
@@ -385,11 +438,10 @@ const Page = () => {
             await dispatch(fetchSendPushNotifications(data));
           }
         } else if (isDesigner) {
-          // const query = `designerId=${userData?.id}`;
-          const query = ``;
-          await dispatch(fetchGetOrdersByBoardId({ query }));
+          await dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() }));
           setCheckedOrderIds([]);
         }
+        await fetchAllStatuses(boardId, role);
         toast.success('Change status successfully!');
       } else {
         toast.error(message || 'Lỗi khi chuyển trạng thái đơn hàng');
@@ -401,8 +453,31 @@ const Page = () => {
     setLimit(data);
   };
 
+  const handleClearFilters = () => {
+    setSortBy('');
+    setSortDirection('');
+    setStartCreateDate(null);
+    setEndCreateDate(null);
+    setStartUpdateDate(null);
+    setEndUpdateDate(null);
+    setMinPrice(null);
+    setMaxPrice(null);
+    setMinPriceDe(null);
+    setMaxPriceDe(null);
+    setPage(1);
+  };
+
   const handleMoreFilter = async () => {
     setOpenDrawerFilter(true);
+  };
+
+  const handleCloseMoreFilter = () => {
+    setOpenDrawerFilter(false);
+    handleClearFilters();
+  };
+
+  const handleStatusChanged = () => {
+    dispatch(fetchGetAllStatus(boardId ? `boardId=${boardId}` : ''));
   };
 
   return (
@@ -437,7 +512,7 @@ const Page = () => {
                       {isCustomer && (
                         <Grid width={'15%'} size={4} padding={0} display={'flex'}>
                           <FormDialogSplitLayout
-                            title="Create New Idea"
+                            title={t(tokens.nav.createNewIdea)}
                             fields={fieldIdeas}
                             onSubmit={handleSubmitIdeas}
                             buttonLabel={t(tokens.nav.addnew)}
@@ -485,101 +560,32 @@ const Page = () => {
                         <Button variant="contained" onClick={handleMoreFilter}>
                           {t(tokens.nav.more_filter)}
                         </Button>
-                        <Drawer
-                          anchor="right"
+                        <OrderFilterDrawer
                           open={openDrawerFilter}
-                          onClose={() => setOpenDrawerFilter(false)}
-                          sx={{ zIndex: 999999999999999 }}
-                        >
-                          <Box sx={{ width: 300, p: 3 }}>
-                            <Typography variant="h6" gutterBottom>
-                              Sắp xếp theo
-                            </Typography>
-
-                            {/* Ngày tạo */}
-                            <Box sx={{ mb: 3 }}>
-                              <Typography variant="subtitle2">Ngày tạo</Typography>
-                              <ToggleButtonGroup
-                                value={sortBy === 'createdDate' ? sortDirection : ''}
-                                exclusive
-                                onChange={(e, val) => {
-                                  if (val) {
-                                    setSortBy('createdDate');
-                                    setSortDirection(val);
-                                  }
-                                }}
-                                sx={{ mt: 1 }}
-                                fullWidth
-                              >
-                                <ToggleButton value="asc">Tăng dần</ToggleButton>
-                                <ToggleButton value="desc">Giảm dần</ToggleButton>
-                              </ToggleButtonGroup>
-                            </Box>
-
-                            {/* Ngày cập nhật */}
-                            <Box sx={{ mb: 3 }}>
-                              <Typography variant="subtitle2">Ngày cập nhật</Typography>
-                              <ToggleButtonGroup
-                                value={sortBy === 'lastModifiedDate' ? sortDirection : ''}
-                                exclusive
-                                onChange={(e, val) => {
-                                  if (val) {
-                                    setSortBy('lastModifiedDate');
-                                    setSortDirection(val);
-                                  }
-                                }}
-                                sx={{ mt: 1 }}
-                                fullWidth
-                              >
-                                <ToggleButton value="asc">Tăng dần</ToggleButton>
-                                <ToggleButton value="desc">Giảm dần</ToggleButton>
-                              </ToggleButtonGroup>
-                            </Box>
-
-                            {/* Giá (theo role) */}
-                            {role === 'customer' && (
-                              <Box sx={{ mb: 3 }}>
-                                <Typography variant="subtitle2">Giá</Typography>
-                                <ToggleButtonGroup
-                                  value={sortBy === 'price' ? sortDirection : ''}
-                                  exclusive
-                                  onChange={(e, val) => {
-                                    if (val) {
-                                      setSortBy('price');
-                                      setSortDirection(val);
-                                    }
-                                  }}
-                                  sx={{ mt: 1 }}
-                                  fullWidth
-                                >
-                                  <ToggleButton value="asc">Tăng dần</ToggleButton>
-                                  <ToggleButton value="desc">Giảm dần</ToggleButton>
-                                </ToggleButtonGroup>
-                              </Box>
-                            )}
-
-                            {role === 'designer' && (
-                              <Box sx={{ mb: 3 }}>
-                                <Typography variant="subtitle2">Giá nhận</Typography>
-                                <ToggleButtonGroup
-                                  value={sortBy === 'pricede' ? sortDirection : ''}
-                                  exclusive
-                                  onChange={(e, val) => {
-                                    if (val) {
-                                      setSortBy('pricede');
-                                      setSortDirection(val);
-                                    }
-                                  }}
-                                  sx={{ mt: 1 }}
-                                  fullWidth
-                                >
-                                  <ToggleButton value="asc">Tăng dần</ToggleButton>
-                                  <ToggleButton value="desc">Giảm dần</ToggleButton>
-                                </ToggleButtonGroup>
-                              </Box>
-                            )}
-                          </Box>
-                        </Drawer>
+                          onClose={handleCloseMoreFilter}
+                          role={role}
+                          sortBy={sortBy}
+                          sortDirection={sortDirection}
+                          setSortBy={setSortBy}
+                          setSortDirection={setSortDirection}
+                          startCreateDate={startCreateDate}
+                          endCreateDate={endCreateDate}
+                          setStartCreateDate={setStartCreateDate}
+                          setEndCreateDate={setEndCreateDate}
+                          startUpdateDate={startUpdateDate}
+                          endUpdateDate={endUpdateDate}
+                          setStartUpdateDate={setStartUpdateDate}
+                          setEndUpdateDate={setEndUpdateDate}
+                          minPrice={minPrice}
+                          maxPrice={maxPrice}
+                          setMinPrice={setMinPrice}
+                          setMaxPrice={setMaxPrice}
+                          minPriceDe={minPriceDe}
+                          maxPriceDe={maxPriceDe}
+                          setMinPriceDe={setMinPriceDe}
+                          setMaxPriceDe={setMaxPriceDe}
+                          onClear={handleClearFilters}
+                        />
                       </Grid>
                     </Grid>
                   </CardContent>
@@ -638,14 +644,14 @@ const Page = () => {
                                 variant="contained"
                                 color="primary"
                                 size="small"
-                                sx={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0, m: 0 }}
+                                sx={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0, ml: 2 }}
                               >
-                                Nhận đơn
+                                {t(tokens.nav.receiveOrder)}
                               </Button>
 
                               {/* Confirm Dialog */}
                               <Dialog open={openConfirmAsgin} onClose={() => setOpenConfirmAsgin(false)}>
-                                <DialogTitle>Xác nhận nhận đơn</DialogTitle>
+                                <DialogTitle>{t(tokens.nav.confirmAssign)}</DialogTitle>
                                 <DialogContent>
                                   <DialogContentText>
                                     Bạn có chắc chắn muốn nhận {checkedOrderIds.length} đơn hàng?
@@ -653,7 +659,7 @@ const Page = () => {
                                 </DialogContent>
                                 <DialogActions>
                                   <Button onClick={() => setOpenConfirmAsgin(false)} color="inherit">
-                                    Hủy
+                                    {t(tokens.nav.cancel)}
                                   </Button>
                                   <Button
                                     onClick={() => {
@@ -667,7 +673,7 @@ const Page = () => {
                                     color="primary"
                                     variant="contained"
                                   >
-                                    Xác nhận
+                                    {t(tokens.nav.submit)}
                                   </Button>
                                 </DialogActions>
                               </Dialog>
@@ -701,188 +707,195 @@ const Page = () => {
                   </Box>
                 )}
 
-                <Grid container spacing={2} sx={{ marginTop: 2 }}>
-                  {orderData.map((item) => {
-                    let itemImages = [];
-                    try {
-                      itemImages = JSON.parse(item.images || '[]');
-                    } catch (e) {
-                      itemImages = [];
-                    }
-                    return (
-                      <Grid item size={3} xs={12} sm={6} md={3} key={item.id} position="relative">
-                        <Paper
-                          variant="outlined"
-                          onClick={() => handleClickOpenDetail(item)}
-                          sx={{
-                            height: 330,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            backgroundColor: '#f5f5f5',
-                            overflow: 'hidden',
-                            borderRadius: 2,
-                            cursor: 'pointer',
-                          }}
-                        >
-                          <Box
+                {isLoading ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <CircularProgress />
+                  </Box>
+                ) : (
+                  <Grid container spacing={2} sx={{ marginTop: 2 }} minHeight={400}>
+                    {orderData.map((item) => {
+                      let itemImages = [];
+                      try {
+                        itemImages = JSON.parse(item.images || '[]');
+                      } catch (e) {
+                        itemImages = [];
+                      }
+                      return (
+                        <Grid item size={3} xs={12} sm={6} md={3} key={item.id} position="relative">
+                          <Paper
+                            variant="outlined"
+                            onClick={() => handleClickOpenDetail(item)}
                             sx={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              margin: '0 8px',
-                            }}
-                          >
-                            <Checkbox
-                              checked={!!checkedOrderIds.includes(item.id)}
-                              onClick={(e) => handleCheckboxItem(e, item.id)}
-                            />
-
-                            {canDeleteOrder(role, item.status) && (
-                              <Box
-                                sx={{ padding: '14px 16px', cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleClickDeleteIcon(item.id);
-                                }}
-                              >
-                                <Delete sx={{ color: 'red' }} />
-                              </Box>
-                            )}
-                          </Box>
-
-                          {/* Vùng ảnh chính */}
-                          <Box sx={{ width: '100%', overflow: 'hidden' }}>
-                            <img
-                              src={itemImages[0] || '/fallback.png'}
-                              alt={item.title}
-                              style={{
-                                width: '100%',
-                                height: '330px',
-                                objectFit: 'cover',
-                              }}
-                            />
-                          </Box>
-
-                          {itemImages.length > 1 && (
-                            <Box
-                              sx={{
-                                display: 'flex',
-                                gap: 0.5,
-                                p: 1,
-                                overflowX: 'auto',
-                                maxHeight: 60,
-                                bgcolor: '#fafafa',
-                              }}
-                            >
-                              {itemImages.slice(1, 4).map((url, idx) => (
-                                <Box
-                                  key={idx}
-                                  sx={{
-                                    width: 50,
-                                    height: 50,
-                                    borderRadius: 1,
-                                    overflow: 'hidden',
-                                    flexShrink: 0,
-                                    border: '1px solid #ccc',
-                                  }}
-                                >
-                                  <img
-                                    src={url}
-                                    alt={`preview-${idx}`}
-                                    style={{
-                                      width: '100%',
-                                      height: '100%',
-                                      objectFit: 'cover',
-                                    }}
-                                  />
-                                </Box>
-                              ))}
-                            </Box>
-                          )}
-
-                          {/* Thông tin đơn */}
-                          <Box
-                            sx={{
-                              flex: 1,
-                              p: 1,
+                              height: 400,
                               display: 'flex',
                               flexDirection: 'column',
-                              justifyContent: 'space-between',
-                              fontSize: '0.75rem',
+                              backgroundColor: '#f5f5f5',
+                              overflow: 'hidden',
+                              borderRadius: 2,
+                              cursor: 'pointer',
                             }}
                           >
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                              <Typography noWrap variant="body1" fontWeight="bold" color="text.secondary">
-                                {item.usercreate}
-                              </Typography>
-                              <Typography noWrap variant="body2" fontWeight="bold" color="text.secondary">
-                                {item.name}
-                              </Typography>
-                            </Box>
-
                             <Box
                               sx={{
                                 display: 'flex',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
-                                margin: '4px 0',
+                                margin: '0 8px',
                               }}
                             >
-                              <Box>
-                                <Typography
-                                  noWrap
-                                  variant="body3"
-                                  color="text.secondary"
-                                  sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
+                              {(selectedCategory === 'NEW' || selectedCategory === 'DRAFT') && (
+                                <Checkbox
+                                  checked={!!checkedOrderIds.includes(item.id)}
+                                  onClick={(e) => handleCheckboxItem(e, item.id)}
+                                />
+                              )}
+                              {canDeleteOrder(role, item.status) && (
+                                <Box
+                                  sx={{ padding: '14px 16px', cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleClickDeleteIcon(item.id);
                                   }}
                                 >
-                                  <CalendarMonthIcon />
-                                  {new Date(item.createddate).toLocaleDateString('vi-VN')}
-                                </Typography>
-                              </Box>
-                              <Box>
-                                <Typography noWrap variant="body4" marginLeft="4px" title="Files">
-                                  <AttachFileIcon />
-                                  {itemImages.length}
-                                </Typography>
-                                <Typography noWrap variant="body4" marginLeft="4px" title="Quantity">
-                                  <LayersIcon />
-                                  {item.quantity}
-                                </Typography>
-                                <Typography noWrap variant="body4" marginLeft="4px" title="Number">
-                                  <NumbersIcon /> {item.number}
-                                </Typography>
-                              </Box>
+                                  <Delete sx={{ color: 'red' }} />
+                                </Box>
+                              )}
                             </Box>
 
+                            {/* Vùng ảnh chính */}
+                            <Box sx={{ width: '100%', overflow: 'hidden' }}>
+                              <img
+                                src={itemImages[0] || '/fallback.png'}
+                                alt={item.title}
+                                style={{
+                                  width: '100%',
+                                  height: '400px',
+                                  objectFit: 'cover',
+                                }}
+                              />
+                            </Box>
+
+                            {itemImages.length > 1 && (
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  gap: 0.5,
+                                  p: 1,
+                                  overflowX: 'auto',
+                                  maxHeight: 60,
+                                  bgcolor: '#fafafa',
+                                }}
+                              >
+                                {itemImages.slice(1, 4).map((url, idx) => (
+                                  <Box
+                                    key={idx}
+                                    sx={{
+                                      width: 50,
+                                      height: 50,
+                                      borderRadius: 1,
+                                      overflow: 'hidden',
+                                      flexShrink: 0,
+                                      border: '1px solid #ccc',
+                                    }}
+                                  >
+                                    <img
+                                      src={url}
+                                      alt={`preview-${idx}`}
+                                      style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        objectFit: 'cover',
+                                      }}
+                                    />
+                                  </Box>
+                                ))}
+                              </Box>
+                            )}
+
+                            {/* Thông tin đơn */}
                             <Box
                               sx={{
+                                flex: 1,
+                                p: 1,
                                 display: 'flex',
+                                flexDirection: 'column',
                                 justifyContent: 'space-between',
-                                alignItems: 'center',
-                                margin: '4px 0',
+                                fontSize: '0.75rem',
                               }}
                             >
-                              <Box>
-                                <Typography noWrap variant="body4" title="ProductType">
-                                  {productTypeData.find((pt) => pt.id === item.producttypeid)?.name}
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <Typography noWrap variant="body1" fontWeight="bold" color="text.secondary">
+                                  {item.usercreate}
                                 </Typography>
-                                <Typography noWrap variant="body4" marginLeft="12px" title="DesignType">
-                                  {item.designtype}
+                                <Typography noWrap variant="body2" fontWeight="bold" color="text.secondary">
+                                  {item.name}
                                 </Typography>
                               </Box>
-                              <Typography noWrap variant="body1" fontSize="20px" marginLeft="4px" title="Files">
-                                {handleAmountFormat(isCustomer ? item.price : isDesigner ? item.pricede : 0)} đ
-                              </Typography>
+
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  margin: '4px 0',
+                                }}
+                              >
+                                <Box>
+                                  <Typography
+                                    noWrap
+                                    variant="body3"
+                                    color="text.secondary"
+                                    sx={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                    }}
+                                  >
+                                    <CalendarMonthIcon />
+                                    {new Date(item.createddate * 1000).toLocaleDateString('vi-VN')}
+                                  </Typography>
+                                </Box>
+                                <Box>
+                                  <Typography noWrap variant="body4" marginLeft="4px" title="Files">
+                                    <AttachFileIcon />
+                                    {itemImages.length}
+                                  </Typography>
+                                  <Typography noWrap variant="body4" marginLeft="4px" title="Quantity">
+                                    <LayersIcon />
+                                    {item.quantity}
+                                  </Typography>
+                                  <Typography noWrap variant="body4" marginLeft="4px" title="Number">
+                                    <NumbersIcon /> {item.number}
+                                  </Typography>
+                                </Box>
+                              </Box>
+
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  margin: '4px 0',
+                                }}
+                              >
+                                <Box>
+                                  <Typography noWrap variant="body4" title="ProductType">
+                                    {productTypeData.find((pt) => pt.id === item.producttypeid)?.name}
+                                  </Typography>
+                                  <Typography noWrap variant="body4" marginLeft="12px" title="DesignType">
+                                    {item.designtype}
+                                  </Typography>
+                                </Box>
+                                <Typography noWrap variant="body1" fontSize="20px" marginLeft="4px" title="Files">
+                                  {handleAmountFormat(isCustomer ? item.price : isDesigner ? item.price_ : 0)} đ
+                                </Typography>
+                              </Box>
                             </Box>
-                          </Box>
-                        </Paper>
-                      </Grid>
-                    );
-                  })}
-                </Grid>
+                          </Paper>
+                        </Grid>
+                      );
+                    })}
+                  </Grid>
+                )}
                 <OrderDetailModal
                   open={openDetailModal}
                   order={selectedOrder}
@@ -891,48 +904,59 @@ const Page = () => {
                   userData={userData}
                   role={role}
                   productTypeData={productTypeData}
+                  buildQueryString={buildQueryString}
+                  boardId={boardId}
+                  onStatusChanged={handleStatusChanged}
                 />
 
                 {/* Pagination Footer */}
-                <Paper variant="outlined" sx={{ mt: 2, p: 2, pr: 8 }}>
-                  <Grid container spacing={2} justifyContent="flex-end" alignItems="center">
-                    <Grid item>
-                      <Typography>
-                        {(page - 1) * limit + 1} - {Math.min(page * limit, totalOrders)} of {totalOrders} items
-                      </Typography>
+                {!isLoading && (
+                  <Paper variant="outlined" sx={{ mt: 2, p: 2, pr: 8 }}>
+                    <Grid container spacing={2} justifyContent="flex-end" alignItems="center">
+                      <Grid item>
+                        <Typography>
+                          {(page - 1) * limit + 1} - {Math.min(page * limit, totalOrders) || 0} {t(tokens.nav.of)}{' '}
+                          {totalOrders} {t(tokens.nav.items)}
+                        </Typography>
+                      </Grid>
+                      <Grid item>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          disabled={page === 1 || isLoading}
+                          onClick={() => setPage(page - 1)}
+                        >
+                          &lt;
+                        </Button>
+                      </Grid>
+                      <Grid item>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          disabled={page >= totalPages || isLoading}
+                          onClick={() => setPage(page + 1)}
+                        >
+                          &gt;
+                        </Button>
+                      </Grid>
+                      <Select
+                        options={[
+                          { value: 20, label: <span>20</span> },
+                          { value: 30, label: <span>30</span> },
+                          { value: 50, label: <span>50</span> },
+                        ]}
+                        onChange={handleSetLimitPerPage}
+                        defaultValue={limit}
+                        placeholder={limit}
+                      />
+                      <Grid item>
+                        <Typography>
+                          {t(tokens.nav.page)} {page} {t(tokens.nav.of)} {totalPages}
+                        </Typography>
+                      </Grid>
                     </Grid>
-                    <Grid item>
-                      <Button variant="contained" size="small" disabled={page === 1} onClick={() => setPage(page - 1)}>
-                        &lt;
-                      </Button>
-                    </Grid>
-                    <Grid item>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        disabled={page >= totalPages}
-                        onClick={() => setPage(page + 1)}
-                      >
-                        &gt;
-                      </Button>
-                    </Grid>
-                    <Select
-                      options={[
-                        { value: 20, label: <span>20</span> },
-                        { value: 30, label: <span>30</span> },
-                        { value: 50, label: <span>50</span> },
-                      ]}
-                      onChange={handleSetLimitPerPage}
-                      defaultValue={20}
-                      placeholder="20"
-                    />
-                    <Grid item>
-                      <Typography>
-                        Page {page} of {totalPages}
-                      </Typography>
-                    </Grid>
-                  </Grid>
-                </Paper>
+                  </Paper>
+                )}
               </Box>
             </Box>
             <Modal
@@ -981,10 +1005,10 @@ const Page = () => {
                   </DialogContent>
                   <DialogActions>
                     <Button onClick={handleCloseDialog} color="inherit">
-                      Hủy
+                      {t(tokens.nav.cancel)}
                     </Button>
                     <Button onClick={handleConfirmDelete} color="error" variant="contained">
-                      Xóa
+                      {t(tokens.nav.submit)}
                     </Button>
                   </DialogActions>
                 </Dialog>

@@ -143,14 +143,6 @@ const FormDialogSplitLayout = ({
     }
   }, [dialogOpen, initialData, fields]);
 
-  const handlePriceInput = (key) => (e) => {
-    const raw = e.target.value.replace(/\D/g, '');
-    setFormData((prev) => ({
-      ...prev,
-      [key]: raw,
-    }));
-  };
-
   return (
     <>
       {buttonLabel && (
@@ -169,7 +161,7 @@ const FormDialogSplitLayout = ({
                 <TextField
                   fullWidth
                   required
-                  label="Title"
+                  label={t(tokens.nav.title)}
                   type="text"
                   value={formData['title'] || ''}
                   onChange={(e) => handleChange('title', e.target.value)}
@@ -180,7 +172,7 @@ const FormDialogSplitLayout = ({
                 <TextareaAutosize
                   aria-label="Description"
                   minRows={4}
-                  placeholder="Description"
+                  placeholder={t(tokens.nav.description)}
                   style={{
                     width: '100%',
                     backgroundColor: '#fafafa',
@@ -196,7 +188,7 @@ const FormDialogSplitLayout = ({
                 <TextField
                   fullWidth
                   required
-                  label="Images"
+                  label={t(tokens.nav.chosseImages)}
                   type="file"
                   inputProps={{ multiple: true, accept: 'image/*' }}
                   onChange={(e) => {
@@ -239,7 +231,7 @@ const FormDialogSplitLayout = ({
                 <TextField
                   select
                   fullWidth
-                  label="Design Type"
+                  label={t(tokens.nav.design_type)}
                   SelectProps={{
                     renderValue: (selected) => optionsDesignType.find((o) => o.value === selected)?.label || selected,
                   }}
@@ -257,7 +249,7 @@ const FormDialogSplitLayout = ({
                 <TextField
                   select
                   fullWidth
-                  label="Product Type"
+                  label={t(tokens.nav.product_type)}
                   SelectProps={{
                     renderValue: (selected) => productTypeData.find((o) => o.id === selected)?.name || selected,
                   }}
@@ -274,7 +266,7 @@ const FormDialogSplitLayout = ({
               <Box sx={{ mb: 2, borderRadius: 1, bgcolor: '#fafafa' }}>
                 <TextField
                   fullWidth
-                  label="Quantity"
+                  label={t(tokens.nav.quantity)}
                   type="text"
                   value={formData['quantity'] !== undefined ? formData['quantity'] : 1}
                   onChange={handleNumericInput('quantity')}
@@ -292,7 +284,7 @@ const FormDialogSplitLayout = ({
               <Box sx={{ mb: 2, borderRadius: 1, bgcolor: '#fafafa' }}>
                 <TextField
                   fullWidth
-                  label="Number"
+                  label={t(tokens.nav.number)}
                   type="text"
                   value={formData['number'] !== undefined ? formData['number'] : 1}
                   onChange={handleNumericInput('number')}
@@ -310,7 +302,7 @@ const FormDialogSplitLayout = ({
               <Box sx={{ mb: 2, borderRadius: 1, bgcolor: '#fafafa' }}>
                 <TextField
                   fullWidth
-                  label="Deadline"
+                  label={t(tokens.nav.deadline)}
                   type="date"
                   InputLabelProps={{ shrink: true }}
                   value={formData['completed_at'] ? new Date(formData['completed_at']).toISOString().split('T')[0] : ''}
@@ -321,7 +313,7 @@ const FormDialogSplitLayout = ({
                 <TextField
                   select
                   fullWidth
-                  label="Price"
+                  label={t(tokens.nav.price)}
                   SelectProps={{
                     renderValue: (selected) => PRICE_OPTIONS.find((opt) => opt.value === selected)?.label || selected,
                   }}
@@ -339,7 +331,7 @@ const FormDialogSplitLayout = ({
                 <TextField
                   select
                   fullWidth
-                  label="Template"
+                  label={t(tokens.nav.templates)}
                   SelectProps={{
                     multiple: true,
                     renderValue: (selected) =>
