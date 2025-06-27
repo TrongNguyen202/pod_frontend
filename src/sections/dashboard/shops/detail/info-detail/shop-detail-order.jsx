@@ -1,23 +1,23 @@
-import { useEffect } from 'react';
+// import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
-import { fetchAllOrderByShop } from 'src/redux/reducers/orders';
+// import { fetchAllOrderByShop } from 'src/redux/reducers/orders';
 import { CardOrder } from './card-order';
 import { Spin } from 'antd';
 
 export const ShopDetailOrder = (props) => {
   const { shopId } = props;
-  const dispatch = useAppDispatch();
+  // const dispatch = useAppDispatch();
   const { orderByShop } = useAppSelector((state) => state.orders);
 
   const orderList = orderByShop?.data?.data?.length
     ? orderByShop?.data?.data?.map((order) => order?.data?.order_list).flat()
     : [];
 
-  useEffect(() => {
-    if (shopId) {
-      dispatch(fetchAllOrderByShop(shopId));
-    }
-  }, [shopId]);
+  // useEffect(() => {
+  //   if (shopId) {
+  //     dispatch(fetchAllOrderByShop(shopId));
+  //   }
+  // }, [shopId]);
 
   return (
     <Spin spinning={orderByShop.loading}>

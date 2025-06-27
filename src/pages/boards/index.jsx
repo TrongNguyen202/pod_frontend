@@ -21,6 +21,10 @@ import {
   TablePagination,
   Button,
   Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import Link from 'next/link';
 import { Seo } from 'src/components/seo';
@@ -28,42 +32,18 @@ import Header from 'src/components/header';
 import Sidebar from 'src/components/sidebar';
 import FormDialog from 'src/components/popup';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
-import { fetchInfoBoardByBoardId } from 'src/redux/reducers/products';
-import axios from 'axios';
+
 import { useTranslation } from 'react-i18next';
 import { tokens } from '../../locales/tokens';
-
-const data = [
-  { id: '1', title: 'video board', client: { name: 'Nguyễn Đình Trọng', email: 'trongprotein@gmail.com' } },
-  { id: '2', title: 'video 3123', client: { name: 'Nguyễn Đình Trọng', email: 'trongprotein@gmail.com' } },
-  { id: '3', title: 'newboard1', client: { name: 'Nguyễn Đình Trọng', email: 'trongprotein@gmail.com' } },
-  { id: '4', title: 'trong nguyen', client: { name: 'Nguyễn Đình Trọng', email: 'trongprotein@gmail.com' } },
-];
-
-const fields = [
-  { name: 'title', label: 'Title', fullWidth: true, required: true },
-  {
-    name: 'product_types',
-    label: 'Product Types',
-    type: 'select',
-    multiple: true,
-    options: [
-      { label: 'T-shirt', value: 'T-shirt' },
-      { label: 'Shirt', value: 'shirt' },
-      { label: 'Sweater', value: 'sweater' },
-    ],
-  },
-  {
-    name: 'design_type',
-    label: 'Default Design Type',
-    type: 'select',
-    options: [
-      { label: 'Clone', value: 'Clone' },
-      { label: 'Redesign', value: 'Redesign' },
-      { label: 'New', value: 'New' },
-    ],
-  },
-];
+import toast from 'react-hot-toast';
+import {
+  fetchPostBoard,
+  fetchDeleteBoardByIds,
+  putBoardInfoByBoardId,
+  fetchGetBoardsByUserId,
+  fetchBoardInfoByBoardId,
+} from 'src/redux/reducers/boards';
+import { Delete } from '@mui/icons-material';
 
 const Page = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -73,21 +53,24 @@ const Page = () => {
   const [page, setPage] = useState(0);
   const [boardId, setBoardId] = useState(null);
   const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [openAddBoard, setOpenAddBoard] = useState(false);
   const dispatch = useAppDispatch();
-  const { loading, products = [], error } = useAppSelector((state) => state.products);
-  const [quickDesignData, setQuickDesignData] = useState({});
   const { t } = useTranslation();
+  const [role, setRole] = useState('');
+  const [openDialogDelete, setOpenDialogDelete] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [editingBoardData, setEditingBoardData] = useState(null);
 
-  // Lấy board từ localStorage
+  const { data: boardsData } = useAppSelector((state) => state.boards.boardService);
+  const { data: userData } = useAppSelector((state) => state.users.userInfo);
+  const { data: productTypeData } = useAppSelector((state) => state.productTypes.productTypes);
+
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedId = localStorage.getItem('current_board_id');
-      if (savedId) {
-        setBoardId(savedId === 'null' ? null : savedId);
-      }
+    if (userData) {
+      setRole(userData.role_name);
     }
-  }, []);
-
+  }, [userData]);
+  const userId = userData?.id;
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -102,7 +85,7 @@ const Page = () => {
       const newSelected = prevSelected.includes(rowId)
         ? prevSelected.filter((id) => id !== rowId)
         : [...prevSelected, rowId];
-      setAllSelected(newSelected.length === data.length);
+      setAllSelected(newSelected.length === boardsData.length);
       return newSelected;
     });
   };
@@ -112,45 +95,80 @@ const Page = () => {
       if (allSelected) {
         return [];
       } else {
-        return data.map((row) => row.id);
+        return boardsData.map((row) => row.id);
       }
     });
     setAllSelected((prev) => !prev);
   };
 
-  useEffect(() => {
-    if (boardId) {
-      console.log(boardId);
-      dispatch(fetchInfoBoardByBoardId({ boardId }));
-      console.log('by id; ', products);
-    }
-  }, [dispatch, boardId]);
-
-  useEffect(() => {
-    setQuickDesignData(products);
-  }, [products, boardId]);
-
-  const handleUpdateIdea = (updatedIdea) => {
-    console.log(updatedIdea);
-    setQuickDesignData(updatedIdea);
-  };
-
-  const handleSubmit = async (formData, onAfterSubmit) => {
-    const { id, ...payload } = formData;
-
+  const handleCreateBoard = async (formData) => {
     try {
-      if (id) {
-        const res = await axios.put(`https://6848f91945f4c0f5ee6f902e.mockapi.io/api/v1/free/${id}`, payload);
-        console.log('Updated successfully:', res.data);
-        onAfterSubmit?.(res.data);
-      } else {
-        const res = await axios.post(`https://6848f91945f4c0f5ee6f902e.mockapi.io/api/v1/free`, payload);
-        console.log('Created successfully:', res.data);
-        onAfterSubmit?.(res.data);
+      // formData.userId = userData?.id;
+      const res = await dispatch(fetchPostBoard({ data: formData }));
+      if (res.payload.status === 200) {
+        await dispatch(fetchGetBoardsByUserId({ userId }));
+        toast.success('Created Board Successfully!');
       }
     } catch (err) {
-      console.error('Submit error:', err);
+      toast.error('Create board fail:', err);
     }
+  };
+  const optionProductType = productTypeData.map((pt) => ({
+    label: pt.name,
+    value: pt.id,
+  }));
+
+  const handleOpenEditBoard = async (boardId) => {
+    try {
+      console.log(boardId);
+      const res = await dispatch(fetchBoardInfoByBoardId({ boardId }));
+      console.log(res);
+      if (res.payload?.data) {
+        setEditingBoardData(res.payload.data);
+        setOpenEditDialog(true);
+      }
+    } catch (error) {
+      toast.error('Lỗi khi tải thông tin board');
+    }
+  };
+
+  const handleEditBoard = async (formData) => {
+    try {
+      const boardId = formData.id;
+
+      const payload = {
+        title: formData.title,
+        productTypeIds: formData.productTypeIds,
+        designType: formData.designType,
+      };
+
+      const res = await dispatch(putBoardInfoByBoardId({ boardId, data: payload }));
+      console.log(res);
+      if (res.payload?.status === 200) {
+        toast.success('Board updated successfully');
+        await dispatch(fetchGetBoardsByUserId({ userId }));
+      } else {
+        toast.error('Update failed');
+      }
+    } catch (error) {
+      toast.error('Error updating board');
+    }
+  };
+
+  const handleDeleteBoard = async () => {
+    try {
+      const res = await dispatch(fetchDeleteBoardByIds({ data: selected }));
+      if (res.payload.status === 200) {
+        toast.success('Deleted successfully!');
+        setSelected([]);
+        dispatch(fetchGetBoardsByUserId({ userId }));
+      } else {
+        toast.error('Delete error');
+      }
+    } catch (err) {
+      toast.error('Delete failed');
+    }
+    setOpenDialogDelete(false);
   };
 
   return (
@@ -159,7 +177,7 @@ const Page = () => {
       <Header showBoards={false} />
       <Toolbar />
       <Box sx={{ display: 'flex' }}>
-        <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} />
+        {role && <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} role={role} />}
         <Box
           component="main"
           sx={{
@@ -167,37 +185,49 @@ const Page = () => {
             padding: 2,
           }}
         >
-          <Grid position={'relative'} size={4} marginBottom={2} right={0} display={'flex'} justifyContent={'end'}>
-            <Button
-              sx={{ m: 0 }}
-              variant="contained"
-              color="primary"
-              size="medium"
-              component={Link}
-              href="/ideas/create"
-            >
-              {t(tokens.nav.addnew)}
-            </Button>
-          </Grid>
           <Box>
             <Card>
-              <CardContent>
-                <Grid
-                  xs={12}
-                  sm={6}
-                  md={3}
-                  size={12}
-                  sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 0 }}
-                >
+              <CardContent size={12} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Grid size={4}>
+                  <Button onClick={() => setOpenAddBoard(true)} sx={{ backgroundColor: 'primary.main', color: '#fff' }}>
+                    {t(tokens.nav.addnew)}
+                  </Button>
+                  <FormDialog
+                    title={t(tokens.nav.addnew)}
+                    fields={[
+                      { name: 'title', label: 'Title', fullWidth: true, required: true },
+                      {
+                        name: 'productTypeIds',
+                        label: 'Product Types',
+                        type: 'select',
+                        multiple: true,
+                        options: optionProductType,
+                      },
+                      {
+                        name: 'designType',
+                        label: 'Default Design Type',
+                        type: 'select',
+                        options: [
+                          { label: 'Clone', value: 'CLONE' },
+                          { label: 'Re-design', value: 'RE_DESIGN' },
+                          { label: 'New', value: 'NEW' },
+                        ],
+                      },
+                    ]}
+                    onSubmit={(data) => handleCreateBoard(data)}
+                    initialData={[]}
+                    openOverride={openAddBoard}
+                    onCloseOverride={() => setOpenAddBoard(false)}
+                  ></FormDialog>
+                </Grid>
+                <Grid xs={12} sm={6} md={3} size={8} width="90%">
                   <Grid
-                    size={8}
                     position="static"
                     sx={{
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
                       flexDirection: 'row',
-                      width: '85%',
                       backgroundColor: '#fff',
                     }}
                   >
@@ -223,23 +253,47 @@ const Page = () => {
                 </Grid>
               </CardContent>
             </Card>
-            <Card>
+            <Card sx={{ marginTop: 2 }}>
               <Paper>
                 <TableContainer>
                   <Table>
                     <TableHead>
                       <TableRow>
                         <TableCell padding="checkbox">
-                          <Checkbox checked={allSelected} onChange={handleSelectAll} disabled={data.length === 0} />
+                          <Checkbox
+                            checked={allSelected}
+                            onChange={handleSelectAll}
+                            disabled={boardsData.length === 0}
+                          />
                         </TableCell>
                         <TableCell>{t(tokens.nav.title)}</TableCell>
                         <TableCell>{t(tokens.nav.client)}</TableCell>
                         <TableCell>{t(tokens.nav.action)}</TableCell>
-                        <TableCell></TableCell>
+                        <TableCell>
+                          <Button
+                            startIcon={<Delete />}
+                            color="error"
+                            disabled={selected.length === 0}
+                            onClick={() => setOpenDialogDelete(true)}
+                            sx={{
+                              border: 'none',
+                              outline: 'none',
+                              boxShadow: 'none',
+                              backgroundColor: 'transparent',
+                              minWidth: 100,
+                              height: 36,
+                              '&:hover': {
+                                backgroundColor: 'transparent',
+                              },
+                            }}
+                          >
+                            {selected.length > 0 && `(${selected.length})`}
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
+                      {boardsData.map((row) => (
                         <TableRow key={row.id}>
                           <TableCell padding="checkbox">
                             <Checkbox checked={selected.includes(row.id)} onChange={() => handleSelect(row.id)} />
@@ -247,45 +301,78 @@ const Page = () => {
                           <TableCell>{row.title}</TableCell>
                           <TableCell>
                             <div>
-                              {row.client.name}
+                              {row.username}
                               <br />
-                              {row.client.email}
+                              {row.email}
                             </div>
                           </TableCell>
                           <TableCell>
+                            <Button
+                              onClick={() => handleOpenEditBoard(row.id)}
+                              variant="contained"
+                              color="primary"
+                              size="medium"
+                            >
+                              {t(tokens.nav.edit)}
+                            </Button>
                             <FormDialog
-                              buttonLabel="Edit"
-                              title="Edit Board"
-                              fields={fields}
-                              onSubmit={(data) => handleSubmit(data, handleUpdateIdea)}
-                              initialData={quickDesignData}
-                              // onClick={handleOpenEditForm}
-                              buttonProps={{
-                                sx: {},
-                                variant: 'contained',
-                                color: 'primary',
-                                size: 'medium',
-                              }}
-                            />
-                            <FormDialog
-                              buttonLabel="Delete"
-                              title="Delete Board"
+                              title={t(tokens.nav.edit)}
                               fields={[
-                                { name: 'title', label: 'Title' },
-                                { name: 'description', label: 'Description', multiline: true, rows: 4 },
-                                // Thêm các field bạn muốn trong form
+                                { name: 'title', label: t(tokens.nav.title), fullWidth: true, required: true },
+                                {
+                                  name: 'productTypeIds',
+                                  label: t(tokens.nav.product_type),
+                                  type: 'select',
+                                  multiple: true,
+                                  options: optionProductType,
+                                },
+                                {
+                                  name: 'designType',
+                                  label: t(tokens.nav.design_type),
+                                  type: 'select',
+                                  options: [
+                                    { label: 'Clone', value: 'CLONE' },
+                                    { label: 'Re-design', value: 'RE_DESIGN' },
+                                    { label: 'New', value: 'NEW' },
+                                  ],
+                                },
                               ]}
-                              onSubmit={(data) => {
-                                console.log('Form data submitted:', data);
-                                // Xử lý gửi data ở đây, ví dụ gọi API hoặc chuyển trang
-                              }}
-                              buttonProps={{
-                                sx: { ml: 2 },
-                                variant: 'contained',
-                                color: 'primary',
-                                size: 'medium',
+                              onSubmit={(data) => handleEditBoard(data)}
+                              initialData={editingBoardData}
+                              openOverride={openEditDialog}
+                              onCloseOverride={() => {
+                                setOpenEditDialog(false);
+                                setEditingBoardData(null);
                               }}
                             />
+
+                            {/* <Button
+                              onClick={() => setOpenDialogDelete(true)}
+                              sx={{
+                                color: '#fff',
+                                backgroundColor: 'primary.main',
+                                size: 'medium',
+                                ml: 2,
+                              }}
+                            >
+                              {t(tokens.nav.delete)}
+                            </Button> */}
+                            <Dialog open={openDialogDelete} onClose={() => setOpenDialogDelete(false)}>
+                              <DialogTitle>{t(tokens.nav.submit)}</DialogTitle>
+                              <DialogContent>
+                                <Typography sx={{ textAlign: 'center', fontSize: '18px' }}>
+                                  {t(tokens.nav.messageDeleteBoards)}
+                                </Typography>
+                              </DialogContent>
+                              <DialogActions>
+                                <Button onClick={() => setOpenDialogDelete(false)} variant="outlined">
+                                  {t(tokens.nav.cancel)}
+                                </Button>
+                                <Button onClick={handleDeleteBoard} variant="contained" backgroundColor="primary.main">
+                                  {t(tokens.nav.submit)}
+                                </Button>
+                              </DialogActions>
+                            </Dialog>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -295,7 +382,7 @@ const Page = () => {
                 <TablePagination
                   rowsPerPageOptions={[20]}
                   component="div"
-                  count={data.length}
+                  count={boardsData.length}
                   rowsPerPage={rowsPerPage}
                   page={page}
                   onPageChange={handleChangePage}

@@ -12,6 +12,7 @@
 import dayjs from 'dayjs';
 import { isArray } from 'lodash';
 import utc from 'dayjs/plugin/utc';
+import { categoryList, standardizationCategory } from 'src/constants';
 
 dayjs.extend(utc);
 
@@ -36,6 +37,66 @@ export const formatNumber = (str) => {
   }
   return '';
 };
+
+export const getCategoryCounts = (
+  role,
+  statusCountMap = {},
+) => {
+  const visibleCategories = categoryList.filter((label) => {
+    if (role === 'designer' && label === 'DRAFT') return false;
+    if (role === 'customer' && label === 'ARCHIVED') return false;
+    return true;
+  });
+
+  return visibleCategories.map((label) => {
+    const count =
+      label === 'ALL' ? Object.values(statusCountMap).reduce((sum, val) => sum + val, 0) : statusCountMap[label] || 0;
+
+    return {
+      label: formatCategoryLabel(label),
+      value: label,
+      count,
+    };
+  });
+};
+
+export const formatCategoryLabel = (label) => standardizationCategory[label];
+
+export const getAllowedStatusOptions = (role, currentStatuses) => {
+  if (currentStatuses.length !== 1) return [];
+
+  const status = currentStatuses[0];
+
+  const transitions = {
+    customer: {
+      DRAFT: ['NEW'],
+      IN_REVIEW: ['NEED_FIX', 'DONE'],
+    },
+    designer: {
+      NEW: ['DOING'],
+      DOING: ['IN_REVIEW'],
+      NEED_FIX: ['IN_REVIEW'],
+    },
+  };
+
+  return transitions[role]?.[status] || [];
+};
+
+export const checkRole = (role) => {
+  return {
+    isAdmin: role === 'admin',
+    isDesigner: role === 'designer',
+    isCustomer: role === 'customer',
+  };
+};
+
+export const transformBoardToFormInitialData = (boardInfoData) => ({
+  title: boardInfoData.title || '',
+  designType: boardInfoData.designType?.toUpperCase() || '',
+  productTypeIds: Array.isArray(boardInfoData.productTypeIds)
+    ? boardInfoData.productTypeIds.filter((id) => id != null).map(Number)
+    : [],
+});
 
 export const formatPriceOrContact = (p) => {
   if (!p) return 'Liên hệ';
@@ -163,7 +224,7 @@ export const buildNestedArrays = (items, parentId) => {
 };
 
 export const buildNestedArraysMenu = (items) => {
-  console.log("item", items)
+  console.log('item', items);
   const itemsByParentId = items.reduce((acc, item) => {
     if (!acc[item.parent_id]) {
       acc[item.parent_id] = [];
@@ -183,7 +244,7 @@ export const buildNestedArraysMenu = (items) => {
       // console.log("grand childent", grandChildren)
       return grandChildren
         ? {
-          label: item.local_name,
+            label: item.local_name,
             key: item.id,
             children: grandChildren,
             value: item.id,

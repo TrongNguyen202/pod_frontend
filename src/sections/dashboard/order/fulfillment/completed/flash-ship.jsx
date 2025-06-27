@@ -1,10 +1,10 @@
 import { Card } from "@mui/material";
 import { useSearchParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "src/redux/hook";
-import {
-  fetchAllOrderByShop,
-  fetchPackageFulfillmentCompleted,
-} from "src/redux/reducers/orders";
+// import {
+//   fetchAllOrderByShop,
+//   fetchPackageFulfillmentCompleted,
+// } from "src/redux/reducers/orders";
 import { TableOrderFulfillment } from "./table";
 import { useEffect, useMemo } from "react";
 
@@ -28,12 +28,12 @@ export const FlashShip = () => {
     );
   }, [packageFulfillmentCompleted]);
 
-  useEffect(() => {
-    if (shopId) {
-      dispatch(fetchAllOrderByShop(shopId));
-      dispatch(fetchPackageFulfillmentCompleted(shopId));
-    }
-  }, [shopId]);
+  // useEffect(() => {
+  //   if (shopId) {
+  //     dispatch(fetchAllOrderByShop(shopId));
+  //     // dispatch(fetchPackageFulfillmentCompleted(shopId));
+  //   }
+  // }, [shopId]);
 
   return (
     <Card className="p-4">

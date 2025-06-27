@@ -10,14 +10,14 @@ import {
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { useAppDispatch, useAppSelector } from "src/redux/hook";
-import { fetchGetAllOrders } from "src/redux/reducers/orders";
+// import { useAppDispatch, useAppSelector } from "src/redux/hook";
+// import { fetchGetAllOrders } from "src/redux/reducers/orders";
 import { RepositoryRemote } from "src/services";
 
 export const ModalRejectOrder = (props) => {
   const { isOpen, handleClose, order } = props;
-  const dispatch = useAppDispatch();
-  const { orders } = useAppSelector((state) => state.orders);
+  // const dispatch = useAppDispatch();
+  // const { orders } = useAppSelector((state) => state.orders);
 
   const {
     handleSubmit,
@@ -53,7 +53,7 @@ export const ModalRejectOrder = (props) => {
       } else {
         toast.warning(res.message);
       }
-      dispatch(fetchGetAllOrders(order.query));
+      // dispatch(fetchGetAllOrders(order.query));
     } catch (error) {
       toast.error(`Huỷ đơn thất bại. ${error}`);
     }

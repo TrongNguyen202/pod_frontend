@@ -1,19 +1,19 @@
-import { useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from 'src/redux/hook';
-import { fetchPackageFulfillmentCompleted } from 'src/redux/reducers/orders';
+// import { useEffect } from 'react';
+// import { useAppDispatch, useAppSelector } from 'src/redux/hook';
+// import { fetchPackageFulfillmentCompleted } from 'src/redux/reducers/orders';
 import { CardOrder } from './card-order';
 import { Spin } from 'antd';
 
 export const ShopDetailFulfillmentComplete = (props) => {
   const { shopId } = props;
-  const dispatch = useAppDispatch();
-  const { packageFulfillmentCompleted } = useAppSelector((state) => state.orders);
+  // const dispatch = useAppDispatch();
+  // const { packageFulfillmentCompleted } = useAppSelector((state) => state.orders);
 
-  useEffect(() => {
-    if (shopId) {
-      dispatch(fetchPackageFulfillmentCompleted(shopId));
-    }
-  }, [shopId]);
+  // useEffect(() => {
+  //   if (shopId) {
+  //     dispatch(fetchPackageFulfillmentCompleted(shopId));
+  //   }
+  // }, [shopId]);
 
   return (
     <Spin spinning={packageFulfillmentCompleted.loading}>

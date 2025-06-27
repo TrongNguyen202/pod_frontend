@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import Stack from '@mui/material/Stack';
 
-import { TopNavItem } from './top-nav-item';
+// import { TopNavItem } from './top-nav-item';
 import { useAppSelector } from '../../../redux/hook';
 import { permission } from '../../../constants';
 
@@ -34,34 +34,34 @@ export const TopNavSection = (props) => {
         }
         // Branch
 
-        if (item.items) {
-          return (
-            <TopNavItem
-              active={partialMatch}
-              disabled={item.disabled}
-              icon={item.icon}
-              items={item.items}
-              key={item.title}
-              label={item.label}
-              title={item.title}
-            />
-          );
-        }
+        // if (item.items) {
+        //   return (
+        //     <TopNavItem
+        //       active={partialMatch}
+        //       disabled={item.disabled}
+        //       icon={item.icon}
+        //       items={item.items}
+        //       key={item.title}
+        //       label={item.label}
+        //       title={item.title}
+        //     />
+        //   );
+        // }
 
         // Leaf
 
-        return (
-          <TopNavItem
-            active={exactMatch}
-            disabled={item.disabled}
-            external={item.external}
-            icon={item.icon}
-            key={item.title}
-            label={item.label}
-            path={item.path}
-            title={item.title}
-          />
-        );
+        // return (
+        //   <TopNavItem
+        //     active={exactMatch}
+        //     disabled={item.disabled}
+        //     external={item.external}
+        //     icon={item.icon}
+        //     key={item.title}
+        //     label={item.label}
+        //     path={item.path}
+        //     title={item.title}
+        //   />
+        // );
       })}
     </Stack>
   );

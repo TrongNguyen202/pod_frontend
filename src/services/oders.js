@@ -1,301 +1,96 @@
 import { axiosAPI } from 'src/utils/axios';
 
-const requestGetAllOrders = async (query) => {
+const requestGetOrdersByBoardId = async (query) => {
   const config = {
     method: 'GET',
-    url: `/orders?${query}`,
+    url: `/order/search-job?${query}`,
   };
 
   return axiosAPI(config);
 };
 
-const requestGetAllOrderByShop = async (id) => {
+const requestGetAllStatus = async (query) => {
   const config = {
     method: 'GET',
-    url: `/shops/${id}/orders/detail`,
+    url: `/order/status-count?${query}`,
   };
 
   return axiosAPI(config);
 };
 
-const requestGetLabelById = async (orderId) => {
-  const config = {
-    method: 'GET',
-    url: `/shops/orders/${orderId}/search_file`,
-  };
-
-  return axiosAPI(config);
-};
-
-const requestUploadLabelToDriver = async (data) => {
+const requestPostOrder = async (data) => {
   const config = {
     method: 'POST',
-    url: `/shops/upload_driver`,
+    url: `/order/create`,
     data,
   };
 
   return axiosAPI(config);
 };
 
-const requestGetToShipInfor = async (shopId, data) => {
+const requestPostOrders = async (data) => {
   const config = {
     method: 'POST',
-    url: `/shops/${shopId}/orders/toship_infor`,
+    url: `/order/create-many`,
     data,
   };
 
   return axiosAPI(config);
 };
 
-const requestGetAllCombine = async (shopId) => {
-  const config = {
-    method: 'GET',
-    url: `/shops/${shopId}/pre_combine_pkg`,
-  };
-
-  return axiosAPI(config);
-};
-
-const requestConfirmCombine = async (shopId, data) => {
-  const config = {
-    method: 'POST',
-    url: `/shops/${shopId}/confirm_combine_pkg`,
-    data,
-  };
-
-  return axiosAPI(config);
-};
-
-const requestCreateLabel = async (shopId, data) => {
-  const config = {
-    method: 'POST',
-    url: `/shops/${shopId}/packages/package_detail`,
-    data,
-  };
-
-  return axiosAPI(config);
-};
-
-const requestShippingService = async (shopId, data) => {
-  const config = {
-    method: 'POST',
-    url: `/shops/${shopId}/shipping_service`,
-    data,
-  };
-
-  return axiosAPI(config);
-};
-
-const requestByLabel = async (shopId, data) => {
-  const config = {
-    method: 'POST',
-    url: `/shops/${shopId}/packages/buy_label`,
-    data,
-  };
-
-  return axiosAPI(config);
-};
-
-const requestGetShippingDoc = async (id, data) => {
-  const config = {
-    method: 'POST',
-    url: `/shops/${id}/get_shipping_doc_package_ids`,
-    data,
-  };
-
-  return axiosAPI(config);
-};
-
-const requestGetPackageBought = async () => {
-  const config = {
-    method: 'GET',
-    url: `/shops/get_package_buyed`,
-  };
-
-  return axiosAPI(config);
-};
-
-const requestPdfLabelSearch = async (packageId) => {
-  const config = {
-    method: 'GET',
-    url: `/pdf-search/?query=${packageId}`,
-  };
-
-  return axiosAPI(config);
-};
-
-const requestPdfLabelDownload = async (fileName) => {
-  const config = {
-    method: 'GET',
-    url: `/pdf-download/?filename=${fileName}`,
-  };
-
-  return axiosAPI(config);
-};
-
-const requestGetDesignSku = async () => {
-  const config = {
-    method: 'GET',
-    url: '/designskus/',
-  };
-
-  return axiosAPI(config);
-};
-
-const requestGetDesignSkuSize = async (page) => {
-  const config = {
-    method: 'GET',
-    url: `/designskus/?page=${page}`,
-    data,
-  };
-
-  return axiosAPI(config);
-};
-
-const requestGetDesignSkuGroup = async (groupId) => {
-  const config = {
-    method: 'GET',
-    url: `/designskus/find_by_group/${groupId}`,
-  };
-
-  return axiosAPI(config);
-};
-
-const requestGetDesignSkuGroupSize = async (groupId, page) => {
-  const config = {
-    method: 'GET',
-    url: `/designskus/find_by_group/${groupId}?page=${page}`,
-  };
-
-  return axiosAPI(config);
-};
-
-const requestPostDesignSku = async (data) => {
-  const config = {
-    method: 'POST',
-    url: '/designskus/',
-    data,
-  };
-
-  return axiosAPI(config);
-};
-
-const requestPutDesignSku = async (data, designId) => {
+const requestPutOrder = async (orderId, data) => {
   const config = {
     method: 'PUT',
-    url: `/designskus/${designId}/`,
+    url: `/order/edit/${orderId}`,
     data,
   };
 
   return axiosAPI(config);
 };
 
-const requestDeleteDesignSku = async (designId) => {
-  console.log("heheheheh",designId)
+const requestGetOrderById = async (orderId) => {
+  const config = {
+    method: 'GET',
+    url: `/order/${orderId}`,
+  };
+  return axiosAPI(config);
+};
+
+const requestChangeStatusOrders = async (data) => {
+  const config = {
+    method: 'PUT',
+    url: `/order/change-status`,
+    data,
+  };
+  return axiosAPI(config);
+};
+
+const requestApiDeleteOrders = async (data) => {
   const config = {
     method: 'DELETE',
-    url: `/designskus/${designId}/`,
-    
-  };
-
-  return axiosAPI(config);
-};
-
-const requestPdfLabelLinkSearch = async (data) => {
-  const config = {
-    method: 'POST',
-    url: `/pdf-upload-search`,
+    url: `/order/delete-many`,
     data,
   };
-
   return axiosAPI(config);
 };
 
-const requestSearchDesignSky = async (skuId) => {
-  const config = {
-    method: 'GET',
-    url: `/designskus/${skuId}`,
-  };
-
-  return axiosAPI(config);
-};
-
-const requestPackageCreateFlashShip = async (shopId, data) => {
-  const config = {
-    method: 'POST',
-    url: `/shop/${shopId}/packages/create_flash`,
-    data,
-  };
-
-  return axiosAPI(config);
-};
-
-const requestPackageCreatePrintCare = async (shopId, data) => {
-  const config = {
-    method: 'POST',
-    url: `/shop/${shopId}/packages/create_print`,
-    data,
-  };
-
-  return axiosAPI(config);
-};
-
-const requestPackageFulfillmentCompleted = async (shopId) => {
-  const config = {
-    method: 'GET',
-    url: `/shop/${shopId}/packages/list`,
-  };
-
-  return axiosAPI(config);
-};
-
-const requestPackageFulfillmentCompletedInActive = async (packageId, data) => {
+const requestAssignOrdersForDesigner = async (data) => {
   const config = {
     method: 'PUT',
-    url: `/package/${packageId}/deactive`,
+    url: `/order/assign`,
     data,
   };
-
-  return axiosAPI(config);
-};
-
-const requestCancelOder = async (shopId, data) => {
-  const config = {
-    method: 'PUT',
-    url: `/shop/${shopId}/orders/cancel`,
-    data,
-  };
-
   return axiosAPI(config);
 };
 
 export const orders = {
-  requestGetAllOrders,
-  requestGetLabelById,
-  requestUploadLabelToDriver,
-  requestGetToShipInfor,
-  requestGetAllCombine,
-  requestConfirmCombine,
-  requestCreateLabel,
-  requestShippingService,
-  requestByLabel,
-  requestGetShippingDoc,
-  requestGetPackageBought,
-  requestPdfLabelSearch,
-  requestPdfLabelDownload,
-  requestGetDesignSku,
-  requestGetDesignSkuSize,
-  requestGetDesignSkuGroup,
-  requestGetDesignSkuGroupSize,
-  requestPostDesignSku,
-  requestPutDesignSku,
-  requestDeleteDesignSku,
-  requestPdfLabelLinkSearch,
-  requestSearchDesignSky,
-  requestPackageCreateFlashShip,
-  requestPackageCreatePrintCare,
-  requestPackageFulfillmentCompleted,
-  requestPackageFulfillmentCompletedInActive,
-  requestCancelOder,
-  requestGetAllOrderByShop,
+  requestGetOrdersByBoardId,
+  requestGetAllStatus,
+  requestPostOrder,
+  requestPostOrders,
+  requestPutOrder,
+  requestGetOrderById,
+  requestChangeStatusOrders,
+  requestApiDeleteOrders,
+  requestAssignOrdersForDesigner,
 };

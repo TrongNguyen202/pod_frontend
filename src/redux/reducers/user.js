@@ -14,6 +14,11 @@ const initialState = {
     error: '',
     data: [],
   },
+  designerIds: {
+    loading: false,
+    error: '',
+    data: [],
+  },
 };
 
 export const fetchUserByEmail = createAsyncThunk('/user/post/user-detail', async (email) => {
@@ -26,9 +31,23 @@ export const fetchGetShopByUser = createAsyncThunk('/user/shop-by-user', async (
   return res.data.data;
 });
 
+export const fetchGetDesginerIds = createAsyncThunk('/get/designer/ids', async () => {
+  const res = await RepositoryRemote.users.requestGetDesignerIds();
+  return res.data.data;
+});
+
 const slicer = createSlice({
   name: 'users',
   initialState,
+  reducers: {
+    resetDataDesginerIds(state) {
+      state.designerIds = {
+        loading: false,
+        error: '',
+        data: [],
+      };
+    },
+  },
   extraReducers: (builder) => {
     builder.addCase(fetchGetShopByUser.pending, (state) => {
       state.loading = true;
@@ -65,9 +84,31 @@ const slicer = createSlice({
         data: [],
       };
     });
+
+    builder.addCase(fetchGetDesginerIds.pending, (state) => {
+      state.loading = true;
+      state.designerIds.loading = true;
+    });
+    builder.addCase(fetchGetDesginerIds.fulfilled, (state, action) => {
+      state.loading = false;
+      state.designerIds = {
+        loading: false,
+        error: '',
+        data: action.payload,
+      };
+      state.error = '';
+    });
+    builder.addCase(fetchGetDesginerIds.rejected, (state, action) => {
+      state.loading = false;
+      state.designerIds = {
+        loading: false,
+        error: action?.error?.message || 'Error while processing.',
+        data: [],
+      };
+    });
   },
 });
 
-export const {} = slicer.actions;
+export const { resetDataDesginerIds } = slicer.actions;
 
 export default slicer.reducer;

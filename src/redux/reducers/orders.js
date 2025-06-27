@@ -4,87 +4,93 @@ import { RepositoryRemote } from 'src/services';
 const initialState = {
   loading: false,
   error: '',
-  shippingService: {
+  orderService: {
+    loading: false,
+    error: '',
+    data: [],
+    total: 0,
+    page: 1,
+    totalPages: 1,
+  },
+  orderStatus: {
     loading: false,
     error: '',
     data: [],
   },
-  packagesBought: {
+  orderPostSignle: {
     loading: false,
     error: '',
     data: [],
   },
-  orders: {
-    loading: false,
-    query: '',
-    error: '',
-    data: {},
-  },
-  packageFulfillmentCompleted: {
+  orderPostMulti: {
     loading: false,
     error: '',
     data: [],
   },
-  designSku: {
-    loading: false,
-    initial: false,
-    error: '',
-    data: [],
-  },
-  toShipInfor: {
+  orderPutService: {
     loading: false,
     error: '',
     data: [],
   },
-  orderByShop: {
+  orderById: {
+    loading: false,
+    error: '',
+    data: [],
+  },
+  changeStatusService: {
+    loading: false,
+    error: '',
+    data: [],
+  },
+  deleteService: {
     loading: false,
     error: '',
     data: [],
   },
 };
 
-export const fetchGetShippingService = createAsyncThunk('/orders/shipping-services', async ({ shopId, data }) => {
-  const res = await RepositoryRemote.orders.requestShippingService(shopId, data);
+export const fetchGetOrdersByBoardId = createAsyncThunk('/get/order/boardId', async ({ query }) => {
+  const res = await RepositoryRemote.orders.requestGetOrdersByBoardId(query);
   return res?.data?.data;
 });
 
-export const fetchGetPackageBought = createAsyncThunk('/orders/package-bought', async () => {
-  const res = await RepositoryRemote.orders.requestGetPackageBought();
-  return res?.data;
+export const fetchGetAllStatus = createAsyncThunk('/get/order/status', async (query) => {
+  const res = await RepositoryRemote.orders.requestGetAllStatus(query);
+  return res?.data?.data;
 });
 
-export const fetchGetAllOrders = createAsyncThunk('/orders/all', async (query) => {
-  const res = await RepositoryRemote.orders.requestGetAllOrders(query);
-  return res?.data;
-  // return mockData;
+export const postOrder = createAsyncThunk('/post/order', async ({ data }) => {
+  const res = await RepositoryRemote.orders.requestPostOrder(data);
+  return res.data;
 });
 
-export const fetchPackageFulfillmentCompleted = createAsyncThunk('/orders/fulfillment-completed', async (shopId) => {
-  const res = await RepositoryRemote.orders.requestPackageFulfillmentCompleted(shopId);
-  return res?.data;
+export const postOrders = createAsyncThunk('/post/orders-many', async ({ data }) => {
+  const res = await RepositoryRemote.orders.requestPostOrders(data);
+  return res.data;
 });
 
-export const fetchPackageFulfillmentCompletedInactive = createAsyncThunk(
-  '/orders/fulfillment-completed-inactive',
-  async ({ packageId, body }) => {
-    const res = await RepositoryRemote.orders.requestPackageFulfillmentCompletedInActive(packageId, body);
-    return res?.data;
-  },
-);
-
-export const fetchGetDesignSku = createAsyncThunk('/orders/design-sku', async () => {
-  const res = await RepositoryRemote.orders.requestGetDesignSku();
-  return res?.data;
+export const putOrder = createAsyncThunk('/put/order', async ({ orderId, data }) => {
+  const res = await RepositoryRemote.orders.requestPutOrder(orderId, data);
+  return res.data;
 });
 
-export const fetchToShipInfor = createAsyncThunk('/orders/to-ship-infor', async ({ shopId, body }) => {
-  const res = await RepositoryRemote.orders.requestGetToShipInfor(shopId, body);
-  return res?.data;
+export const fetchtGetOrder = createAsyncThunk('/get/order/id', async ({ orderId }) => {
+  const res = await RepositoryRemote.orders.requestGetOrderById(orderId);
+  return res.data;
 });
 
-export const fetchAllOrderByShop = createAsyncThunk('/orders/by-shop', async (shopId) => {
-  const res = await RepositoryRemote.orders.requestGetAllOrderByShop(shopId);
-  return res?.data;
+export const changeStatusOrders = createAsyncThunk('/put/order/change/status', async ({ data }) => {
+  const res = await RepositoryRemote.orders.requestChangeStatusOrders(data);
+  return res.data;
+});
+
+export const requestDeleteOrders = createAsyncThunk('/delete/orders', async ({ ids }) => {
+  const res = await RepositoryRemote.orders.requestApiDeleteOrders({ ids });
+  return res.data;
+});
+
+export const fetchAssignOrdersForDesigner = createAsyncThunk('/asign/orders', async ({ data }) => {
+  const res = await RepositoryRemote.orders.requestAssignOrdersForDesigner(data);
 });
 
 const slicer = createSlice({
@@ -92,115 +98,170 @@ const slicer = createSlice({
   initialState,
   reducers: {
     setQueryAllOrders: (state, action) => {
-      state.orders.query = action.payload;
+      state.boards.query = action.payload;
     },
-    resetDataListOrder: (state, action) => {
-      state.orders.data = {};
-    }
+    resetDataListOrder(state) {
+      state.orderService = {
+        loading: false,
+        error: '',
+        data: [],
+      };
+    },
+    resetCountStatus(state) {
+      state.orderStatus = {
+        loading: false,
+        error: '',
+        data: [],
+      };
+    },
   },
   extraReducers: (builder) => {
-    builder.addCase(fetchGetShippingService.pending, (state) => {
-      state.shippingService.loading = true;
+    // Lay thong tin cac order tu boardId
+    builder.addCase(fetchGetOrdersByBoardId.pending, (state) => {
+      state.orderService.loading = true;
     });
-    builder.addCase(fetchGetShippingService.fulfilled, (state, action) => {
-      state.shippingService.loading = false;
-      state.shippingService.data = action.payload;
-      state.shippingService.error = '';
-    });
-    builder.addCase(fetchGetShippingService.rejected, (state, action) => {
-      state.shippingService.loading = false;
-      state.shippingService.data = [];
-      state.shippingService.error = action?.error?.message || 'Error while processing.';
+    builder.addCase(fetchGetOrdersByBoardId.fulfilled, (state, action) => {
+      const { bodyData, total, currentPage, lastPage } = action.payload;
+
+      state.orderService.loading = false;
+      state.orderService.data = bodyData || [];
+      state.orderService.total = total ?? 0;
+      state.orderService.page = currentPage ?? 1;
+      state.orderService.totalPages = lastPage ?? 1;
+      state.orderService.error = '';
     });
 
-    builder.addCase(fetchGetPackageBought.pending, (state) => {
-      state.packagesBought.loading = true;
-    });
-    builder.addCase(fetchGetPackageBought.fulfilled, (state, action) => {
-      state.packagesBought.loading = false;
-      state.packagesBought.data = action.payload;
-      state.packagesBought.error = '';
-    });
-    builder.addCase(fetchGetPackageBought.rejected, (state, action) => {
-      state.packagesBought.loading = false;
-      state.packagesBought.data = [];
-      state.packagesBought.error = action?.error?.message || 'Error while processing.';
+    builder.addCase(fetchGetOrdersByBoardId.rejected, (state, action) => {
+      state.orderService.loading = false;
+      state.orderService.data = [];
+      state.orderService.total = 0;
+      state.orderService.page = 1;
+      state.orderService.totalPages = 1;
+      state.orderService.error = action?.error?.message || 'Error while processing.';
     });
 
-    builder.addCase(fetchGetAllOrders.pending, (state) => {
-      state.orders.loading = true;
+    // Lay so luong don hang theo tung trang thai
+    builder.addCase(fetchGetAllStatus.pending, (state) => {
+      state.orderStatus.loading = true;
     });
-    builder.addCase(fetchGetAllOrders.fulfilled, (state, action) => {
-      state.orders.loading = false;
-      state.orders.data = action.payload;
-      state.orders.error = '';
+    builder.addCase(fetchGetAllStatus.fulfilled, (state, action) => {
+      state.orderStatus.loading = false;
+      state.orderStatus.data = action.payload;
+      state.orderStatus.error = '';
     });
-    builder.addCase(fetchGetAllOrders.rejected, (state, action) => {
-      state.orders.loading = false;
-      state.orders.data = {};
-      state.orders.error = action?.error?.message || 'Error while processing.';
-    });
-
-    builder.addCase(fetchPackageFulfillmentCompleted.pending, (state) => {
-      state.packageFulfillmentCompleted.loading = true;
-    });
-    builder.addCase(fetchPackageFulfillmentCompleted.fulfilled, (state, action) => {
-      state.packageFulfillmentCompleted.loading = false;
-      state.packageFulfillmentCompleted.data = action.payload;
-      state.packageFulfillmentCompleted.error = '';
-    });
-    builder.addCase(fetchPackageFulfillmentCompleted.rejected, (state, action) => {
-      state.packageFulfillmentCompleted.loading = false;
-      state.packageFulfillmentCompleted.data = [];
-      state.packageFulfillmentCompleted.error = action?.error?.message || 'Error while processing.';
+    builder.addCase(fetchGetAllStatus.rejected, (state, action) => {
+      state.orderStatus.loading = false;
+      state.orderStatus.data = [];
+      state.orderStatus.error = action?.error?.message || 'Error while processing.';
     });
 
-    builder.addCase(fetchGetDesignSku.pending, (state) => {
-      state.designSku.loading = true;
+    // Tao 1 order
+    builder.addCase(postOrder.pending, (state) => {
+      state.orderPostSignle.loading = true;
     });
-    builder.addCase(fetchGetDesignSku.fulfilled, (state, action) => {
-      state.designSku.loading = false;
-      state.designSku.data = action.payload;
-      state.designSku.initial = true;
-      state.designSku.error = '';
+    builder.addCase(postOrder.fulfilled, (state, action) => {
+      state.orderPostSignle.loading = false;
+      state.orderPostSignle.data = action.payload.bodyData;
+      state.orderPostSignle.error = '';
     });
-    builder.addCase(fetchGetDesignSku.rejected, (state, action) => {
-      state.designSku.loading = false;
-      state.designSku.data = [];
-      state.designSku.error = action?.error?.message || 'Error while processing.';
-      state.designSku.initial = true;
-    });
-
-    builder.addCase(fetchToShipInfor.pending, (state) => {
-      state.toShipInfor.loading = true;
-    });
-    builder.addCase(fetchToShipInfor.fulfilled, (state, action) => {
-      state.toShipInfor.loading = false;
-      state.toShipInfor.data = action.payload;
-      state.toShipInfor.error = '';
-    });
-    builder.addCase(fetchToShipInfor.rejected, (state, action) => {
-      state.toShipInfor.loading = false;
-      state.toShipInfor.data = [];
-      state.toShipInfor.error = action?.error?.message || 'Error while processing.';
+    builder.addCase(postOrder.rejected, (state, action) => {
+      state.orderPostSignle.loading = false;
+      state.orderPostSignle.data = [];
+      state.orderPostSignle.error = action?.error?.message || 'Error while processing.';
     });
 
-    builder.addCase(fetchAllOrderByShop.pending, (state) => {
-      state.orderByShop.loading = true;
+    // Tao nhieu orders
+    builder.addCase(postOrders.pending, (state) => {
+      state.orderPostMulti.loading = true;
     });
-    builder.addCase(fetchAllOrderByShop.fulfilled, (state, action) => {
-      state.orderByShop.loading = false;
-      state.orderByShop.data = action.payload;
-      state.orderByShop.error = '';
+    builder.addCase(postOrders.fulfilled, (state, action) => {
+      state.orderPostMulti.loading = false;
+      state.orderPostMulti.data = action.payload.bodyData;
+      state.orderPostMulti.error = '';
     });
-    builder.addCase(fetchAllOrderByShop.rejected, (state, action) => {
-      state.orderByShop.loading = false;
-      state.orderByShop.data = [];
-      state.orderByShop.error = action?.error?.message || 'Error while processing.';
+    builder.addCase(postOrders.rejected, (state, action) => {
+      state.orderPostMulti.loading = false;
+      state.orderPostMulti.data = [];
+      state.orderPostMulti.error = action?.error?.message || 'Error while processing.';
+    });
+
+    // Cap nhat thong tin order tu orderId
+    builder.addCase(putOrder.pending, (state) => {
+      state.orderPutService.loading = true;
+    });
+    builder.addCase(putOrder.fulfilled, (state, action) => {
+      state.orderPutService.loading = false;
+      state.orderPutService.data = action.payload.bodyData;
+      state.orderPutService.error = '';
+    });
+    builder.addCase(putOrder.rejected, (state, action) => {
+      state.orderPutService.loading = false;
+      state.orderPutService.data = [];
+      state.orderPutService.error = action?.error?.message || 'Error while processing.';
+    });
+
+    // Lay thong tin cac order tu orderId
+    builder.addCase(fetchtGetOrder.pending, (state) => {
+      state.orderById.loading = true;
+    });
+    builder.addCase(fetchtGetOrder.fulfilled, (state, action) => {
+      state.orderById.loading = false;
+      state.orderById.data = action.payload.bodyData;
+      state.orderById.error = '';
+    });
+    builder.addCase(fetchtGetOrder.rejected, (state, action) => {
+      state.orderById.loading = false;
+      state.orderById.data = [];
+      state.orderById.error = action?.error?.message || 'Error while processing.';
+    });
+
+    // Change status multi
+    builder.addCase(changeStatusOrders.pending, (state) => {
+      state.changeStatusService.loading = true;
+    });
+    builder.addCase(changeStatusOrders.fulfilled, (state, action) => {
+      state.changeStatusService.loading = false;
+      state.changeStatusService.data = action.payload.bodyData;
+      state.changeStatusService.error = '';
+    });
+    builder.addCase(changeStatusOrders.rejected, (state, action) => {
+      state.changeStatusService.loading = false;
+      state.changeStatusService.data = [];
+      state.changeStatusService.error = action?.error?.message || 'Error while processing.';
+    });
+
+    // Delete orders
+    builder.addCase(requestDeleteOrders.pending, (state) => {
+      state.deleteService.loading = true;
+    });
+    builder.addCase(requestDeleteOrders.fulfilled, (state, action) => {
+      state.deleteService.loading = false;
+      state.deleteService.data = action.payload.bodyData;
+      state.deleteService.error = '';
+    });
+    builder.addCase(requestDeleteOrders.rejected, (state, action) => {
+      state.deleteService.loading = false;
+      state.deleteService.data = [];
+      state.deleteService.error = action?.error?.message || 'Error while processing.';
+    });
+
+    // Assign order for designer
+    builder.addCase(fetchAssignOrdersForDesigner.pending, (state) => {
+      state.deleteService.loading = true;
+    });
+    builder.addCase(fetchAssignOrdersForDesigner.fulfilled, (state, action) => {
+      state.deleteService.loading = false;
+      state.deleteService.data = action.payload;
+      state.deleteService.error = '';
+    });
+    builder.addCase(fetchAssignOrdersForDesigner.rejected, (state, action) => {
+      state.deleteService.loading = false;
+      state.deleteService.data = [];
+      state.deleteService.error = action?.error?.message || 'Error while processing.';
     });
   },
 });
 
-export const { setQueryAllOrders, resetDataListOrder } = slicer.actions;
+export const { setQueryAllOrders, resetDataListOrder, resetCountStatus } = slicer.actions;
 
 export default slicer.reducer;

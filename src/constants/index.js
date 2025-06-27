@@ -27,6 +27,87 @@ export const ENVIRONMENT_URL = {
   API_PRINT_CARE: process.env.NEXT_PUBLIC_API_PRINT_CARE,
 };
 
+export const categoryList = [
+  'DRAFT',
+  'NEW',
+  // 'TODO',
+  'DOING',
+  // 'CHECK',
+  'IN_REVIEW',
+  'NEED_FIX',
+  'DONE',
+  'ARCHIVED',
+  'ALL',
+];
+
+export const standardizationCategory = {
+  DRAFT: 'Nháp',
+  NEW: 'Mới',
+  DOING: 'Đang xử lý',
+  IN_REVIEW: 'Kiểm tra',
+  NEED_FIX: 'Cần sửa',
+  DONE: 'Hoàn thành',
+  ARCHIVED: 'Lưu trữ ',
+  ALL: 'Tất cả',
+};
+
+export const validNextStatusMap = {
+  DRAFT: ['NEW'],
+  NEW: ['DOING'],
+  // TODO: ['DOING'],
+  DOING: ['IN_REVIEW'],
+  // CHECK: ['IN_REVIEW'],
+  IN_REVIEW: ['NEED_FIX', 'DONE'],
+  NEED_FIX: ['IN_REVIEW'],
+  DONE: ['ARCHIVED'],
+};
+
+export const categoryColors = {
+  DRAFT: '#90caf9',
+  NEW: '#a5d6a7',
+  TODO: '#ffcc80',
+  DOING: '#ffab91',
+  CHECK: '#ce93d8',
+  IN_REVIEW: '#80cbc4',
+  NEED_FIX: '#f48fb1',
+  DONE: '#b39ddb',
+  ARCHIVED: '#721387',
+  ALL: '#i66sd5',
+};
+
+export const categoryLabelsVi = {
+  NEW: 'Tạo mới',
+  RE_DESIGN: 'Thiết kế lại',
+  CLONE: 'Tạo bản sao',
+};
+
+export const categoryStatusVi = {
+  DRAFT: 'Nháp',
+  NEW: 'Mới',
+  DOING: 'Đang xử lý',
+  IN_REVIEW: 'Kiểm tra',
+  NEED_FIX: 'Cần sửa',
+  DONE: 'Hoàn thành',
+  ARCHIVED: 'Lưu trữ ',
+};
+
+export const optionsDesignType = [
+  { label: 'CLONE', value: 'CLONE' },
+  { label: 'RE_DESIGN', value: 'RE_DESIGN' },
+  { label: 'NEW', value: 'NEW' },
+];
+
+export const bankId = 'mbbank';
+export const bankAccountNo = '0399709507';
+
+export const PRICE_OPTIONS = [
+  { id: 1, label: '20,000', value: 20000 },
+  { id: 2, label: '25,000', value: 25000 },
+  { id: 3, label: '27,000', value: 27000 },
+  { id: 4, label: '32,000', value: 32000 },
+  { id: 5, label: '35,000', value: 35000 },
+];
+
 export const statusIdentity = {
   PROGRESSING: 0,
   UNAPPROVED: 1,

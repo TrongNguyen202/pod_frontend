@@ -320,10 +320,10 @@ export const OrderCheckPartner = ({ toShipInfoData }) => {
         order_documents: dataConvert,
       };
 
-      dispatch(fetchGetDesignSku());
+      // dispatch(fetchGetDesignSku());
       dispatch(fetchGetFlashShipPODVariant());
-      dispatch(fetchToShipInfor({ shopId: shopId, body: data }));
-      dispatch(fetchPackageFulfillmentCompleted(shopId));
+      // dispatch(fetchToShipInfor({ shopId: shopId, body: data }));
+      // dispatch(fetchPackageFulfillmentCompleted(shopId));
       dispatch(fetchGetCkfVariant());
     }
   }, [toShipInfoData, shopId]);
