@@ -49,7 +49,7 @@ const slicer = createSlice({
       state.loading = false;
       state.data = [];
       state.error = action?.error?.message || 'Error while processing.';
-      alerts.error('Lỗi đăng nhập');
+      // alerts.error('Lỗi đăng nhập');
     });
   },
 });
