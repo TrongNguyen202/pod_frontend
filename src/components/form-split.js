@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, memo } from 'react';
+import React, { useState, useCallback, useEffect, memo, useMemo } from 'react';
 import {
   Button,
   Dialog,
@@ -77,18 +77,21 @@ const FormDialogSplitLayout = ({
     handleChange(fieldName, value);
   };
 
-  const handleFormSubmit = useCallback(
-    async (status) => {
-      setIsSubmitting(true);
+  const mergedDescription = useMemo(() => {
+    const selectedTemplateIds = formData['templates'] || [];
 
-      const selectedTemplateIds = formData['templates'] || [];
-      const mergedDescription = selectedTemplateIds
-        .map((id) => {
-          const t = templatesData.find((tpl) => tpl.id === id);
-          return t?.description || '';
-        })
-        .filter((desc) => desc.trim() !== '')
-        .join('\n');
+    return selectedTemplateIds
+      .map((id) => {
+        const tpl = templatesData.find((t) => t.id === id);
+        return tpl?.description || '';
+      })
+      .filter((desc) => desc.trim() !== '')
+      .join('\n');
+  }, [formData['templates'], templatesData]);
+
+  const handleFormSubmit = useCallback(
+    async (formData, status) => {
+      setIsSubmitting(true);
 
       const formDataToSubmit = new FormData();
       for (const key in formData) {
@@ -128,6 +131,27 @@ const FormDialogSplitLayout = ({
 
     handleChange('description', mergedDescription);
   }, [formData['templates'], templatesData]);
+
+  const productTypeMap = useMemo(() => {
+    return productTypeData.reduce((acc, curr) => {
+      acc[curr.id] = curr.name;
+      return acc;
+    }, {});
+  }, [productTypeData]);
+
+  const designTypeMap = useMemo(() => {
+    return optionsDesignType.reduce((acc, curr) => {
+      acc[curr.value] = curr.label;
+      return acc;
+    }, {});
+  }, [optionsDesignType]);
+
+  const templateMap = useMemo(() => {
+    return templatesData.reduce((acc, curr) => {
+      acc[curr.id] = curr.title;
+      return acc;
+    }, {});
+  }, [templatesData]);
 
   const dialogOpen = typeof openOverride === 'boolean' ? openOverride : open;
 
@@ -233,7 +257,7 @@ const FormDialogSplitLayout = ({
                   fullWidth
                   label={t(tokens.nav.design_type)}
                   SelectProps={{
-                    renderValue: (selected) => optionsDesignType.find((o) => o.value === selected)?.label || selected,
+                    renderValue: (selected) => designTypeMap[selected] || selected,
                   }}
                   value={formData['designType'] || ''}
                   onChange={(e) => handleChange('designType', e.target.value)}
@@ -251,7 +275,7 @@ const FormDialogSplitLayout = ({
                   fullWidth
                   label={t(tokens.nav.product_type)}
                   SelectProps={{
-                    renderValue: (selected) => productTypeData.find((o) => o.id === selected)?.name || selected,
+                    renderValue: (selected) => productTypeMap[selected] || selected,
                   }}
                   value={formData['productTypeId'] || ''}
                   onChange={(e) => handleChange('productTypeId', e.target.value)}
@@ -335,10 +359,7 @@ const FormDialogSplitLayout = ({
                   SelectProps={{
                     multiple: true,
                     renderValue: (selected) =>
-                      selected.map((v) => {
-                        const label = templatesData.find((o) => o.id === v)?.title || v;
-                        return <Chip key={v} label={label} sx={{ mr: 0.5 }} />;
-                      }),
+                      selected.map((v) => <Chip key={v} label={templateMap[v] || v} sx={{ mr: 0.5 }} />),
                   }}
                   value={formData['templates'] || []}
                   onChange={(e) => handleChange('templates', e.target.value)}
@@ -357,10 +378,10 @@ const FormDialogSplitLayout = ({
           <Button onClick={handleClose} color="inherit">
             {t(tokens.nav.cancel)}
           </Button>
-          <Button onClick={() => handleFormSubmit('DRAFT')} variant="contained" disabled={isSubmitting}>
+          <Button onClick={() => handleFormSubmit(formData, 'DRAFT')} variant="contained" disabled={isSubmitting}>
             {t(tokens.nav.submit_draft)}
           </Button>
-          <Button onClick={() => handleFormSubmit('NEW')} variant="contained" disabled={isSubmitting}>
+          <Button onClick={() => handleFormSubmit(formData, 'NEW')} variant="contained" disabled={isSubmitting}>
             {t(tokens.nav.submit)}
           </Button>
         </DialogActions>

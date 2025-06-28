@@ -33,7 +33,10 @@ const Header = ({ onBoardChange, showBoards, role }) => {
   const [selectedBoardId, setSelectedBoardId] = useState(null);
   const [email, setEmail] = useState(null);
   const [amount, setAmount] = useState('');
+  const [amountWithdraw, setAmountWithdraw] = useState('');
   const [note, setNote] = useState('');
+  const [bankName, setBankName] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
   const [qrCode, setQrCode] = useState('');
   const [walletUpdated, setWalletUpdated] = useState(false);
   const amountRef = useRef();
@@ -198,20 +201,26 @@ const Header = ({ onBoardChange, showBoards, role }) => {
 
   const handleGenerateQR = async () => {
     try {
-      const response = await dispatch(
-        fetchCreateQr({
-          userId: userData.id,
-          amount: Number(amount),
-          transactionCode: transactionCode?.toString(),
-        }),
-      );
-      const rawExpiresAt = Math.floor(response.payload.expiresAt);
-      const expiresAtDate = new Date(rawExpiresAt * 1000);
+      if (role === 'customer') {
+        const response = await dispatch(
+          fetchCreateQr({
+            userId: userData.id,
+            amount: Number(amount),
+            transactionCode: transactionCode?.toString(),
+          }),
+        );
+        const rawExpiresAt = Math.floor(response.payload.expiresAt);
+        const expiresAtDate = new Date(rawExpiresAt * 1000);
 
-      setQrCode(response.payload.qrCodeBase64);
-      setExpiresAt(expiresAtDate);
-      handleToggleDrawer();
-      setTimeout(() => setOpenQRDialog(true), 500);
+        setQrCode(response.payload.qrCodeBase64);
+        setExpiresAt(expiresAtDate);
+        handleToggleDrawer();
+        setTimeout(() => setOpenQRDialog(true), 500);
+      } else if (role === 'designer') {
+        console.log(123);
+        handleToggleDrawer();
+        setOpenQRDialog(true);
+      }
     } catch (error) {
       toast.error('Lỗi tạo QR:', error);
     }
@@ -227,7 +236,6 @@ const Header = ({ onBoardChange, showBoards, role }) => {
         }
         const res = await dispatch(fetchGetInfoPayment(transactionCode));
         const status = res.payload?.data?.status;
-        console.log(status);
         if (status === 'SUCCESS') {
           clearInterval(interval);
           setOpenQRDialog(false);
@@ -248,7 +256,6 @@ const Header = ({ onBoardChange, showBoards, role }) => {
 
   useEffect(() => {
     if (!expiresAt) return;
-    console.log(expiresAt);
     const interval = setInterval(() => {
       const now = new Date();
       const diff = Math.floor((new Date(expiresAt) - now) / 1000);
@@ -319,7 +326,7 @@ const Header = ({ onBoardChange, showBoards, role }) => {
                   displayEmpty
                   renderValue={(selected) => {
                     if (!selected) return <div>{t(tokens.nav.all)}</div>;
-                    const board = boardsData.find((b) => b.id === selected);
+                    const board = (boardsData ?? []).find((b) => b.id === selected);
                     return board?.title || t(tokens.nav.untitled);
                   }}
                   sx={{ '& .MuiSelect-select': { paddingY: '8px' } }}
@@ -327,7 +334,7 @@ const Header = ({ onBoardChange, showBoards, role }) => {
                   <MenuItem value="">
                     <div>{t(tokens.nav.all)}</div>
                   </MenuItem>
-                  {boardsData.map((board) => (
+                  {(boardsData ?? []).map((board) => (
                     <MenuItem key={board.id ?? 'null'} value={board.id ?? 'null'}>
                       {board.title}
                     </MenuItem>
@@ -339,7 +346,6 @@ const Header = ({ onBoardChange, showBoards, role }) => {
                 onRender={(id, phase, actualDuration) => console.log(`${id} ${phase} in ${actualDuration}ms`)}
               >
                 <FormDialog
-                  // key={selectedBoardId + '-' + JSON.stringify(initialFormData)}
                   buttonLabel={t(tokens.nav.quick_design)}
                   title="Edit Board"
                   fields={fields}
@@ -357,6 +363,7 @@ const Header = ({ onBoardChange, showBoards, role }) => {
               <Button
                 variant="outlined"
                 size="medium"
+                disabled={!selectedBoardId}
                 sx={{
                   ml: 1,
                   mr: 2,
@@ -412,25 +419,65 @@ const Header = ({ onBoardChange, showBoards, role }) => {
                 sx={{ zIndex: 999999991 }}
               >
                 <Box sx={{ width: 400, p: 3 }}>
-                  <Typography variant="h6">{t(tokens.nav.make_deposit)}</Typography>
+                  {role === 'customer' ? (
+                    <Typography variant="h6">{t(tokens.nav.make_deposit)}</Typography>
+                  ) : role === 'designer' ? (
+                    <Typography variant="h6">{t(tokens.nav.make_withdraw)}</Typography>
+                  ) : (
+                    <Box></Box>
+                  )}
                   <Box mt={2}>
-                    <input
-                      type="text"
-                      ref={amountRef}
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={handleAmountFormat(amount)}
-                      onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))}
-                      onKeyDown={(e) => {
-                        if (
-                          !/[0-9]/.test(e.key) &&
-                          !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)
-                        ) {
-                          e.preventDefault();
-                        }
-                      }}
-                      style={{ margin: '12px 0', borderRadius: '5px', width: '100%', padding: 8 }}
-                    />
+                    {role === 'customer' ? (
+                      <input
+                        type="text"
+                        ref={amountRef}
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={handleAmountFormat(amount)}
+                        onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))}
+                        onKeyDown={(e) => {
+                          if (
+                            !/[0-9]/.test(e.key) &&
+                            !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)
+                          ) {
+                            e.preventDefault();
+                          }
+                        }}
+                        style={{ margin: '12px 0', borderRadius: '5px', width: '100%', padding: 8 }}
+                      />
+                    ) : role === 'designer' ? (
+                      <Box>
+                        <input
+                          type="text"
+                          ref={amountRef}
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          value={handleAmountFormat(amountWithdraw)}
+                          onChange={(e) => setAmountWithdraw(e.target.value.replace(/\D/g, ''))}
+                          onKeyDown={(e) => {
+                            if (
+                              !/[0-9]/.test(e.key) &&
+                              !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)
+                            ) {
+                              e.preventDefault();
+                            }
+                          }}
+                          style={{
+                            margin: '12px 0',
+                            borderRadius: '5px',
+                            width: '100%',
+                            padding: 8,
+                            border: amountWithdraw > (userData.coin || 0) ? '1px solid red' : '1px solid #ccc',
+                          }}
+                        />
+
+                        {amountWithdraw > (userData.coin || 0) && (
+                          <p style={{ color: 'red', margin: '4px 0 0 0' }}>Số tiền rút vượt quá số dư!</p>
+                        )}
+                      </Box>
+                    ) : (
+                      <Box></Box>
+                    )}
                     <input
                       placeholder={t(tokens.nav.transaction)}
                       style={{
@@ -444,86 +491,159 @@ const Header = ({ onBoardChange, showBoards, role }) => {
                       disabled
                       value={transactionCode}
                     />
-                    <textarea
-                      placeholder={t(tokens.nav.note)}
-                      style={{ margin: '12px 0', borderRadius: '5px', width: '100%', padding: 8 }}
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                    />
-                    <Button variant="contained" color="primary" sx={{ mt: 2 }} onClick={handleGenerateQR}>
+                    {role === 'customer' ? (
+                      <textarea
+                        placeholder={t(tokens.nav.note)}
+                        style={{ margin: '12px 0', borderRadius: '5px', width: '100%', padding: 8 }}
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}
+                      />
+                    ) : (
+                      <Box>
+                        <input
+                          placeholder={t(tokens.nav.bankName)}
+                          style={{ margin: '12px 0', borderRadius: '5px', width: '100%', padding: 8 }}
+                          value={bankName}
+                          onChange={(e) => setBankName(e.target.value)}
+                        />
+                        <input
+                          placeholder={t(tokens.nav.accountNumber)}
+                          style={{ margin: '12px 0', borderRadius: '5px', width: '100%', padding: 8 }}
+                          value={accountNumber}
+                          onChange={(e) => setAccountNumber(e.target.value)}
+                        />
+                      </Box>
+                    )}
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      sx={{ mt: 2 }}
+                      onClick={handleGenerateQR}
+                      disabled={role === 'designer' ? amountWithdraw > userData.coin || amountWithdraw <= 0 : amount <= 0}
+                    >
                       {t(tokens.nav.submit)}
                     </Button>
                   </Box>
                 </Box>
               </Drawer>
-              <Dialog fullScreen open={openQRDialog} onClose={() => setOpenQRDialog(false)} sx={{ zIndex: 999999999 }}>
-                <Box
-                  sx={{
-                    backgroundColor: '#fff',
-                    height: '100vh',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    textAlign: 'center',
-                    px: 2,
-                  }}
+              {role === 'customer' ? (
+                <Dialog
+                  fullScreen
+                  open={openQRDialog}
+                  onClose={() => setOpenQRDialog(false)}
+                  sx={{ zIndex: 999999999 }}
                 >
-                  {/* QR Image */}
-                  <img src={qrCode} alt="QR Code" style={{ width: '80%', maxWidth: 400 }} />
-
-                  {/* Số tiền */}
-                  <Typography variant="h5" sx={{ mt: 4, fontWeight: 'bold' }}>
-                    {Number(amount).toLocaleString('vi-VN')}₫
-                  </Typography>
-
-                  <Typography variant="body2" color="success.main">
-                    Tặng ngay <strong>3% giá trị</strong> – tiết kiệm thêm từ giá gốc!
-                  </Typography>
-
-                  <Typography variant="body2" sx={{ mt: 1 }}>
-                    Tổng giá trị nhận được:&nbsp;
-                    <strong>{(amount * 1.03).toLocaleString('vi-VN')}₫</strong>
-                  </Typography>
-
-                  {/* Mã giao dịch */}
-                  <Typography variant="body2" sx={{ mt: 1, color: 'gray' }}>
-                    Mã giao dịch: {transactionCode}
-                  </Typography>
-
-                  {secondsLeft > 0 && (
-                    <Typography variant="body2" sx={{ mt: 1, color: 'red' }}>
-                      Còn lại: {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
-                    </Typography>
-                  )}
-                  <Typography variant="body1" sx={{ mt: 1, color: 'red' }}>
-                    Lưu ý KHÔNG thực hiện chuyển tiền khi mã hết hạn để tránh rủi ro
-                  </Typography>
-                  {/* Số tài khoản */}
-                  <Typography
-                    variant="body2"
-                    sx={{ mt: 0.5, color: 'gray', cursor: 'pointer' }}
-                    onClick={() => {
-                      navigator.clipboard.writeText('0399709507');
-                      alert('Đã copy số tài khoản');
+                  <Box
+                    sx={{
+                      backgroundColor: '#fff',
+                      height: '100vh',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      textAlign: 'center',
+                      px: 2,
                     }}
                   >
-                    STK: 0399709507 (MBBank)
-                  </Typography>
+                    {/* QR Image */}
+                    <img src={qrCode} alt="QR Code" style={{ width: '80%', maxWidth: 400 }} />
 
-                  {/* Hướng dẫn */}
-                  <Typography variant="h6" sx={{ mt: 4 }}>
-                    Quét mã để nạp tiền
-                  </Typography>
-                  <Typography variant="body2" sx={{ mt: 1, color: 'gray', maxWidth: 300 }}>
-                    Quá trình sẽ tự động hoàn thành khi bạn thanh toán thành công.
-                  </Typography>
+                    {/* Số tiền */}
+                    <Typography variant="h5" sx={{ mt: 4, fontWeight: 'bold' }}>
+                      {Number(amount).toLocaleString('vi-VN')}₫
+                    </Typography>
 
-                  <Button onClick={() => setOpenQRDialog(false)} sx={{ mt: 6 }} variant="outlined">
-                    Đóng
-                  </Button>
-                </Box>
-              </Dialog>
+                    <Typography variant="body2" color="success.main">
+                      Tặng ngay <strong>3% giá trị</strong> – tiết kiệm thêm từ giá gốc!
+                    </Typography>
+
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                      Tổng giá trị nhận được:&nbsp;
+                      <strong>{(amount * 1.03).toLocaleString('vi-VN')}₫</strong>
+                    </Typography>
+
+                    {/* Mã giao dịch */}
+                    <Typography variant="body2" sx={{ mt: 1, color: 'gray' }}>
+                      Mã giao dịch: {transactionCode}
+                    </Typography>
+
+                    {secondsLeft > 0 && (
+                      <Typography variant="body2" sx={{ mt: 1, color: 'red' }}>
+                        Còn lại: {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
+                      </Typography>
+                    )}
+                    <Typography variant="body1" sx={{ mt: 1, color: 'red' }}>
+                      Lưu ý KHÔNG thực hiện chuyển tiền khi mã hết hạn để tránh rủi ro
+                    </Typography>
+                    {/* Số tài khoản */}
+                    <Typography
+                      variant="body2"
+                      sx={{ mt: 0.5, color: 'gray', cursor: 'pointer' }}
+                      onClick={() => {
+                        navigator.clipboard.writeText('0399709507');
+                        alert('Đã copy số tài khoản');
+                      }}
+                    >
+                      STK: 0399709507 (MBBank)
+                    </Typography>
+
+                    {/* Hướng dẫn */}
+                    <Typography variant="h6" sx={{ mt: 4 }}>
+                      Quét mã để nạp tiền
+                    </Typography>
+                    <Typography variant="body2" sx={{ mt: 1, color: 'gray', maxWidth: 300 }}>
+                      Quá trình sẽ tự động hoàn thành khi bạn thanh toán thành công.
+                    </Typography>
+
+                    <Button onClick={() => setOpenQRDialog(false)} sx={{ mt: 6 }} variant="outlined">
+                      Đóng
+                    </Button>
+                  </Box>
+                </Dialog>
+              ) : (
+                <Dialog
+                  fullScreen
+                  open={openQRDialog}
+                  onClose={() => setOpenQRDialog(false)}
+                  sx={{ zIndex: 999999999 }}
+                >
+                  <Box
+                    sx={{
+                      backgroundColor: '#fff',
+                      height: '100vh',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      textAlign: 'center',
+                      px: 2,
+                    }}
+                  >
+                    {/* Số tiền */}
+                    <Typography variant="h5" sx={{ mt: 4, fontWeight: 'bold' }}>
+                      {Number(amount).toLocaleString('vi-VN')}₫
+                    </Typography>
+
+                    <Typography variant="body2" color="success.main">
+                      Yêu cầu rút tiền của bạn đã được ghi nhận, vui lòng chờ!.
+                    </Typography>
+
+                    {/* Mã giao dịch */}
+                    <Typography variant="body2" sx={{ mt: 1, color: 'gray' }}>
+                      Mã giao dịch: {transactionCode}
+                    </Typography>
+
+                    {/* Số tài khoản */}
+                    <Typography variant="body2" sx={{ mt: 0.5, color: 'gray', cursor: 'pointer' }}>
+                      STK: {accountNumber} ({bankName})
+                    </Typography>
+
+                    <Button onClick={() => setOpenQRDialog(false)} sx={{ mt: 6 }} variant="outlined">
+                      Đóng
+                    </Button>
+                  </Box>
+                </Dialog>
+              )}
             </Box>
           )}
 

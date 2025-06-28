@@ -15,6 +15,7 @@ import fcmtoken from './fcmtoken';
 import qrtransaction from './qrtransaction';
 import userwallets from './userwallets';
 import notifications from './notifications';
+import usertopups from './usertopups';
 import warehouses from './warehouse';
 import statistics from './statistics';
 import google from './google';
@@ -35,6 +36,7 @@ const rootReducer = combineReducers({
   qrtransaction,
   userwallets,
   notifications,
+  usertopups,
   userAdmin,
   shops,
   users,

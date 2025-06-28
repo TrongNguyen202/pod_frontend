@@ -18,6 +18,7 @@ import { comments } from './comments';
 import { qrtransaction } from './qrtransaction';
 import { userwallets } from './userwallets';
 import { notifications } from './notifications';
+import { usertopups } from './usertopups';
 import { google } from './google';
 import { flashShip } from './flash-ship';
 import { printCare } from './print-care';
@@ -39,6 +40,7 @@ export const RepositoryRemote = {
   qrtransaction,
   userwallets,
   notifications,
+  usertopups,
   customers,
   categories,
   bannersAds,

@@ -8,6 +8,9 @@ const initialState = {
     loading: false,
     error: '',
     data: [],
+    total: 0,
+    page: 1,
+    totalPages: 1,
   },
   boardInfo: {
     loading: false,
@@ -31,8 +34,8 @@ const initialState = {
   },
 };
 
-export const fetchGetBoardsByUserId = createAsyncThunk('/get/board/user', async ({ userId, query }) => {
-  const res = await RepositoryRemote.boards.requestGetBoardsByUserId(userId, query);
+export const fetchGetBoardsByUserId = createAsyncThunk('/get/board/user', async ({ query }) => {
+  const res = await RepositoryRemote.boards.requestGetBoardsByUserId(query);
   return res?.data?.data;
 });
 
@@ -80,8 +83,13 @@ const slicer = createSlice({
       state.boardService.loading = true;
     });
     builder.addCase(fetchGetBoardsByUserId.fulfilled, (state, action) => {
+      const { bodyData, total, currentPage, lastPage } = action.payload;
+
       state.boardService.loading = false;
-      state.boardService.data = action.payload.bodyData;
+      state.boardService.data = bodyData || [];
+      state.boardService.total = total ?? 0;
+      state.boardService.page = currentPage ?? 1;
+      state.boardService.totalPages = lastPage ?? 1;
       state.boardService.error = '';
     });
     builder.addCase(fetchGetBoardsByUserId.rejected, (state, action) => {
@@ -147,7 +155,7 @@ const slicer = createSlice({
     builder.addCase(fetchDeleteBoardByIds.rejected, (state, action) => {
       state.boardDelete.loading = false;
       state.boardDelete.data = [];
-      state.boardDelete.error = action?.error?.message || 'Error while processing.';
+      state.boardDelete.error = action || 'Delete failed';
     });
   },
 });
