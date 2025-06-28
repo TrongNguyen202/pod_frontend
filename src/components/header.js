@@ -519,7 +519,7 @@ const Header = ({ onBoardChange, showBoards, role }) => {
                       color="primary"
                       sx={{ mt: 2 }}
                       onClick={handleGenerateQR}
-                      disabled={amountWithdraw > userData.coin || amountWithdraw <= 0}
+                      disabled={role === 'designer' ? amountWithdraw > userData.coin || amountWithdraw <= 0 : amount <= 0}
                     >
                       {t(tokens.nav.submit)}
                     </Button>
