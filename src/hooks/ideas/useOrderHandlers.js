@@ -93,7 +93,7 @@ const useOrderHandlers = ({
             );
             await dispatch(
               fetchSendPushNotifications({
-                userIds: userData?.id ? [userData.id] : [],
+                customerIds: userData?.id ? [userData.id] : [],
                 title: 'Lên đơn hàng ',
                 message: `Đơn hàng ${formData.get('title')} của bạn đã được lên sàn, chờ nhà thiết kể làm việc!`,
               }),
