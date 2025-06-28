@@ -14,7 +14,7 @@ import { useRouter } from 'src/hooks/use-router';
 import { useSearchParams } from 'src/hooks/use-search-params';
 import { Layout as AuthLayout } from 'src/layouts/auth/classic-layout';
 import { paths } from 'src/paths';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { LOCAL_STORAGE_KEY } from 'src/constants';
 import { RepositoryRemote } from 'src/services';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';

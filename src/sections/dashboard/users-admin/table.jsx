@@ -18,7 +18,7 @@ import { LoadingCustom } from 'src/components/loading';
 import { useAppSelector } from 'src/redux/hook';
 import PopupState, { bindPopover, bindTrigger } from 'material-ui-popup-state';
 import DeleteIcon from '@mui/icons-material/Delete';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { RepositoryRemote } from 'src/services';
 import { useState } from 'react';
 import { ModalActionUserAdmin } from './modals/modal-action-user';

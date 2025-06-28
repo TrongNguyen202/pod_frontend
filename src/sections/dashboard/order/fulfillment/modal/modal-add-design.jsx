@@ -16,7 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { LoadingCustom } from 'src/components/loading';
 import { NoData } from 'src/components/nodata';
 import { Scrollbar } from 'src/components/scrollbar';

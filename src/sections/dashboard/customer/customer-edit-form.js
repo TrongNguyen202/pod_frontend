@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import Button from '@mui/material/Button';

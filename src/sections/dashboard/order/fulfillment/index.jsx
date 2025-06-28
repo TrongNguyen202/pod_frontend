@@ -7,7 +7,7 @@ import { useSelection } from 'src/hooks/use-selection';
 import { OrderCheckDesign } from './order-check-design';
 import { OrderCheckPartner } from './order-for-partner';
 import { useSearchParams } from 'next/navigation';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { RepositoryRemote } from 'src/services';
 
 export const PageFulfillment = () => {

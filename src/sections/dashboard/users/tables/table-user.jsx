@@ -25,7 +25,7 @@ import Edit02Icon from '@untitled-ui/icons-react/build/esm/Edit02';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { NoData } from 'src/components/nodata';
 import { useState } from 'react';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { RepositoryRemote } from 'src/services';
 import { fetchGetShopByUser } from 'src/redux/reducers/user';
 import { ModalActionUser } from '../modals/modal-action-user';

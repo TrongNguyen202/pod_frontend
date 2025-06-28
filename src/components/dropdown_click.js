@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Menu, MenuItem, Typography, Box, Divider } from '@mui/material';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import { tokens } from 'src/locales/tokens';
 

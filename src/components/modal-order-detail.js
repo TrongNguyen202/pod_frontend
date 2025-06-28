@@ -27,9 +27,10 @@ import CommentList from './comments/CommentList';
 import CommentInput from './comments/CommentInput';
 import { checkRole, getAllowedStatusOptions } from 'src/utils';
 import { categoryColors, categoryLabelsVi, categoryStatusVi } from 'src/constants';
-import { changeStatusOrders, fetchGetOrdersByBoardId } from 'src/redux/reducers/orders';
-import toast from 'react-hot-toast';
+import { changeStatusOrders, fetchGetOrdersByBoardId, fetchUploadImagesForDesigner } from 'src/redux/reducers/orders';
+import { toast } from 'react-toastify';
 import { fetchSendPushNotifications } from 'src/redux/reducers/notifications';
+import { useSelector } from 'react-redux';
 
 const OrderDetailModal = ({
   open,
@@ -55,6 +56,7 @@ const OrderDetailModal = ({
   const { t } = useTranslation();
   // const comments = useAppSelector((state) => state.comments.commentsInfo.data, shallowEqual);
   const comments = useAppSelector((state) => state.comments.commentsInfo.data);
+  const { loading, data, error } = useSelector((state) => state.orders.uploadImageService);
   const { isCustomer, isDesigner } = checkRole(role);
 
   useEffect(() => {
@@ -129,20 +131,32 @@ const OrderDetailModal = ({
 
     const formData = new FormData();
     uploadFiles.forEach((file) => {
-      formData.append('images', file);
+      formData.append('files', file);
     });
 
+    const toastId = toast.loading('Đang upload ảnh...');
     try {
-      // const res = await RepositoryRemote.uploadImages(formData);
-      for (let pair of formData.entries()) {
-        console.log(`${pair[0]}:`, pair[1]);
+      const response = await dispatch(fetchUploadImagesForDesigner({ orderId: order.id, data: formData })).unwrap();
+      onClose();
+      console.log(response.success);
+      if (response.success === true) {
+        toast.update(toastId, {
+          render: 'Upload thành công!',
+          type: 'success',
+          isLoading: false,
+          autoClose: 2000,
+        });
       }
       setUploadedImages([]);
       setUploadFiles([]);
     } catch (err) {
+      toast.update(toastId, {
+        render: 'Upload thất bại!',
+        type: 'error',
+        isLoading: false,
+        autoClose: 3000,
+      });
       console.error('Upload thất bại:', err);
-    } finally {
-      onClose();
     }
   };
 
@@ -324,32 +338,29 @@ const OrderDetailModal = ({
               </Box>
             )}
           </Box>
-          {isCustomer ? (
-            <Box>
-              <Typography fontWeight="bold" mb={1} mt={2}>
-                {t(tokens.nav.linkDrive)}
-              </Typography>
-              <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center">
-                <Box
-                  variant="contained"
-                  size="small"
-                  component="a"
-                  sx={{
-                    textDecoration: 'underline',
-                    color: 'primary.main',
-                    '&:hover': { opacity: '0.6', transition: '0.2s ease in out' },
-                  }}
-                  href={order.link || 'https://drive.google.com/'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {order.link || 'https://drive.google.com/'}
-                </Box>
+          <Box>
+            <Typography fontWeight="bold" mb={1} mt={2}>
+              {t(tokens.nav.linkDrive)}:
+            </Typography>
+            <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center">
+              <Box
+                variant="contained"
+                size="small"
+                component="a"
+                sx={{
+                  textDecoration: 'underline',
+                  color: 'primary.main',
+                  textAlign: 'center',
+                  '&:hover': { opacity: '0.6', transition: '0.2s ease in out' },
+                }}
+                href={order.link || ''}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {order.link || ''}
               </Box>
             </Box>
-          ) : (
-            <Box></Box>
-          )}
+          </Box>
           {statusOptions.length > 0 && (
             <Box mt={2}>
               <Typography fontWeight="bold" mb={1}>

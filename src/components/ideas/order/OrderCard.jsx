@@ -11,6 +11,7 @@ import AttachFileIcon from '@mui/icons-material/AttachFile';
 import LayersIcon from '@mui/icons-material/Layers';
 import NumbersIcon from '@mui/icons-material/Numbers';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import { categoryLabelsVi } from 'src/constants';
 
 const OrderCard = ({
   item,
@@ -111,7 +112,7 @@ const OrderCard = ({
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '4px 0' }}>
           <Box>
             <Typography noWrap variant="body4">{productTypeData.find((pt) => pt.id === item.producttypeid)?.name}</Typography>
-            <Typography noWrap variant="body4" sx={{ ml: 2 }}>{item.designtype}</Typography>
+            <Typography noWrap variant="body4" sx={{ ml: 2 }}>{categoryLabelsVi[item.designtype]}</Typography>
           </Box>
           <Typography noWrap variant="body1" fontSize="20px" sx={{ ml: 1 }}>
             {handleAmountFormat(role === 'customer' ? item.price : role === 'designer' ? item.price_ : 0)} đ

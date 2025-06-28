@@ -9,7 +9,7 @@ import { fetchGetShopByUser } from 'src/redux/reducers/user';
 import { fetchGetListShops } from 'src/redux/reducers/shops';
 import { Controller, Form, useForm } from 'react-hook-form';
 import { RepositoryRemote } from 'src/services';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { useRouter } from 'next/router';
 import CardHeader from '@mui/material/CardHeader';
 import CardContent from '@mui/material/CardContent';

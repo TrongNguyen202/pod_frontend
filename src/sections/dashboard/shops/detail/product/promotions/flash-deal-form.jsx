@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import PromotionCreateForm from './components/promotion-create-form';
 import { usePromotionsStore } from 'src/store/promotionsStore';
 import { useSearchParams } from 'next/navigation';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 
 const FlashDealForm = () => {
   const searchParams = useSearchParams();

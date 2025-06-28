@@ -31,7 +31,7 @@ import { LoadingCustom } from 'src/components/loading';
 import { NoData } from 'src/components/nodata';
 import { useSearchParams } from 'next/navigation';
 import { RepositoryRemote } from 'src/services';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { useRouter } from 'next/router';
 import { Form, Image, Input, Modal, Table as TableAntd } from 'antd';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';

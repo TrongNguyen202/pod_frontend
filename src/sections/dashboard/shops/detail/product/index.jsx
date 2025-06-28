@@ -10,7 +10,7 @@ import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import { statusProductTikTokShop } from 'src/constants';
 import { useSelection } from 'src/hooks/use-selection';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { RepositoryRemote } from 'src/services';
 import { useRouter } from 'next/router';
 

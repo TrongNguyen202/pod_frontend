@@ -17,7 +17,7 @@ import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 
 import TemplateForm from './TemplateForm';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 
 function Template() {
   const { getAllTemplate, templates, loading, deleteTemplate } = useTemplateStore();

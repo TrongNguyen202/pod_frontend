@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from 'src/redux/hook';
 import { fetchGetDesignSku, fetchPackageFulfillmentCompleted, fetchToShipInfor } from 'src/redux/reducers/orders';
 import { TableOrderFlashShip } from './table/table-order-flashship';
 import { useSearchParams } from 'next/navigation';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { fetchGetFlashShipPODVariant } from 'src/redux/reducers/flash-ship';
 import { fetchGetCkfVariant } from 'src/redux/reducers/ckf-variant';
 import { useSelection } from 'src/hooks/use-selection';

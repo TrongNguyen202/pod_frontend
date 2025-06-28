@@ -1,56 +1,46 @@
-import React, { useState, useEffect } from 'react';
 import {
   Box,
+  Button,
   Card,
   CardContent,
+  Checkbox,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Grid,
-  IconButton,
-  Tab,
-  Tabs,
-  TextField,
-  Typography,
-  AppBar,
-  Toolbar,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Checkbox,
-  TablePagination,
-  Button,
-  Paper,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  TextField,
+  Toolbar,
+  Typography,
 } from '@mui/material';
-import Link from 'next/link';
-import { Seo } from 'src/components/seo';
+import { useEffect, useState } from 'react';
 import Header from 'src/components/header';
-import Sidebar from 'src/components/sidebar';
 import FormDialog from 'src/components/popup';
+import { Seo } from 'src/components/seo';
+import Sidebar from 'src/components/sidebar';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
 
-import { useTranslation } from 'react-i18next';
-import { tokens } from '../../locales/tokens';
-import toast from 'react-hot-toast';
-import {
-  fetchPostBoard,
-  fetchDeleteBoardByIds,
-  putBoardInfoByBoardId,
-  fetchGetBoardsByUserId,
-  fetchBoardInfoByBoardId,
-} from 'src/redux/reducers/boards';
 import { Delete } from '@mui/icons-material';
+import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 import OrderPagination from 'src/components/ideas/order/OrderPagination';
+import {
+  fetchBoardInfoByBoardId,
+  fetchDeleteBoardByIds,
+  fetchGetBoardsByUserId,
+  fetchPostBoard,
+  putBoardInfoByBoardId,
+} from 'src/redux/reducers/boards';
+import { tokens } from '../../locales/tokens';
+import { categoryLabelsVi } from 'src/constants';
 
-const designTypeVi = {
-  NEW: 'Thiết kế mới',
-  RE_DESIGN: 'Thiết kế lại',
-  CLONE: 'Nhân bản',
-};
 
 const Page = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -168,11 +158,7 @@ const Page = () => {
         setSelected([]);
         dispatch(fetchGetBoardsByUserId({ query: `` }));
       } else {
-        if (res.error?.message === 'Request failed with status code 400') {
-          toast.error('Không thể xóa board đang có đơn hàng chưa hoàn tất hoặc đang xử lý');
-        } else {
-          toast.error('Delete fail!');
-        }
+        toast.error('Không thể xóa board đang có đơn hàng chưa hoàn tất hoặc đang xử lý');
       }
     } catch (err) {
       toast.error('Delete fail!');
@@ -316,7 +302,7 @@ const Page = () => {
                             <Checkbox checked={selected.includes(row.id)} onChange={() => handleSelect(row.id)} />
                           </TableCell>
                           <TableCell>{row.title}</TableCell>
-                          <TableCell>{designTypeVi[row.designtype]}</TableCell>
+                          <TableCell>{categoryLabelsVi[row.designtype]}</TableCell>
                           <TableCell>
                             {JSON.parse(row.producttypeids)
                               .map((id) => {

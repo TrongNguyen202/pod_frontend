@@ -11,7 +11,7 @@ import TextField from '@mui/material/TextField';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import Button from '@mui/material/Button';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import OutlinedInput from '@mui/material/OutlinedInput';

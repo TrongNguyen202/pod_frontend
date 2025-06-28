@@ -47,6 +47,11 @@ const initialState = {
     error: '',
     data: [],
   },
+  uploadImageService: {
+    loading: false,
+    error: '',
+    data: [],
+  },
 };
 
 export const fetchGetOrdersByBoardId = createAsyncThunk('/get/order/boardId', async ({ query }) => {
@@ -92,6 +97,18 @@ export const requestDeleteOrders = createAsyncThunk('/delete/orders', async ({ i
 export const fetchAssignOrdersForDesigner = createAsyncThunk('/asign/orders', async ({ data }) => {
   const res = await RepositoryRemote.orders.requestAssignOrdersForDesigner(data);
 });
+
+export const fetchUploadImagesForDesigner = createAsyncThunk(
+  'upload/drive',
+  async ({ orderId, data }, { rejectWithValue }) => {
+    try {
+      const res = await RepositoryRemote.orders.requestUploadImagesForDesigner(orderId, data);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'Upload failed');
+    }
+  },
+);
 
 const slicer = createSlice({
   name: 'orders',
@@ -258,6 +275,21 @@ const slicer = createSlice({
       state.deleteService.loading = false;
       state.deleteService.data = [];
       state.deleteService.error = action?.error?.message || 'Error while processing.';
+    });
+
+    // Upload image order for designer
+    builder.addCase(fetchUploadImagesForDesigner.pending, (state) => {
+      state.uploadImageService.loading = true;
+    });
+    builder.addCase(fetchUploadImagesForDesigner.fulfilled, (state, action) => {
+      state.uploadImageService.loading = false;
+      state.uploadImageService.data = action.payload;
+      state.uploadImageService.error = '';
+    });
+    builder.addCase(fetchUploadImagesForDesigner.rejected, (state, action) => {
+      state.uploadImageService.loading = false;
+      state.uploadImageService.data = [];
+      state.uploadImageService.error = action?.error?.message || 'Error while processing.';
     });
   },
 });

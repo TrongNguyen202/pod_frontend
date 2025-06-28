@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import PropTypes from 'prop-types';
 import DotsHorizontalIcon from '@untitled-ui/icons-react/build/esm/DotsHorizontal';
 import Avatar from '@mui/material/Avatar';

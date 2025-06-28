@@ -11,7 +11,7 @@ import ProductSale from '../../../products/create-antd/products/ProductSale';
 import ProductVariation from '../../../products/create-antd/products/ProductVariation';
 import ProductCreateShipping from '../../../products/create-antd/products/ProductShipping';
 import { Button } from '@mui/material';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { useRouter } from 'next/router';
 import { useSearchParams } from 'next/navigation';
 import { useShopsBrand } from 'src/store/brandStore';

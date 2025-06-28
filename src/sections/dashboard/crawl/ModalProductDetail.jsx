@@ -7,7 +7,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useProductsStore } from '../../../store/productsStore';
 import dynamic from 'next/dynamic';
 import { Box, Button } from '@mui/material';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 

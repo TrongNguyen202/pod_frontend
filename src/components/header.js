@@ -6,7 +6,7 @@ import { AppBar, Toolbar, Typography, FormControl, Select, MenuItem, Button, Box
 import Card from '@mui/material/Card';
 import Link from 'next/link';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { tokens } from 'src/locales/tokens';
 import { RepositoryRemote } from 'src/services';
 import FormDialog from 'src/components/popup';

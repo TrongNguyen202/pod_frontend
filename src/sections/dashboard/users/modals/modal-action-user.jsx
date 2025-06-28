@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from 'src/redux/hook';
 import { fetchGetListShops } from 'src/redux/reducers/shops';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { RepositoryRemote } from 'src/services';
 import { fetchGetShopByUser } from 'src/redux/reducers/user';
 

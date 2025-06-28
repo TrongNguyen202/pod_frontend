@@ -6,7 +6,7 @@ import { DescriptionShopProduct } from './description';
 import { useEffect, useState } from 'react';
 import { RepositoryRemote } from 'src/services';
 import { useSearchParams } from 'next/navigation';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { LoadingCustom } from 'src/components/loading';
 import { statusProductTikTokShop } from '../../../../../../constants';
 

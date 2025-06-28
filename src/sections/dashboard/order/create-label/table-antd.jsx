@@ -4,7 +4,7 @@ import { Form, Image, Input, Modal, Popover, Radio, Space, Spin, Table } from 'a
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { OrderPackageWeightSize } from 'src/constants';
 import { useAppDispatch } from 'src/redux/hook';
 import { useShopsOrder } from 'src/store/ordersStore';

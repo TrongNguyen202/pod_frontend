@@ -24,15 +24,18 @@ const getCommonHeaders = () => {
 
 const refreshTokenApi = async (config) => {
   const accessToken = localStorage.getItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN) || '';
+
+  // Luôn tồn tại
+  if (!config.headers) config.headers = {};
+
   config.headers.Authorization = `Bearer ${accessToken}`;
 
-  return {
-    ...config,
-    headers: {
-      ...config.headers,
-      ...getCommonHeaders(),
-    },
-  };
+  const commonHeaders = getCommonHeaders();
+  Object.entries(commonHeaders).forEach(([key, value]) => {
+    config.headers[key] = value;
+  });
+
+  return config;
 };
 
 const refreshToken = async () => {
@@ -110,8 +113,8 @@ axiosAPI.interceptors.response.use(
         return axiosAPI(originalRequest);
       } catch (err) {
         processQueue(err, null);
-        localStorage.clear(); 
-        window.location.href = '/login'; 
+        localStorage.clear();
+        window.location.href = '/login';
         return Promise.reject(err);
       } finally {
         isRefreshing = false;

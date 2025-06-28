@@ -16,7 +16,7 @@ import { LoadingButton } from '@mui/lab';
 import { useState } from 'react';
 import { NoData } from 'src/components/nodata';
 import { DownloadOutlined } from '@mui/icons-material';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { RepositoryRemote } from 'src/services';
 import { ENVIRONMENT_URL } from 'src/constants';
 

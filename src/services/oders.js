@@ -83,6 +83,16 @@ const requestAssignOrdersForDesigner = async (data) => {
   return axiosAPI(config);
 };
 
+const requestUploadImagesForDesigner = async (orderId, data) => {
+  const config = {
+    method: 'POST',
+    url: `/order/${orderId}/upload-folder`,
+    data,
+    headers: {},
+  };
+  return axiosAPI(config);
+};
+
 export const orders = {
   requestGetOrdersByBoardId,
   requestGetAllStatus,
@@ -93,4 +103,5 @@ export const orders = {
   requestChangeStatusOrders,
   requestApiDeleteOrders,
   requestAssignOrdersForDesigner,
+  requestUploadImagesForDesigner,
 };

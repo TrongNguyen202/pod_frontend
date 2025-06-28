@@ -11,7 +11,7 @@ import { buildNestedArraysMenu } from 'src/utils';
 import { useTemplateStore } from 'src/store/templateStore';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { Button } from '@mui/material';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });

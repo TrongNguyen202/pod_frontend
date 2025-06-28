@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { useDebounce } from 'src/hooks/useDebounce';
 import { RepositoryRemote } from 'src/services';
 import { usePromotionsStore } from 'src/store/promotionsStore';

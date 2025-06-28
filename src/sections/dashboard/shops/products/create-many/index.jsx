@@ -10,7 +10,7 @@ import { useProductsStore } from 'src/store/productsStore';
 import { useWareHousesStore } from 'src/store/warehousesStore';
 import { LOCAL_STORAGE_KEY } from 'src/constants';
 import { useSearchParams } from 'next/navigation';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import * as xlsx from 'xlsx';
 
 const Dragger = dynamic(() => import('antd/es/upload/Dragger'), { ssr: false });

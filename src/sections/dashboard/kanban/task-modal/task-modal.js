@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { format } from 'date-fns';
 import debounce from 'lodash.debounce';
 import ArchiveIcon from '@untitled-ui/icons-react/build/esm/Archive';

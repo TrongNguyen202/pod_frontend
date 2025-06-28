@@ -6,7 +6,7 @@ import ProductSale from './products/ProductSale';
 import ProductVariation from './products/ProductVariation';
 import ProductCreateShipping from './products/ProductShipping';
 import { Button, Card } from '@mui/material';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { useRouter } from 'next/router';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';

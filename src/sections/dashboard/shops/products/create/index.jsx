@@ -12,7 +12,7 @@ import { ProductMedia } from '../components/product-media';
 import { ProductSale } from '../components/product-sale';
 import { ProductShipping } from '../components/product-shipping';
 import { ProductCreateAddVariation } from '../components/product-create-variation';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { RepositoryRemote } from 'src/services';
 import { useRouter } from 'next/router';
 import { convertProductAttribute } from 'src/utils';
