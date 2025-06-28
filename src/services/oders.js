@@ -3,7 +3,7 @@ import { axiosAPI } from 'src/utils/axios';
 const requestGetOrdersByBoardId = async (query) => {
   const config = {
     method: 'GET',
-    url: `/order/search-job?${query}`,
+    url: `/order/search?${query}`,
   };
 
   return axiosAPI(config);

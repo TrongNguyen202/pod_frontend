@@ -37,7 +37,6 @@ export const Cascader = ({
       subsubcategory: newValue,
     });
     if (newValue) {
-      console.log(newValue.value);
       onSubSubcategoryChange(newValue.value);
     }
   };

@@ -1,9 +1,9 @@
 import { axiosAPI } from 'src/utils/axios';
 
-const requestGetBoardsByUserId = async (userId, query) => {
+const requestGetBoardsByUserId = async (query) => {
   const config = {
     method: 'GET',
-    url: `/board/search?userId=${userId}&${query}`,
+    url: `/board/search?${query}`,
   };
 
   return axiosAPI(config);

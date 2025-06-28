@@ -44,24 +44,38 @@ import {
   fetchBoardInfoByBoardId,
 } from 'src/redux/reducers/boards';
 import { Delete } from '@mui/icons-material';
+import OrderPagination from 'src/components/ideas/order/OrderPagination';
+
+const designTypeVi = {
+  NEW: 'Thiết kế mới',
+  RE_DESIGN: 'Thiết kế lại',
+  CLONE: 'Nhân bản',
+};
 
 const Page = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
   const [selected, setSelected] = useState([]);
   const [allSelected, setAllSelected] = useState(false);
-  const [page, setPage] = useState(0);
-  const [boardId, setBoardId] = useState(null);
-  const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [openAddBoard, setOpenAddBoard] = useState(false);
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
   const [role, setRole] = useState('');
   const [openDialogDelete, setOpenDialogDelete] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [openSingleDeleteDialog, setOpenSingleDeleteDialog] = useState(false);
+  const [boardIdToDelete, setBoardIdToDelete] = useState(null);
   const [editingBoardData, setEditingBoardData] = useState(null);
+  const [searchTextBoard, setSearchTextBoard] = useState('');
 
-  const { data: boardsData } = useAppSelector((state) => state.boards.boardService);
+  const {
+    data: boardsData,
+    total: totalOrders,
+    totalPages: totalPages,
+    loading: isLoading,
+  } = useAppSelector((state) => state.boards.boardService);
   const { data: userData } = useAppSelector((state) => state.users.userInfo);
   const { data: productTypeData } = useAppSelector((state) => state.productTypes.productTypes);
 
@@ -70,14 +84,9 @@ const Page = () => {
       setRole(userData.role_name);
     }
   }, [userData]);
-  const userId = userData?.id;
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+  const handleSetLimitPerPage = (data) => {
+    setLimit(data);
   };
 
   const handleSelect = (rowId) => {
@@ -103,10 +112,9 @@ const Page = () => {
 
   const handleCreateBoard = async (formData) => {
     try {
-      // formData.userId = userData?.id;
       const res = await dispatch(fetchPostBoard({ data: formData }));
       if (res.payload.status === 200) {
-        await dispatch(fetchGetBoardsByUserId({ userId }));
+        await dispatch(fetchGetBoardsByUserId({ query: `` }));
         toast.success('Created Board Successfully!');
       }
     } catch (err) {
@@ -120,9 +128,7 @@ const Page = () => {
 
   const handleOpenEditBoard = async (boardId) => {
     try {
-      console.log(boardId);
       const res = await dispatch(fetchBoardInfoByBoardId({ boardId }));
-      console.log(res);
       if (res.payload?.data) {
         setEditingBoardData(res.payload.data);
         setOpenEditDialog(true);
@@ -143,10 +149,9 @@ const Page = () => {
       };
 
       const res = await dispatch(putBoardInfoByBoardId({ boardId, data: payload }));
-      console.log(res);
       if (res.payload?.status === 200) {
         toast.success('Board updated successfully');
-        await dispatch(fetchGetBoardsByUserId({ userId }));
+        await dispatch(fetchGetBoardsByUserId({ query: `` }));
       } else {
         toast.error('Update failed');
       }
@@ -155,21 +160,35 @@ const Page = () => {
     }
   };
 
-  const handleDeleteBoard = async () => {
+  const handleDeleteBoard = async (boardIds = selected) => {
     try {
-      const res = await dispatch(fetchDeleteBoardByIds({ data: selected }));
-      if (res.payload.status === 200) {
+      const res = await dispatch(fetchDeleteBoardByIds({ data: boardIds }));
+      if (res.payload?.status === 200) {
         toast.success('Deleted successfully!');
         setSelected([]);
-        dispatch(fetchGetBoardsByUserId({ userId }));
+        dispatch(fetchGetBoardsByUserId({ query: `` }));
       } else {
-        toast.error('Delete error');
+        if (res.error?.message === 'Request failed with status code 400') {
+          toast.error('Không thể xóa board đang có đơn hàng chưa hoàn tất hoặc đang xử lý');
+        } else {
+          toast.error('Delete fail!');
+        }
       }
     } catch (err) {
-      toast.error('Delete failed');
+      toast.error('Delete fail!');
+    } finally {
+      setOpenDialogDelete(false);
     }
-    setOpenDialogDelete(false);
   };
+
+  const handleConfirmSingleDelete = () => {
+    handleDeleteBoard([boardIdToDelete]);
+    setOpenSingleDeleteDialog(false);
+  };
+
+  useEffect(() => {
+    const res = dispatch(fetchGetBoardsByUserId({ query: `searchText=${searchTextBoard}` }));
+  }, [searchTextBoard]);
 
   return (
     <>
@@ -233,17 +252,14 @@ const Page = () => {
                   >
                     <TextField
                       variant="outlined"
-                      InputProps={{
-                        style: {
-                          color: '#000',
-                        },
-                      }}
+                      value={searchTextBoard}
+                      onChange={(e) => setSearchTextBoard(e.target.value)}
                       placeholder={t(tokens.nav.search)}
+                      InputProps={{
+                        style: { color: '#000' },
+                      }}
                       sx={{
-                        '& .MuiInputBase-input::placeholder': {
-                          color: '#000',
-                          opacity: 1,
-                        },
+                        '& .MuiInputBase-input::placeholder': { color: '#000', opacity: 1 },
                         marginRight: 2,
                         padding: 0,
                         flexGrow: 1,
@@ -263,11 +279,12 @@ const Page = () => {
                           <Checkbox
                             checked={allSelected}
                             onChange={handleSelectAll}
-                            disabled={boardsData.length === 0}
+                            disabled={(boardsData ?? []).length === 0}
                           />
                         </TableCell>
                         <TableCell>{t(tokens.nav.title)}</TableCell>
-                        <TableCell>{t(tokens.nav.client)}</TableCell>
+                        <TableCell>{t(tokens.nav.design_type)}</TableCell>
+                        <TableCell>{t(tokens.nav.product_type)}</TableCell>
                         <TableCell>{t(tokens.nav.action)}</TableCell>
                         <TableCell>
                           <Button
@@ -293,18 +310,20 @@ const Page = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {boardsData.map((row) => (
+                      {(boardsData ?? []).map((row) => (
                         <TableRow key={row.id}>
                           <TableCell padding="checkbox">
                             <Checkbox checked={selected.includes(row.id)} onChange={() => handleSelect(row.id)} />
                           </TableCell>
                           <TableCell>{row.title}</TableCell>
+                          <TableCell>{designTypeVi[row.designtype]}</TableCell>
                           <TableCell>
-                            <div>
-                              {row.username}
-                              <br />
-                              {row.email}
-                            </div>
+                            {JSON.parse(row.producttypeids)
+                              .map((id) => {
+                                const match = productTypeData.find((pt) => pt.id === id);
+                                return match ? match.name : `#${id}`;
+                              })
+                              .join(', ')}
                           </TableCell>
                           <TableCell>
                             <Button
@@ -345,18 +364,6 @@ const Page = () => {
                                 setEditingBoardData(null);
                               }}
                             />
-
-                            {/* <Button
-                              onClick={() => setOpenDialogDelete(true)}
-                              sx={{
-                                color: '#fff',
-                                backgroundColor: 'primary.main',
-                                size: 'medium',
-                                ml: 2,
-                              }}
-                            >
-                              {t(tokens.nav.delete)}
-                            </Button> */}
                             <Dialog open={openDialogDelete} onClose={() => setOpenDialogDelete(false)}>
                               <DialogTitle>{t(tokens.nav.submit)}</DialogTitle>
                               <DialogContent>
@@ -373,23 +380,58 @@ const Page = () => {
                                 </Button>
                               </DialogActions>
                             </Dialog>
+                            <Button
+                              onClick={() => {
+                                setBoardIdToDelete(row.id);
+                                setOpenSingleDeleteDialog(true);
+                              }}
+                              variant="outlined"
+                              size="medium"
+                              sx={{ ml: 1, backgroundColor: 'primary.main', color: '#fff' }}
+                            >
+                              {t(tokens.nav.delete)}
+                            </Button>
+                            <Dialog open={openSingleDeleteDialog} onClose={() => setOpenSingleDeleteDialog(false)}>
+                              <DialogTitle>{t(tokens.nav.submit)}</DialogTitle>
+                              <DialogContent>
+                                <Typography sx={{ textAlign: 'center', fontSize: '18px' }}>
+                                  {t(tokens.nav.messageDeleteBoards)}
+                                </Typography>
+                              </DialogContent>
+                              <DialogActions>
+                                <Button onClick={() => setOpenSingleDeleteDialog(false)} variant="outlined">
+                                  {t(tokens.nav.cancel)}
+                                </Button>
+                                <Button
+                                  onClick={() => {
+                                    handleConfirmSingleDelete();
+                                    setOpenSingleDeleteDialog(false);
+                                  }}
+                                  variant="contained"
+                                  sx={{ ml: 1, backgroundColor: 'primary.main', color: '#fff' }}
+                                >
+                                  {t(tokens.nav.submit)}
+                                </Button>
+                              </DialogActions>
+                            </Dialog>
                           </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                 </TableContainer>
-                <TablePagination
-                  rowsPerPageOptions={[20]}
-                  component="div"
-                  count={boardsData.length}
-                  rowsPerPage={rowsPerPage}
-                  page={page}
-                  onPageChange={handleChangePage}
-                  onRowsPerPageChange={handleChangeRowsPerPage}
-                  labelDisplayedRows={({ from, to, count }) => `${from}-${to} of ${count}`}
-                  labelRowsPerPage="Items per page:"
-                />
+                {!isLoading ? (
+                  <OrderPagination
+                    page={page}
+                    totalPages={totalPages}
+                    totalOrders={totalOrders}
+                    limit={limit}
+                    onChangePage={setPage}
+                    onChangeLimit={handleSetLimitPerPage}
+                  />
+                ) : (
+                  <></>
+                )}
               </Paper>
             </Card>
           </Box>

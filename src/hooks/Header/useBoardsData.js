@@ -5,10 +5,9 @@ import { checkRole } from 'src/utils';
 
 export const useBoardsData = (dispatch, userId, role) => {
   const { isCustomer } = checkRole(role);
-
   useEffect(() => {
     if (userId && isCustomer) {
-      dispatch(fetchGetBoardsByUserId({ userId, query: '' }));
+      dispatch(fetchGetBoardsByUserId({ query: '' }));
     }
   }, [dispatch, userId, isCustomer]);
 
