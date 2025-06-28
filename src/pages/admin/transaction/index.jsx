@@ -33,7 +33,7 @@ import {
   Info,
   History,
 } from "@mui/icons-material";
-import AdminLayout from "../../layouts/admin/layout";
+import AdminLayout from "../../../layouts/admin/layout";
 
 /******************************************************************
  * UTILS
@@ -294,9 +294,6 @@ const Page = () => {
   return (
     <AdminLayout>
       <div className="p-6 bg-gray-50 min-h-screen">
-        {/* HEADER */}
-        <h1 className="text-2xl font-bold mb-6">💰 Quản lý Giao dịch</h1>
-
         {/* STATS */}
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-8">
           {[

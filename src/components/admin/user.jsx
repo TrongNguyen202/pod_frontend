@@ -35,6 +35,7 @@ import PhoneIcon from "@mui/icons-material/Phone";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import PeopleIcon from "@mui/icons-material/People";
+import ActivateUserDialog from './dialog/activate-user';
 
 
 const AdminUser = () => {
@@ -42,6 +43,7 @@ const AdminUser = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserModal, setShowUserModal] = useState(false);
+  const [activateDialogOpen, setActivateDialogOpen] = useState(false)
 
   const [users, setUsers] = useState([
     {
@@ -98,6 +100,11 @@ const AdminUser = () => {
    * Update user status/approval.
    */
   const handleUserAction = (userId, action) => {
+    if (action === "approve") {
+      setActivateDialogOpen(true);
+      setSelectedUser(users.find((user) => user.id === userId));
+      return;
+    }
     setUsers((prev) =>
       prev.map((user) => {
         if (user.id !== userId) return user;
@@ -176,6 +183,17 @@ const AdminUser = () => {
       <Chip label="User" size="small" className="bg-blue-100 text-blue-800" />
     );
   };
+
+  const handleActivateSubmit = (userData) => {
+    console.log("Activating user with data:", userData)
+
+    setUsers((prevUsers) =>
+      prevUsers.map((user) => (user.id === selectedUser.id ? { ...user, status: "Hoạt động", ...userData } : user)),
+    )
+
+    setActivateDialogOpen(false)
+    setSelectedUser(null)
+  }
 
   return (
     <Box className="min-h-screen bg-gray-50">
@@ -532,6 +550,12 @@ const AdminUser = () => {
             </>
           )}
         </Dialog>
+        <ActivateUserDialog
+          open={activateDialogOpen}
+          onClose={() => setActivateDialogOpen(false)}
+          onSubmit={handleActivateSubmit}
+          user={selectedUser}
+        />
       </Box>
     </Box>
   );
