@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useDispatch } from "react-redux"
 import {
   Dialog,
   DialogTitle,
@@ -31,20 +32,22 @@ import {
   Badge as BadgeIcon,
   CheckCircle as CheckCircleIcon,
 } from "@mui/icons-material"
+import { createUserAccount } from "src/redux/reducers/user"
 
 const roles = [
-  { id: "1", name: "User" },
-  { id: "2", name: "Designer" },
-  { id: "3", name: "Admin" },
+  { id: "e02c4f2d-2482-4327-8cd1-4a8f090e6159", lable: "Admin", name: "admin" },
+  { id: "3c6c55d4-8e21-40f4-8391-2a561e28599f", lable: "Customer", name: "customer" },
+  { id: "439c3f44-de92-4cd3-a11e-994b37082987", lable: "Designer", name: "designer" },
 ]
 
 const statusOptions = [
   { value: 1, label: "Hoạt động" },
   { value: 0, label: "Không hoạt động" },
-  { value: 2, label: "Chờ duyệt" },
+  { value: -1, label: "Chờ duyệt" },
 ]
 
-export default function ActivateUserDialog({ open, onClose, onSubmit, userEmail = "" }) {
+export default function ActivateUserDialog({ open, onClose, userEmail = "", onSuccess }) {
+  const dispatch = useDispatch()
   const [formData, setFormData] = useState({
     email: "",
     userName: "",
@@ -52,7 +55,7 @@ export default function ActivateUserDialog({ open, onClose, onSubmit, userEmail 
     phone: "",
     status: 1,
     link_telegram: "",
-    role_id: "",
+    role_id: 2,
     role_name: "",
   })
 
@@ -68,7 +71,7 @@ export default function ActivateUserDialog({ open, onClose, onSubmit, userEmail 
         phone: "",
         status: 1,
         link_telegram: "",
-        role_id: "1",
+        role_id: 2,
         role_name: "User",
       })
       setErrors({})
@@ -81,10 +84,10 @@ export default function ActivateUserDialog({ open, onClose, onSubmit, userEmail 
     return emailRegex.test(email)
   }
 
-  const validateUserName = (userName) => {
-    const userNameRegex = /^[a-zA-Z0-9_]{3,20}$/
-    return userNameRegex.test(userName)
-  }
+  // const validateUserName = (userName) => {
+  //   const userNameRegex = /^[a-zA-Z0-9_]{3,20}$/
+  //   return userNameRegex.test(userName)
+  // }
 
   const validatePassword = (password) => {
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
@@ -133,11 +136,11 @@ export default function ActivateUserDialog({ open, onClose, onSubmit, userEmail 
     }
 
     // Username validation
-    if (!formData.userName.trim()) {
-      newErrors.userName = "Tên người dùng là bắt buộc"
-    } else if (!validateUserName(formData.userName)) {
-      newErrors.userName = "Tên người dùng phải có 3-20 ký tự, chỉ chứa chữ cái, số và dấu gạch dưới"
-    }
+    // if (!formData.userName.trim()) {
+    //   newErrors.userName = "Tên người dùng là bắt buộc"
+    // } else if (!validateUserName(formData.userName)) {
+    //   newErrors.userName = "Tên người dùng phải có 3-20 ký tự, chỉ chứa chữ cái, số và dấu gạch dưới"
+    // }
 
     // Password validation
     if (!formData.password.trim()) {
@@ -160,10 +163,32 @@ export default function ActivateUserDialog({ open, onClose, onSubmit, userEmail 
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateForm()) {
-      onSubmit(formData)
-      handleClose()
+      try {
+        const userData = {
+          email: formData.email,
+          userName: formData.userName,
+          password: formData.password,
+          phone: formData.phone || null,
+          status: formData.status,
+          link_telegram: formData.link_telegram || null,
+          role_id: formData.role_id,
+          role_name: formData.role_name,
+        }
+
+        await dispatch(createUserAccount(userData)).unwrap()
+
+        // Call success callback if provided
+        if (onSuccess) {
+          onSuccess()
+        }
+
+        handleClose()
+      } catch (error) {
+        console.error('Error creating user:', error)
+        // You can add error handling here (show toast, etc.)
+      }
     }
   }
 
@@ -238,7 +263,7 @@ export default function ActivateUserDialog({ open, onClose, onSubmit, userEmail 
               value={formData.userName}
               onChange={handleInputChange("userName")}
               error={!!errors.userName}
-              helperText={errors.userName || "3-20 ký tự, chỉ chứa chữ cái, số và dấu gạch dưới"}
+              // helperText={errors.userName || "3-20 ký tự, chỉ chứa chữ cái, số và dấu gạch dưới"}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -311,7 +336,7 @@ export default function ActivateUserDialog({ open, onClose, onSubmit, userEmail 
               >
                 {roles.map((role) => (
                   <MenuItem key={role.id} value={role.id}>
-                    {role.name}
+                    {role.lable}
                   </MenuItem>
                 ))}
               </Select>

@@ -19,6 +19,12 @@ const initialState = {
     error: '',
     data: [],
   },
+  usersList: {
+    loading: false,
+    error: '',
+    data: [],
+    total: 0,
+  },
 };
 
 export const fetchUserByEmail = createAsyncThunk('/user/post/user-detail', async (email) => {
@@ -41,6 +47,16 @@ export const fetchGetDesginerIds = createAsyncThunk('/get/designer/ids', async (
   return res.data.data;
 });
 
+export const createUserAccount = createAsyncThunk('/user/create', async (userData) => {
+  const res = await RepositoryRemote.users.requestCreateUserAccount(userData);
+  return res.data;
+});
+
+export const fetchUsers = createAsyncThunk('/user/fetch-list', async (filterData) => {
+  const res = await RepositoryRemote.users.requestGetUsers(filterData);
+  return res.data;
+});
+
 const slicer = createSlice({
   name: 'users',
   initialState,
@@ -61,6 +77,14 @@ const slicer = createSlice({
           ...action.payload,
         };
       }
+    },
+    resetUsersList(state) {
+      state.usersList = {
+        loading: false,
+        error: '',
+        data: [],
+        total: 0,
+      };
     },
   },
   extraReducers: (builder) => {
@@ -143,9 +167,37 @@ const slicer = createSlice({
         data: [],
       };
     });
+
+    // Create user account
+    builder.addCase(createUserAccount.pending, (state) => {
+      state.loading = true;
+    });
+    builder.addCase(createUserAccount.fulfilled, (state, action) => {
+      state.loading = false;
+      state.error = '';
+    });
+    builder.addCase(createUserAccount.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action?.error?.message || 'Error creating user.';
+    });
+
+    // Fetch users list
+    builder.addCase(fetchUsers.pending, (state) => {
+      state.usersList.loading = true;
+    });
+    builder.addCase(fetchUsers.fulfilled, (state, action) => {
+      state.usersList.loading = false;
+      state.usersList.data = action.payload.data || [];
+      state.usersList.total = action.payload.total || 0;
+      state.usersList.error = '';
+    });
+    builder.addCase(fetchUsers.rejected, (state, action) => {
+      state.usersList.loading = false;
+      state.usersList.error = action?.error?.message || 'Error fetching users.';
+    });
   },
 });
 
-export const { resetDataDesginerIds, updateUserInfoLocal } = slicer.actions;
+export const { resetDataDesginerIds, updateUserInfoLocal, resetUsersList } = slicer.actions;
 
 export default slicer.reducer;
