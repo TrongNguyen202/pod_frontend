@@ -404,7 +404,7 @@ export default function AdminDashboard() {
                   },
                 }}
               >
-                Tìm kiếm nâng cao 
+                Tìm kiếm nâng cao
                 <FilterListIcon />
               </IconButton>
               <IconButton onClick={handleClearFilters} size="small" color="error">
@@ -628,6 +628,7 @@ export default function AdminDashboard() {
                       <TableCell>Khách hàng</TableCell>
                       <TableCell>Email</TableCell>
                       <TableCell>SĐT</TableCell>
+                      <TableCell>Designer</TableCell>
                       <TableCell align="center">Giá gốc</TableCell>
                       <TableCell align="center">Giá thiết kế</TableCell>
                       <TableCell>Trạng thái</TableCell>
@@ -643,6 +644,7 @@ export default function AdminDashboard() {
                         <TableCell>{order.customer?.username || 'N/A'}</TableCell>
                         <TableCell>{order.customer?.email || 'N/A'}</TableCell>
                         <TableCell>{order.customer?.phone || 'N/A'}</TableCell>
+                        <TableCell>{order.designer?.username || 'N/A'}</TableCell>
                         <TableCell align="right">
                           <Typography fontWeight="medium">{handleAmountFormat(order.price)}</Typography>
                         </TableCell>
