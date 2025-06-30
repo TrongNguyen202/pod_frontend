@@ -65,7 +65,7 @@ const Sidebar = ({ open, toggleSidebar, role }) => {
             <Home />
           </ListItemIcon>
           <ListItemText
-            primary="Ideas"
+            primary="Đơn hàng"
             sx={{
               opacity: open ? 1 : 0,
               transition: 'opacity 0.2s ease-in-out',
@@ -103,7 +103,7 @@ const Sidebar = ({ open, toggleSidebar, role }) => {
               <Star />
             </ListItemIcon>
             <ListItemText
-              primary="Boards"
+              primary="Bảng"
               sx={{
                 opacity: open ? 1 : 0,
                 transition: 'opacity 0.2s ease-in-out',
@@ -140,7 +140,7 @@ const Sidebar = ({ open, toggleSidebar, role }) => {
             <AccountBalanceWalletIcon />
           </ListItemIcon>
           <ListItemText
-            primary="Balances"
+            primary="Tài chính"
             sx={{
               opacity: open ? 1 : 0,
               transition: 'opacity 0.2s ease-in-out',

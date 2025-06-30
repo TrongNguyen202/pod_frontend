@@ -50,13 +50,18 @@ const FormDialogSplitLayout = ({
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Thêm state để track xem user có đang edit description manually không
+  const [isManuallyEditingDescription, setIsManuallyEditingDescription] = useState(false);
+
   const handleOpen = useCallback(() => {
     setFormData(normalizeInitialData(initialData, fields));
+    setIsManuallyEditingDescription(false); // Reset khi mở dialog
     setOpen(true);
   }, [initialData, fields]);
 
   const handleClose = useCallback(() => {
     setFormData(normalizeInitialData(initialData, fields));
+    setIsManuallyEditingDescription(false); // Reset khi đóng dialog
     if (onCloseOverride) {
       onCloseOverride();
     } else {
@@ -66,6 +71,11 @@ const FormDialogSplitLayout = ({
 
   const handleChange = useCallback((name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Nếu user đang edit description manually, đánh dấu để không bị ghi đè
+    if (name === 'description') {
+      setIsManuallyEditingDescription(true);
+    }
   }, []);
 
   const handleNumericInput = (fieldName) => (e) => {
@@ -96,9 +106,11 @@ const FormDialogSplitLayout = ({
       const formDataToSubmit = new FormData();
       for (const key in formData) {
         let value = formData[key];
-        if (key === 'description') {
-          value = mergedDescription;
-        }
+
+        // LOẠI BỎ logic ghi đè description - để user tự control
+        // if (key === 'description') {
+        //   value = mergedDescription;
+        // }
 
         if (Array.isArray(value)) {
           value.forEach((file) => {
@@ -115,22 +127,29 @@ const FormDialogSplitLayout = ({
       setIsSubmitting(false);
       handleClose();
     },
-    [onSubmit, formData, handleClose, templatesData],
+    [onSubmit, formData, handleClose], // Loại bỏ templatesData dependency
   );
 
-  // Tự động cập nhật khi chọn templates
+  // Chỉ tự động merge description khi:
+  // 1. User chưa manually edit description
+  // 2. Templates thay đổi
   useEffect(() => {
-    const selectedTemplateIds = formData['templates'] || [];
-    const mergedDescription = selectedTemplateIds
-      .map((id) => {
-        const t = templatesData.find((tpl) => tpl.id === id);
-        return t?.description || '';
-      })
-      .filter((desc) => desc.trim() !== '')
-      .join('\n');
+    if (!isManuallyEditingDescription) {
+      const selectedTemplateIds = formData['templates'] || [];
+      const mergedDescription = selectedTemplateIds
+        .map((id) => {
+          const t = templatesData.find((tpl) => tpl.id === id);
+          return t?.description || '';
+        })
+        .filter((desc) => desc.trim() !== '')
+        .join('\n');
 
-    handleChange('description', mergedDescription);
-  }, [formData['templates'], templatesData]);
+      // Chỉ update nếu description thực sự thay đổi
+      if (mergedDescription !== formData['description']) {
+        setFormData((prev) => ({ ...prev, description: mergedDescription }));
+      }
+    }
+  }, [formData['templates'], templatesData, isManuallyEditingDescription]);
 
   const productTypeMap = useMemo(() => {
     return productTypeData.reduce((acc, curr) => {
@@ -164,8 +183,22 @@ const FormDialogSplitLayout = ({
         if (prevString === newString) return prev;
         return normalized;
       });
+      setIsManuallyEditingDescription(false); // Reset manual editing flag
     }
   }, [dialogOpen, initialData, fields]);
+
+  // // Thêm button để merge templates vào description theo ý muốn
+  // const handleMergeTemplates = useCallback(() => {
+  //   const currentDescription = formData['description'] || '';
+  //   const templateDescription = mergedDescription;
+
+  //   // Merge mà không duplicate
+  //   const finalDescription = currentDescription.trim()
+  //     ? `${currentDescription}\n${templateDescription}`
+  //     : templateDescription;
+
+  //   handleChange('description', finalDescription);
+  // }, [formData, mergedDescription, handleChange]);
 
   return (
     <>
@@ -192,7 +225,20 @@ const FormDialogSplitLayout = ({
                   InputLabelProps={{ required: true }}
                 />
               </Box>
-              <Box sx={{ mb: 2, borderRadius: 1, bgcolor: '#fafafa' }}>
+              <Box sx={{ mb: 2 }}>
+                {/* <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                  <span>{t(tokens.nav.description)}</span>
+                  {mergedDescription && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={handleMergeTemplates}
+                      sx={{ fontSize: '0.75rem', py: 0.5 }}
+                    >
+                      Thêm từ Templates
+                    </Button>
+                  )}
+                </Box> */}
                 <TextareaAutosize
                   aria-label="Description"
                   minRows={4}

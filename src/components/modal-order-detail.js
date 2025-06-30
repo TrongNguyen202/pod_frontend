@@ -26,7 +26,7 @@ import { useAppDispatch, useAppSelector } from 'src/redux/hook';
 import CommentList from './comments/CommentList';
 import CommentInput from './comments/CommentInput';
 import { checkRole, getAllowedStatusOptions } from 'src/utils';
-import { categoryColors, categoryLabelsVi, categoryStatusVi } from 'src/constants';
+import { categoryColors, categoryLabelsVi, categoryStatusVi, categoryStatusViU } from 'src/constants';
 import {
   changeStatusOrders,
   fetchAssignOrdersForDesigner,
@@ -144,7 +144,7 @@ const OrderDetailModal = ({
   };
 
   const handleSendImages = async () => {
-    if (uploadFiles.length === 0) return;
+    if (uploadFiles.length === 0 || uploadedImages.length === 0) return;
 
     const formData = new FormData();
     uploadFiles.forEach((file) => {
@@ -211,7 +211,8 @@ const OrderDetailModal = ({
       if (onStatusChanged) {
         onStatusChanged();
       }
-
+      setUploadedImages([]);
+      setUploadFiles([]);
       onClose();
     } else {
       toast.error(message || 'Đổi trạng thái thất bại');
@@ -257,7 +258,7 @@ const OrderDetailModal = ({
         <Box>{t(tokens.nav.details)}</Box>
         <Box display="flex" alignItems="center" gap={1}>
           <Chip
-            label={categoryStatusVi[order.status] || order.status}
+            label={isDesigner ? categoryStatusViU[order.status] : categoryStatusVi[order.status] || order.status}
             size="small"
             sx={{
               textTransform: 'capitalize',
@@ -380,6 +381,8 @@ const OrderDetailModal = ({
                   textDecoration: 'underline',
                   color: 'primary.main',
                   textAlign: 'center',
+                  maxWidth: '100%',
+                  wordBreak: 'break-all',
                   '&:hover': { opacity: '0.6', transition: '0.2s ease in out' },
                 }}
                 href={order.link || ''}
@@ -492,7 +495,7 @@ const OrderDetailModal = ({
               <Button onClick={() => setConfirmOpen(false)}>{t(tokens.nav.cancel)}</Button>
               <Button
                 disabled={
-                  (confirmStatus === 'IN_REVIEW' && uploadFiles.length <= 0) ||
+                  (confirmStatus === 'IN_REVIEW' && uploadFiles.length <= 0 && uploadedImages.length === 0) ||
                   (confirmStatus === 'NEED_FIX' && commentText.trim() === '')
                 }
                 onClick={async () => {
@@ -500,7 +503,8 @@ const OrderDetailModal = ({
                     isDesigner &&
                     ((order.status === 'DOING' && confirmStatus === 'IN_REVIEW') ||
                       (order.status === 'NEED_FIX' && confirmStatus === 'IN_REVIEW')) &&
-                    uploadFiles.length > 0
+                    uploadFiles.length > 0 &&
+                    uploadedImages.length > 0
                   ) {
                     await handleSendImages();
                   } else if (isDesigner && order.status === 'NEW' && confirmStatus === 'DOING') {

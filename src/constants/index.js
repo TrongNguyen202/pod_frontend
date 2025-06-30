@@ -91,6 +91,16 @@ export const categoryStatusVi = {
   ARCHIVED: 'Lưu trữ ',
 };
 
+export const categoryStatusViU = {
+  DRAFT: 'Nháp',
+  NEW: 'Mới',
+  DOING: 'Đang xử lý',
+  IN_REVIEW: 'Kiểm tra',
+  NEED_FIX: 'Cần sửa',
+  DONE: 'Hoàn thành',
+  ARCHIVED: 'Lưu trữ ',
+};
+
 export const optionsDesignType = [
   { label: 'CLONE', value: 'CLONE' },
   { label: 'RE_DESIGN', value: 'RE_DESIGN' },

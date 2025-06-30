@@ -37,7 +37,7 @@ const slicer = createSlice({
     });
     builder.addCase(fetchSendPushNotifications.fulfilled, (state, action) => {
       state.notificationSendPush.loading = false;
-      state.notificationSendPush.data = action.payload.bodyData;
+      state.notificationSendPush.data = action?.payload?.bodyData;
       state.notificationSendPush.error = '';
     });
     builder.addCase(fetchSendPushNotifications.rejected, (state, action) => {

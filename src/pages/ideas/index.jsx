@@ -275,7 +275,7 @@ const Page = () => {
 
   return (
     <PageLayout role={role} sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} onBoardChange={handleBoardChange}>
-      {!isAdmin && (
+      {(!isAdmin && isCustomer && boardId) || isDesigner ? (
         <>
           <Box
             component="main"
@@ -417,6 +417,21 @@ const Page = () => {
             </>
           )}
         </>
+      ) : (
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            fontSize: '1.4rem',
+            alignItems: 'center',
+            minHeight: '80vh', // hoặc 100vh nếu bạn muốn chiếm full viewport
+            textAlign: 'center',
+            px: 2, 
+            color: 'text.secondary',
+          }}
+        >
+          Vui lòng chọn bảng để sử dụng chức năng, nếu chưa có bảng hãy thử tạo tại thanh chức năng bên trái
+        </Box>
       )}
     </PageLayout>
   );
