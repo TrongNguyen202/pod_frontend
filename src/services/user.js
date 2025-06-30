@@ -10,6 +10,16 @@ const requestGetUserInfoByEmail = async (data) => {
   return axiosAPI(config);
 };
 
+const requestUpdateUserProfile = async (data) => {
+  const config = {
+    method: 'POST',
+    url: '/users/update',
+    data,
+  };
+
+  return axiosAPI(config);
+};
+
 const requestGetDesignerIds = async () => {
   const config = {
     method: 'GET',
@@ -83,4 +93,5 @@ export const users = {
   requestCreateUser,
   requestGetGroupUser,
   requestGetUserShopAll,
+  requestUpdateUserProfile
 };

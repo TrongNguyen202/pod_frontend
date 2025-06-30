@@ -26,6 +26,11 @@ export const fetchUserByEmail = createAsyncThunk('/user/post/user-detail', async
   return res.data.data;
 });
 
+export const updateUserProfile = createAsyncThunk('/user/update/profile', async (profileData) => {
+  const res = await RepositoryRemote.users.requestUpdateUserProfile(profileData);
+  return res.data.data;
+});
+
 export const fetchGetShopByUser = createAsyncThunk('/user/shop-by-user', async () => {
   const res = await RepositoryRemote.users.requestGetShopByUser();
   return res.data.data;
@@ -46,6 +51,16 @@ const slicer = createSlice({
         error: '',
         data: [],
       };
+    },
+    // Thêm reducer để update user info locally
+    updateUserInfoLocal(state, action) {
+      if (state.userInfo.data) {
+        // Merge chỉ những field được trả về từ backend với data hiện tại
+        state.userInfo.data = {
+          ...state.userInfo.data,
+          ...action.payload,
+        };
+      }
     },
   },
   extraReducers: (builder) => {
@@ -85,6 +100,28 @@ const slicer = createSlice({
       };
     });
 
+    // Thêm cases cho updateUserProfile
+    builder.addCase(updateUserProfile.pending, (state) => {
+      state.userInfo.loading = true;
+    });
+    builder.addCase(updateUserProfile.fulfilled, (state, action) => {
+      state.userInfo.loading = false;
+      // Merge response với data hiện tại
+      if (state.userInfo.data) {
+        state.userInfo.data = {
+          ...state.userInfo.data,
+          ...action.payload,
+          // Map các field từ backend response sang format hiện tại
+          bankName: action.payload.bank_name || state.userInfo.data.bankName,
+        };
+      }
+      state.userInfo.error = '';
+    });
+    builder.addCase(updateUserProfile.rejected, (state, action) => {
+      state.userInfo.loading = false;
+      state.userInfo.error = action?.error?.message || 'Error updating profile.';
+    });
+
     builder.addCase(fetchGetDesginerIds.pending, (state) => {
       state.loading = true;
       state.designerIds.loading = true;
@@ -109,6 +146,6 @@ const slicer = createSlice({
   },
 });
 
-export const { resetDataDesginerIds } = slicer.actions;
+export const { resetDataDesginerIds, updateUserInfoLocal } = slicer.actions;
 
 export default slicer.reducer;
