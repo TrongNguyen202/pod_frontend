@@ -275,7 +275,7 @@ const Page = () => {
 
   return (
     <PageLayout role={role} sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} onBoardChange={handleBoardChange}>
-      {!isAdmin && boardId ? (
+      {(!isAdmin && isCustomer && boardId) || isDesigner ? (
         <>
           <Box
             component="main"
