@@ -380,6 +380,8 @@ const OrderDetailModal = ({
                   textDecoration: 'underline',
                   color: 'primary.main',
                   textAlign: 'center',
+                  maxWidth: '100%',
+                  wordBreak: 'break-all',
                   '&:hover': { opacity: '0.6', transition: '0.2s ease in out' },
                 }}
                 href={order.link || ''}
