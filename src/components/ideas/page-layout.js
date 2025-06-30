@@ -4,7 +4,7 @@ import { Seo } from 'src/components/seo';
 import Header from 'src/components/header';
 import Sidebar from 'src/components/sidebar';
 
-const PageLayout = ({ role, sidebarOpen, toggleSidebar, onBoardChange, children }) => {
+const PageLayout = ({ role = null, sidebarOpen = false, toggleSidebar = () => {}, onBoardChange = () => {}, children }) => {
   return (
     <>
       <Seo title="Ideas" />

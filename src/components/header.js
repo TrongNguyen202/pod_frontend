@@ -164,7 +164,12 @@ const Header = ({ onBoardChange, showBoards, role }) => {
     switch (opt.value) {
       case 'make_deposit':
         handleToggleDrawer();
-        amountRef.current.focus();
+        // Add null check for ref
+        setTimeout(() => {
+          if (amountRef.current) {
+            amountRef.current.focus();
+          }
+        }, 100);
         break;
       case 'board_infomation':
         handleDrawerBoardInfo(true);
@@ -184,7 +189,7 @@ const Header = ({ onBoardChange, showBoards, role }) => {
         toggleChangePassword(true);
         break;
       case 'userprofile':
-        router.push('/account/profile');
+        router.push('/profile');
         break;
       default:
         alert(`${opt.label}...`);
@@ -194,7 +199,9 @@ const Header = ({ onBoardChange, showBoards, role }) => {
   useEffect(() => {
     if (openDrawer) {
       setTimeout(() => {
-        amountRef.current?.focus();
+        if (amountRef.current) {
+          amountRef.current.focus();
+        }
       }, 200);
     }
   }, [openDrawer]);
