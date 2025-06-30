@@ -84,6 +84,26 @@ const requestGetUserShopAll = async (groupId) => {
   return axiosAPI(config);
 };
 
+const requestCreateUserAccount = async (data) => {
+  const config = {
+    method: 'POST',
+    url: '/users/create',
+    data,
+  };
+
+  return axiosAPI(config);
+};
+
+const requestGetUsers = async (data) => {
+  const config = {
+    method: 'POST',
+    url: '/users/get-all',
+    data,
+  };
+
+  return axiosAPI(config);
+};
+
 export const users = {
   requestGetUserInfoByEmail,
   requestGetDesignerIds,
@@ -93,5 +113,7 @@ export const users = {
   requestCreateUser,
   requestGetGroupUser,
   requestGetUserShopAll,
-  requestUpdateUserProfile
+  requestUpdateUserProfile,
+  requestCreateUserAccount,
+  requestGetUsers
 };
