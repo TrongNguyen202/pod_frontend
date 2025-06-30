@@ -124,7 +124,7 @@ export const vi = {
   [tokens.nav.manageUser]: 'Quản lý người dùng',
   [tokens.nav.shops]: 'Cửa hàng',
   [tokens.nav.manageTemplates]: 'Quản lý mẫu',
-  [tokens.nav.templates]: 'Mẫu',
+  [tokens.nav.templates]: 'Templates',
   [tokens.nav.description]: 'Mô tả',
   [tokens.nav.forgetPassword]: 'Quên mật khẩu',
   [tokens.nav.orders]: 'Đơn hàng',

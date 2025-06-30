@@ -74,7 +74,11 @@ const Page = () => {
           dispatch(setAuthenticate({ isAuthenticated: true }));
 
           toast.success('Đăng nhập thành công!');
-          router.push(returnTo || '/ideas');
+          if (decodedToken.role === 'admin') {
+            router.push(returnTo || '/admin/dashboard');
+          } else {
+            router.push(returnTo || '/ideas');
+          }
         }
       } catch (err) {
         if (isMounted()) {

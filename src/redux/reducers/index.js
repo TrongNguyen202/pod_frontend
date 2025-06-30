@@ -11,7 +11,7 @@ import productTypes from './product-types';
 import templates from './templates';
 import images from './images';
 import comments from './comments';
-import fcmtoken from './fcmtoken';
+import fcmToken from './fcmtoken';
 import qrtransaction from './qrtransaction';
 import userwallets from './userwallets';
 import notifications from './notifications';
@@ -32,7 +32,7 @@ const rootReducer = combineReducers({
   orders,
   images,
   comments,
-  fcmtoken,
+  fcmToken,
   qrtransaction,
   userwallets,
   notifications,

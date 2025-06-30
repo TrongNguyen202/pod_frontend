@@ -1,460 +1,707 @@
-import React, { useMemo, useState } from "react";
 import {
+  AttachMoney as AttachMoneyIcon,
+  CalendarToday as CalendarTodayIcon,
+  Clear as ClearIcon,
+  DashboardCustomize as DashboardCustomizeIcon,
+  FilterList as FilterListIcon,
+  Groups as GroupsIcon,
+  Refresh as RefreshIcon,
+  Search as SearchIcon,
+  ShowChart as ShowChartIcon,
+  Warning as WarningIcon,
+  Error as ErrorIcon,
+  Info as InfoIcon,
+  CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon,
+  MoreHoriz as MoreHorizIcon,
+  TrendingUpOutlined,
+  PaymentsOutlined,
+  TrendingDownOutlined,
+  PriceCheckOutlined,
+  FunctionsOutlined,
+} from '@mui/icons-material';
+import {
+  Alert,
+  Box,
+  Button,
   Card,
   CardContent,
-  Avatar,
   Chip,
+  CircularProgress,
+  FormControl,
+  Grid,
   IconButton,
-  Tabs,
-  Tab,
-  Badge,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
+  Pagination,
+  Paper,
+  Select,
   Table,
-  TableHead,
   TableBody,
-  TableRow,
   TableCell,
   TableContainer,
+  TableHead,
+  TableRow,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Button,
-} from "@mui/material";
-import {
-  HourglassEmpty,
-  TrendingUp,
-  TrendingDown,
-  CurrencyExchange,
-  Search,
-  FilterList,
-  Check,
-  Close,
-  Info,
-  History,
-} from "@mui/icons-material";
-import AdminLayout from "../../../layouts/admin/layout";
+  Typography,
+} from '@mui/material';
+import { useCallback, useEffect, useState } from 'react';
+import AdminLayout from 'src/layouts/admin/layout';
+import { useAppDispatch, useAppSelector } from 'src/redux/hook';
+import { fetchGetStatisticsTransaction } from 'src/redux/reducers/statistics';
+import handleAmountFormat from 'src/utils/amount-vnd';
+import { formatDateTime } from 'src/utils/date';
 
-/******************************************************************
- * UTILS
- *****************************************************************/
-
-const COLOR_MAP = {
-  success: {
-    text: "text-green-600",
-    bg: "bg-green-50",
-    chip: "success",
-  },
-  error: {
-    text: "text-red-600",
-    bg: "bg-red-50",
-    chip: "error",
-  },
-  warning: {
-    text: "text-amber-600",
-    bg: "bg-amber-50",
-    chip: "warning",
-  },
-  info: {
-    text: "text-sky-600",
-    bg: "bg-sky-50",
-    chip: "info",
-  },
+const formatTransactionType = (type) => {
+  const types = {
+    IN: 'Nạp tiền',
+    OUT: 'Rút tiền',
+    USE: 'Sử dụng',
+    MAKE: 'Designer làm',
+  };
+  return types[type] || type;
 };
 
-/******************************************************************
- * PRESENTATIONAL COMPONENTS
- *****************************************************************/
-
-const StatsCard = ({ title, value, subtitle, Icon, color }) => {
-  const { text, bg } = COLOR_MAP[color] || COLOR_MAP.info;
-  return (
-    <Card elevation={0} className="h-full rounded-2xl border border-gray-100">
-      <CardContent className="p-6 flex flex-col h-full">
-        <div className="flex justify-between items-center mb-4">
-          <div className={`p-3 rounded-2xl ${bg} flex items-center justify-center`}>
-            <Icon className={`${text}`} />
-          </div>
-        </div>
-        <div className="flex-1">
-          <h3 className="text-2xl font-bold mb-1">{value}</h3>
-          <p className="text-sm text-gray-500 mb-1 font-medium">{title}</p>
-          <p className="text-xs text-gray-400">{subtitle}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
+const getTransactionTypeColor = (type) => {
+  const colors = {
+    IN: 'success',
+    OUT: 'error',
+    USE: 'info',
+    MAKE: 'warning',
+  };
+  return colors[type] || 'default';
 };
 
-const TransactionRow = ({ transaction, onApprove, onReject, onDetail }) => {
-  const isDeposit = transaction.type === "deposit";
-  const amountColor = isDeposit ? "success" : "error";
-  const { text } = COLOR_MAP[amountColor];
-  return (
-    <TableRow hover>
-      <TableCell>
-        <p className="font-medium text-sm">{transaction.id}</p>
-        <p className="text-xs text-gray-500">{transaction.bank || "VNP: 14127832"}</p>
-      </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-3">
-          <Avatar className="h-10 w-10 bg-primary-600">
-            {transaction.user.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")}
-          </Avatar>
-          <div>
-            <p className="font-medium text-sm">{transaction.user.name}</p>
-            <p className="text-xs text-gray-500">ID: {transaction.user.id}</p>
-          </div>
-        </div>
-      </TableCell>
-      <TableCell>
-        <Chip
-          label={isDeposit ? "Nạp tiền" : "Rút tiền"}
-          color={COLOR_MAP[amountColor].chip}
-          size="small"
-          icon={isDeposit ? <TrendingUp /> : <TrendingDown />}
-        />
-      </TableCell>
-      <TableCell>
-        <p className={`font-bold text-sm ${text}`}>
-          {isDeposit ? "+" : "-"}
-          {transaction.amount.toLocaleString()}
-        </p>
-        <p className="text-xs text-gray-500">VND</p>
-      </TableCell>
-      <TableCell>
-        <p className={`font-medium text-sm ${text}`}>
-          {isDeposit ? "+" : "-"}
-          {transaction.points}
-        </p>
-        <p className="text-xs text-gray-500">Points</p>
-      </TableCell>
-      <TableCell>
-        <p className="text-sm">{transaction.date}</p>
-        <p className="text-xs text-gray-500">{transaction.time}</p>
-      </TableCell>
-      <TableCell>
-        <Chip
-          label={transaction.statusLabel}
-          variant="outlined"
-          size="small"
-          color="warning"
-        />
-      </TableCell>
-      <TableCell>
-        <div className="flex gap-1">
-          <IconButton
-            size="small"
-            color="success"
-            onClick={() => onApprove(transaction.id)}
-          >
-            <Check fontSize="small" />
-          </IconButton>
-          <IconButton
-            size="small"
-            color="error"
-            onClick={() => onReject(transaction.id)}
-          >
-            <Close fontSize="small" />
-          </IconButton>
-          <IconButton size="small" onClick={() => onDetail(transaction.id)}>
-            <Info fontSize="small" />
-          </IconButton>
-        </div>
-      </TableCell>
-    </TableRow>
-  );
-};
+const formatDateTimeForInput = (date) => {
+  if (!date) return '';
 
-/******************************************************************
- * MAIN PAGE COMPONENT
- *****************************************************************/
+  const d = new Date(date);
+
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
 
 const Page = () => {
-  /* --------------------------------------------------------------------
-   * STATE
-   * ------------------------------------------------------------------*/
-  const [activeTab, setActiveTab] = useState(0);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [userType, setUserType] = useState("all");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const dispatch = useAppDispatch();
 
-  /* --------------------------------------------------------------------
-   * TAB META
-   * ------------------------------------------------------------------*/
-  const tabs = [
-    { label: "Chờ duyệt", value: 0, key: "pending", icon: HourglassEmpty },
-    { label: "Nạp tiền", value: 1, key: "deposit", icon: TrendingUp },
-    { label: "Rút tiền", value: 2, key: "withdraw", icon: TrendingDown },
-    { label: "Lịch sử", value: 3, key: "history", icon: History },
-  ];
+  // Filter states
+  const [pageSize, setPageSize] = useState(10);
+  const [searchInput, setSearchInput] = useState('');
+  const [sortBy, setSortBy] = useState('createdDate');
+  const [sortDirection, setSortDirection] = useState('DESC');
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [statusToSearch, setStatusToSearch] = useState('');
+  const [emailToSearch, setEmailToSearch] = useState('');
+  const [nameToSearch, setNameToSearch] = useState('');
+  const [customerNameToSearch, setCustomerNameToSearch] = useState('');
+  const [minCoin, setMinCoin] = useState('');
+  const [maxCoin, setMaxCoin] = useState('');
+  const [page, setPage] = useState(1);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-  /* --------------------------------------------------------------------
-   * DUMMY DATA (should come from API)
-   * ------------------------------------------------------------------*/
-  const transactions = [
-    {
-      id: "TXN20250612001",
-      user: { name: "Nguyễn Hoàng", id: "123456" },
-      type: "deposit",
-      amount: 500.000,
-      points: 50,
-      date: "2025-06-12",
-      time: "14:30",
-      status: "pending",
-      statusLabel: "CHỜ DUYỆT",
-      bank: "VNP: 14127832",
-    },
-    {
-      id: "TXN01235",
-      user: { name: "Mai Thảo", id: "DESIGN" },
-      type: "withdraw",
-      amount: 200.000,
-      points: 20,
-      date: "2025-06-12",
-      time: "13:45",
-      status: "pending",
-      statusLabel: "CHỜ DUYỆT",
-    },
-    {
-      id: "TXN01236",
-      user: { name: "Võ Duy", id: "USER" },
-      type: "deposit",
-      amount: 1.000000,
-      points: 100,
-      date: "2025-06-12",
-      time: "12:15",
-      status: "approved",
-      statusLabel: "ĐÃ DUYỆT",
-    },
-  ];
+  // Temporary states for advanced filters - chỉ apply khi bấm search
+  const [tempNameToSearch, setTempNameToSearch] = useState('');
+  const [tempMinCoin, setTempMinCoin] = useState('');
+  const [tempMaxCoin, setTempMaxCoin] = useState('');
+  const [tempStartDate, setTempStartDate] = useState(null);
+  const [tempEndDate, setTempEndDate] = useState(null);
+  const [tempTransactionIdToSearch, setTempTransactionIdToSearch] = useState('');
 
-  /* --------------------------------------------------------------------
-   * MEMOIZED FILTERING LOGIC
-   * ------------------------------------------------------------------*/
-  const filteredTransactions = useMemo(() => {
-    return transactions.filter((txn) => {
-      // TAB filter (status or type)
-      const tab = tabs.find((t) => t.value === activeTab);
-      if (!tab) return true;
-      switch (tab.key) {
-        case "pending":
-          if (txn.status !== "pending") return false;
-          break;
-        case "deposit":
-          if (txn.type !== "deposit") return false;
-          break;
-        case "withdraw":
-          if (txn.type !== "withdraw") return false;
-          break;
-        case "history":
-          // show all for history
-          break;
-        default:
-          break;
+  // Get data from Redux store
+  const {
+    dataTopup: transactionTopupData,
+    dataStatistics: statisticsTransactionData,
+    loading,
+    error,
+  } = useAppSelector((state) => state.statistics.transaction);
+  console.log(transactionTopupData);
+  console.log(statisticsTransactionData);
+  // Xử lý thay đổi datetime cho temp states
+  const handleTempDateTimeChange = (type, value) => {
+    if (!value) {
+      if (type === 'start') {
+        setTempStartDate(null);
+      } else {
+        setTempEndDate(null);
       }
+      return;
+    }
 
-      // Search filter
-      const keyword = searchTerm.toLowerCase();
-      if (
-        keyword &&
-        !(
-          txn.id.toLowerCase().includes(keyword) ||
-          txn.user.name.toLowerCase().includes(keyword) ||
-          txn.user.id.toLowerCase().includes(keyword)
-        )
-      )
-        return false;
+    const dateTime = new Date(value); // local
+    if (type === 'start') {
+      setTempStartDate(dateTime);
+    } else {
+      setTempEndDate(dateTime);
+    }
+  };
 
-      // User type filter
-      if (userType !== "all" && txn.user.id.toLowerCase() !== userType) return false;
+  // Format datetime để gửi lên API
+  const formatDateTimeForAPI = (date) => {
+    if (!date) return null;
 
-      // Date range filter (ISO yyyy-mm-dd)
-      if (fromDate && txn.date < fromDate) return false;
-      if (toDate && txn.date > toDate) return false;
+    // Cộng thêm 7 giờ
+    const plus7H = new Date(date.getTime() + 7 * 60 * 60 * 1000);
 
-      return true;
-    });
-  }, [activeTab, searchTerm, userType, fromDate, toDate]);
+    return plus7H.toISOString();
+  };
 
-  /* --------------------------------------------------------------------
-   * CALLBACKS
-   * ------------------------------------------------------------------*/
-  const handleApprove = (id) => console.log("Approve", id);
-  const handleReject = (id) => console.log("Reject", id);
-  const handleDetail = (id) => console.log("Detail", id);
+  const buildQueryString = () => {
+    const params = new URLSearchParams();
 
-  /* --------------------------------------------------------------------
-   * RENDER
-   * ------------------------------------------------------------------*/
+    if (statusToSearch) {
+      params.append('transactionType', statusToSearch);
+    }
+
+    if (emailToSearch) {
+      params.append('email', emailToSearch);
+    }
+
+    if (nameToSearch) {
+      params.append('orderName', nameToSearch);
+    }
+
+    if (customerNameToSearch) {
+      params.append('customerName', customerNameToSearch);
+    }
+
+    if (minCoin) {
+      params.append('minCoin', minCoin);
+    }
+
+    if (maxCoin) {
+      params.append('maxCoin', maxCoin);
+    }
+
+    params.append('sort', sortBy);
+    params.append('direction', sortDirection);
+
+    params.append('page', (page - 1).toString());
+    params.append('size', pageSize.toString());
+
+    if (startDate) {
+      params.append('startDate', formatDateTimeForAPI(startDate));
+    }
+
+    if (endDate) {
+      params.append('endDate', formatDateTimeForAPI(endDate));
+    }
+
+    return params.toString();
+  };
+
+  // Fetch data function
+  const fetchData = useCallback(async () => {
+    const query = buildQueryString();
+    dispatch(fetchGetStatisticsTransaction({ query }));
+  }, [
+    dispatch,
+    page,
+    pageSize,
+    statusToSearch,
+    emailToSearch,
+    nameToSearch,
+    customerNameToSearch,
+    minCoin,
+    maxCoin,
+    sortBy,
+    sortDirection,
+    startDate,
+    endDate,
+  ]);
+
+  // Effects
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Create statistics cards data from API response
+  const getStatisticsCards = () => {
+    if (!statisticsTransactionData) {
+      return [];
+    }
+
+    return [
+      {
+        title: 'Tổng giao dịch',
+        value: statisticsTransactionData.totalTransactions?.toLocaleString() || '0',
+        icon: FunctionsOutlined,
+        circle: 'blue-circle',
+      },
+      {
+        title: 'Tổng nạp',
+        value: handleAmountFormat(statisticsTransactionData.totalIn || 0),
+        icon: TrendingUpOutlined,
+        circle: 'green-circle',
+      },
+      {
+        title: 'Tổng dùng',
+        value: handleAmountFormat(statisticsTransactionData.totalUse || 0),
+        diff: 'Trung bình mỗi đơn hàng',
+        icon: PaymentsOutlined,
+        circle: 'purple-circle',
+      },
+      {
+        title: 'Tổng rút',
+        value: handleAmountFormat(statisticsTransactionData.totalOut || 0),
+        icon: TrendingDownOutlined,
+        circle: 'orange-circle',
+      },
+      {
+        title: 'Tổng desginer làm ',
+        value: handleAmountFormat(statisticsTransactionData.totalMake || 0),
+        icon: PriceCheckOutlined,
+        circle: 'yellow-circle',
+      },
+      {
+        title: 'Tổng thu',
+        value: handleAmountFormat(statisticsTransactionData.netBalance || 0),
+        icon: AttachMoneyIcon,
+        circle: 'greenlight-circle',
+      },
+    ];
+  };
+
+  // Event handlers
+  const handlePageChange = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handlePageSizeChange = (event) => {
+    setPageSize(event.target.value);
+    setPage(1);
+  };
+
+  const handleSearch = () => {
+    // Set all search values from inputs
+    setEmailToSearch(searchInput);
+    setPage(1);
+  };
+
+  const handleAdvancedSearch = () => {
+    // Apply tất cả temp values vào actual search states
+    setNameToSearch(tempNameToSearch);
+    setMinCoin(tempMinCoin);
+    setMaxCoin(tempMaxCoin);
+    setStartDate(tempStartDate);
+    setEndDate(tempEndDate);
+    setTempTransactionIdToSearch(tempTransactionIdToSearch);
+    setPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setSearchInput('');
+    setEmailToSearch('');
+    setNameToSearch('');
+    setTempNameToSearch('');
+    setStatusToSearch('');
+    setMinCoin('');
+    setMaxCoin('');
+    setTempMinCoin('');
+    setTempMaxCoin('');
+    setStartDate(null);
+    setEndDate(null);
+    setTempStartDate(null);
+    setTempEndDate(null);
+    setTempTransactionIdToSearch('');
+    setSortBy('createdDate');
+    setSortDirection('DESC');
+    setPage(1);
+  };
+
+  const handleSearchKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const handleStatusFilterChange = (event) => {
+    setStatusToSearch(event.target.value === 'ALL' ? '' : event.target.value);
+    setPage(1);
+  };
+
+  const handleRefresh = () => {
+    fetchData();
+  };
+
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert
+          severity="error"
+          action={
+            <IconButton onClick={handleRefresh} size="small">
+              <RefreshIcon />
+            </IconButton>
+          }
+        >
+          {error}
+        </Alert>
+      </Box>
+    );
+  }
+
+  const statisticsCards = getStatisticsCards();
+  const contents = transactionTopupData?.content || [];
+  const pagination = transactionTopupData?.pageable;
+
   return (
     <AdminLayout>
-      <div className="p-6 bg-gray-50 min-h-screen">
-        {/* STATS */}
-        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          {[
-            {
-              title: "GIAO DỊCH CHỜ DUYỆT",
-              value: "23",
-              subtitle: "Nạp tiền: 18 | Rút tiền: 5",
-              Icon: HourglassEmpty,
-              color: "warning",
-            },
-            {
-              title: "TỔNG NẠP HÔM NAY",
-              value: "45.8M",
-              subtitle: "VND | 4,580 Points",
-              Icon: TrendingUp,
-              color: "success",
-            },
-            {
-              title: "TỔNG RÚT HÔM NAY",
-              value: "12.3M",
-              subtitle: "VND | 1,230 Points",
-              Icon: TrendingDown,
-              color: "error",
-            },
-            {
-              title: "TỶ LỆ CHUYỂN ĐỔI",
-              value: "1:100",
-              subtitle: "1 Point = 10,000 VND",
-              Icon: CurrencyExchange,
-              color: "info",
-            },
-          ].map((s, i) => (
-            <StatsCard key={i} {...s} />
-          ))}
-        </div>
-
-        {/* TABS */}
-        <div className="bg-white rounded-2xl border mb-6 overflow-x-auto">
-          <Tabs
-            value={activeTab}
-            onChange={(_, v) => setActiveTab(v)}
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{ minHeight: 64 }}
-          >
-            {tabs.map((tab) => (
-              <Tab
-                key={tab.value}
-                disableRipple
-                label={
-                  <div className="flex items-center gap-2">
-                    <tab.icon />
-                    {tab.label}
-                    {tab.value !== 3 && (
-                      <Badge
-                        badgeContent={
-                          tab.key === "pending"
-                            ? transactions.filter((t) => t.status === "pending").length
-                            : transactions.filter((t) => t.type === tab.key).length
-                        }
-                        color="primary"
-                        className="ml-2"
+      <Box sx={{ p: 3 }}>
+        {/* Statistics Cards */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          {statisticsCards.map(({ title, value, diff, icon: Icon, circle }, index) => (
+            <Grid item xs={12} sm={6} lg={3} key={index} size={4}>
+              <Card>
+                <CardContent>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        {title}
+                      </Typography>
+                      <Typography variant="h4" fontWeight="bold" gutterBottom>
+                        {value}
+                      </Typography>
+                    </Box>
+                    <Box
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: circle.includes('blue')
+                          ? '#e3f2fd'
+                          : circle.includes('green')
+                            ? '#e8f5e8'
+                            : circle.includes('purple')
+                              ? '#f3e5f5'
+                              : '#fff3e0',
+                      }}
+                    >
+                      <Icon
+                        sx={{
+                          color: circle.includes('blue')
+                            ? '#1976d2'
+                            : circle.includes('green')
+                              ? '#2e7d32'
+                              : circle.includes('purple')
+                                ? '#7b1fa2'
+                                : '#f57c00',
+                        }}
                       />
-                    )}
-                  </div>
-                }
-              />
-            ))}
-          </Tabs>
-        </div>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
 
-        {/* FILTERS */}
-        <div className="bg-white rounded-2xl border p-6 mb-6">
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-12 w-full items-center">
-            <div className="md:col-span-4 lg:col-span-3">
-              <TextField
-                fullWidth
-                placeholder="Mã GD, tên user, email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{ startAdornment: <Search className="mr-2 text-gray-400" /> }}
-              />
-            </div>
-            <div className="md:col-span-4 lg:col-span-2">
-              <FormControl fullWidth>
-                <InputLabel>Loại User</InputLabel>
-                <Select
-                  value={userType}
-                  label="Loại User"
-                  onChange={(e) => setUserType(e.target.value)}
+        {/* Advanced Filter Section */}
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <FilterListIcon />
+                Bộ lọc tìm kiếm
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <IconButton
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                  color={showAdvancedFilters ? 'primary' : 'default'}
+                  size="small"
+                  sx={{
+                    backgroundColor: showAdvancedFilters ? 'primary.main' : 'transparent',
+                    color: showAdvancedFilters ? 'white' : 'primary.light',
+                    borderRadius: 1,
+                    '&:hover': {
+                      backgroundColor: showAdvancedFilters ? 'primary.dark' : 'transparent',
+                    },
+                  }}
                 >
-                  <MenuItem value="all">Tất cả</MenuItem>
-                  <MenuItem value="user">User</MenuItem>
-                  <MenuItem value="design">Design</MenuItem>
-                </Select>
-              </FormControl>
-            </div>
-            <div className="md:col-span-2 lg:col-span-2">
-              <TextField
-                fullWidth
-                type="date"
-                label="Từ ngày"
-                value={fromDate}
-                InputLabelProps={{ shrink: true }}
-                onChange={(e) => setFromDate(e.target.value)}
-              />
-            </div>
-            <div className="md:col-span-2 lg:col-span-2">
-              <TextField
-                fullWidth
-                type="date"
-                label="Đến ngày"
-                value={toDate}
-                InputLabelProps={{ shrink: true }}
-                onChange={(e) => setToDate(e.target.value)}
-              />
-            </div>
-            <div className="md:col-span-2 lg:col-span-1">
-              <Button
-                fullWidth
-                variant="contained"
-                className="h-14 normal-case font-medium"
-                startIcon={<FilterList />}
-              >
-                Lọc
-              </Button>
-            </div>
-          </div>
-        </div>
+                  Tìm kiếm nâng cao
+                  <FilterListIcon />
+                </IconButton>
+                <IconButton onClick={handleClearFilters} size="small" color="error">
+                  <ClearIcon />
+                </IconButton>
+                <IconButton onClick={handleRefresh} disabled={loading} size="small">
+                  <RefreshIcon />
+                </IconButton>
+              </Box>
+            </Box>
 
-        {/* TABLE */}
-        <div className="bg-white rounded-2xl border overflow-x-auto">
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow className="bg-gray-100">
-                  <TableCell className="font-bold">MÃ GD</TableCell>
-                  <TableCell className="font-bold">USER</TableCell>
-                  <TableCell className="font-bold">LOẠI</TableCell>
-                  <TableCell className="font-bold">SỐ TIỀN</TableCell>
-                  <TableCell className="font-bold">POINTS</TableCell>
-                  <TableCell className="font-bold">THỜI GIAN</TableCell>
-                  <TableCell className="font-bold">TRẠNG THÁI</TableCell>
-                  <TableCell className="font-bold">THAO TÁC</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredTransactions.map((t) => (
-                  <TransactionRow
-                    key={t.id}
-                    transaction={t}
-                    onApprove={handleApprove}
-                    onReject={handleReject}
-                    onDetail={handleDetail}
-                  />
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </div>
-      </div>
+            {/* Basic Search Row */}
+            <Grid container spacing={2} sx={{ mb: showAdvancedFilters ? 2 : 0 }}>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Tìm kiếm theo email..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyPress={handleSearchKeyPress}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Trạng thái</InputLabel>
+                  <Select
+                    value={statusToSearch}
+                    sx={{ minWidth: '150px' }}
+                    label="Trạng thái"
+                    onChange={handleStatusFilterChange}
+                  >
+                    <MenuItem value="ALL">Tất cả</MenuItem>
+                    <MenuItem value="IN">{formatTransactionType('IN')}</MenuItem>
+                    <MenuItem value="USE">{formatTransactionType('USE')}</MenuItem>
+                    <MenuItem value="MAKE">{formatTransactionType('MAKE')}</MenuItem>
+                    <MenuItem value="OUT">{formatTransactionType('OUT')}</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={2}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Hiển thị</InputLabel>
+                  <Select value={pageSize} label="Hiển thị" onChange={handlePageSizeChange}>
+                    <MenuItem value={5}>5</MenuItem>
+                    <MenuItem value={10}>10</MenuItem>
+                    <MenuItem value={25}>25</MenuItem>
+                    <MenuItem value={50}>50</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Sắp xếp</InputLabel>
+                  <Select
+                    value={`${sortBy}-${sortDirection}`}
+                    label="Sắp xếp"
+                    onChange={(e) => {
+                      const [field, direction] = e.target.value.split('-');
+                      setSortBy(field);
+                      setSortDirection(direction);
+                    }}
+                  >
+                    <MenuItem value="createdDate-DESC">Mới nhất</MenuItem>
+                    <MenuItem value="createdDate-ASC">Cũ nhất</MenuItem>
+                    <MenuItem value="coin-DESC">Giá cao nhất</MenuItem>
+                    <MenuItem value="coin-ASC">Giá thấp nhất</MenuItem>
+                    <MenuItem value="transactionType-ASC">Trạng thái A-Z</MenuItem>
+                    <MenuItem value="transactionType-DESC">Trạng thái Z-A</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+
+            {/* Advanced Filters */}
+            {showAdvancedFilters && (
+              <Box sx={{ borderTop: 1, borderColor: 'divider', pt: 3 }}>
+                <Typography variant="subtitle2" sx={{ mb: 2, color: 'text.secondary' }}>
+                  Bộ lọc nâng cao
+                </Typography>
+
+                <Grid container spacing={2}>
+                  {/* Hàng 1: Mã giao dịch */}
+                  <Grid item xs={12} md={6} size={4}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Mã giao dịch"
+                      placeholder="Nhập mã giao dịch..."
+                      value={tempTransactionIdToSearch}
+                      onChange={(e) => setTempTransactionIdToSearch(e.target.value)}
+                    />
+                  </Grid>
+                  {/* Hàng 2: Giá từ - Giá đến */}
+                  <Grid item xs={12} md={6} size={4}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Giá từ"
+                      placeholder="0"
+                      type="number"
+                      value={tempMinCoin}
+                      onChange={(e) => setTempMinCoin(e.target.value)}
+                      InputProps={{
+                        endAdornment: <InputAdornment position="end">₫</InputAdornment>,
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6} size={4}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Giá đến"
+                      placeholder="999999999"
+                      type="number"
+                      value={tempMaxCoin}
+                      onChange={(e) => setTempMaxCoin(e.target.value)}
+                      InputProps={{
+                        endAdornment: <InputAdornment position="end">₫</InputAdornment>,
+                      }}
+                    />
+                  </Grid>
+
+                  {/* Hàng 3: Từ ngày - Đến ngày */}
+                  <Grid item xs={12} md={6} size={4}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Từ ngày"
+                      type="datetime-local"
+                      value={formatDateTimeForInput(tempStartDate)}
+                      onChange={(e) => handleTempDateTimeChange('start', e.target.value)}
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6} size={4}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Đến ngày"
+                      type="datetime-local"
+                      value={formatDateTimeForInput(tempEndDate)}
+                      onChange={(e) => handleTempDateTimeChange('end', e.target.value)}
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} size={12}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'flex-start',
+                        gap: 2,
+                        mt: 1,
+                      }}
+                    >
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<SearchIcon />}
+                        onClick={handleAdvancedSearch}
+                      >
+                        Tìm kiếm
+                      </Button>
+                      <Button variant="outlined" color="error" startIcon={<ClearIcon />} onClick={handleClearFilters}>
+                        Xoá bộ lọc
+                      </Button>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Orders Table */}
+        <Card>
+          <CardContent>
+            <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+              <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                Danh sách đơn hàng
+                {transactionTopupData?.pageable && (
+                  <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                    ({transactionTopupData.totalElements} kết quả)
+                  </Typography>
+                )}
+              </Typography>
+            </Box>
+
+            {loading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              <>
+                <TableContainer component={Paper} variant="outlined">
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>ID</TableCell>
+                        <TableCell>Người tạo</TableCell>
+                        <TableCell>Số tiền</TableCell>
+                        <TableCell>Nội dung</TableCell>
+                        <TableCell align="center">Mã giao dịch</TableCell>
+                        <TableCell align="center">Loại giao dịch</TableCell>
+                        <TableCell>Ngày tạo</TableCell>
+                        <TableCell>Trạng thái</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {contents.map((contents) => (
+                        <TableRow key={contents.id} hover>
+                          <TableCell
+                            title={`ID: ${contents.id}`}
+                            sx={{
+                              maxWidth: 100,
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
+                          >
+                            #{contents.id}
+                          </TableCell>
+                          <TableCell>{contents.createdBy || 'N/A'}</TableCell>
+                          <TableCell align="right">
+                            <Typography fontWeight="medium">{handleAmountFormat(contents.coin) || 0}</Typography>
+                          </TableCell>
+                          <TableCell>{contents.contents || 'N/A'}</TableCell>
+                          <TableCell align="center">{contents.transactionCode}</TableCell>
+                          <TableCell>
+                            <Chip
+                              label={formatTransactionType(contents.transactionType)}
+                              color={getTransactionTypeColor(contents.transactionType)}
+                              size="small"
+                            />
+                          </TableCell>
+                          {/* <TableCell align="center">{formatTransactionType(contents.transactionType)}</TableCell> */}
+                          <TableCell>{formatDateTime(contents.createdDate)}</TableCell>
+                          <TableCell>{formatDateTime(contents.status)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+
+                {/* Pagination */}
+                {transactionTopupData.pageable && (
+                  <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Hiển thị {transactionTopupData.numberOfElements} trong tổng số {transactionTopupData.totalElements} kết quả
+                    </Typography>
+
+                    <Pagination
+                      count={transactionTopupData.totalPages}
+                      page={transactionTopupData.pageable.pageNumber + 1}
+                      onChange={handlePageChange}
+                      color="primary"
+                      showFirstButton
+                      showLastButton
+                    />
+                  </Box>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </Box>
     </AdminLayout>
   );
 };

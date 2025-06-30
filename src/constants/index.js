@@ -84,7 +84,7 @@ export const categoryLabelsVi = {
 export const categoryStatusVi = {
   DRAFT: 'Nháp',
   NEW: 'Mới',
-  DOING: 'Đang xử lý',
+  DOING: 'Nhận đơn',
   IN_REVIEW: 'Kiểm tra',
   NEED_FIX: 'Cần sửa',
   DONE: 'Hoàn thành',

@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { useAppDispatch } from 'src/redux/hook';
 
 import { requestUploadImages } from 'src/redux/reducers/images';
@@ -95,7 +95,7 @@ const useOrderHandlers = ({
               fetchSendPushNotifications({
                 customerIds: userData?.id ? [userData.id] : [],
                 title: 'Lên đơn hàng ',
-                message: `Đơn hàng ${formData.get('title')} của bạn đã được lên sàn, chờ nhà thiết kể làm việc!`,
+                message: `Đơn hàng ${formData.get('title')} của bạn đã được lên sàn, chờ nhà thiết kế làm việc!`,
               }),
             );
           }

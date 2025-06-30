@@ -325,31 +325,33 @@ const Page = () => {
               />
 
               {/* Tabs status orders */}
-              <OrderTabs
-                role={role}
-                categories={categories}
-                selectedTab={selectedTab}
-                selectedCategory={selectedCategory}
-                onTabChange={(e, v) => {
-                  handleTabChange(e, v);
-                }}
-                orderData={orderData}
-                checkedOrderIds={checkedOrderIds}
-                onToggleCheckAll={handleToggleCheckAll}
-                isAcceptableToAssign={isAcceptableToAssign}
-                openConfirmAssign={openConfirmAssign}
-                onCloseConfirmAssign={() => setOpenConfirmAssign(false)}
-                openConfirmAssignDialog={() => setOpenConfirmAssign(true)}
-                onConfirmAssign={() => {
-                  const selectedUserIds = orderData
-                    .filter((order) => checkedOrderIds.includes(order.id))
-                    .map((order) => order.userid)
-                    .filter((v, i, self) => v && self.indexOf(v) === i);
-                  confirmAssignOrders(selectedUserIds);
-                }}
-                statusOptions={statusOptions}
-                onChangeStatusOrders={handleChangeStatusOrders}
-              />
+              {role && (
+                <OrderTabs
+                  role={role}
+                  categories={categories}
+                  selectedTab={selectedTab}
+                  selectedCategory={selectedCategory}
+                  onTabChange={(e, v) => {
+                    handleTabChange(e, v);
+                  }}
+                  orderData={orderData}
+                  checkedOrderIds={checkedOrderIds}
+                  onToggleCheckAll={handleToggleCheckAll}
+                  isAcceptableToAssign={isAcceptableToAssign}
+                  openConfirmAssign={openConfirmAssign}
+                  onCloseConfirmAssign={() => setOpenConfirmAssign(false)}
+                  openConfirmAssignDialog={() => setOpenConfirmAssign(true)}
+                  onConfirmAssign={() => {
+                    const selectedUserIds = orderData
+                      .filter((order) => checkedOrderIds.includes(order.id))
+                      .map((order) => order.userid)
+                      .filter((v, i, self) => v && self.indexOf(v) === i);
+                    confirmAssignOrders(selectedUserIds);
+                  }}
+                  statusOptions={statusOptions}
+                  onChangeStatusOrders={handleChangeStatusOrders}
+                />
+              )}
 
               {/* Order List */}
               {isLoading ? (
@@ -384,7 +386,7 @@ const Page = () => {
               />
 
               {/* Pagination Footer */}
-              {!isLoading && (
+              {!isLoading && role && (
                 <OrderPagination
                   page={page}
                   totalPages={totalPages}

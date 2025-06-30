@@ -27,7 +27,13 @@ import CommentList from './comments/CommentList';
 import CommentInput from './comments/CommentInput';
 import { checkRole, getAllowedStatusOptions } from 'src/utils';
 import { categoryColors, categoryLabelsVi, categoryStatusVi } from 'src/constants';
-import { changeStatusOrders, fetchGetOrdersByBoardId, fetchUploadImagesForDesigner } from 'src/redux/reducers/orders';
+import {
+  changeStatusOrders,
+  fetchAssignOrdersForDesigner,
+  fetchGetAllStatus,
+  fetchGetOrdersByBoardId,
+  fetchUploadImagesForDesigner,
+} from 'src/redux/reducers/orders';
 import { toast } from 'react-toastify';
 import { fetchSendPushNotifications } from 'src/redux/reducers/notifications';
 import { useSelector } from 'react-redux';
@@ -126,6 +132,17 @@ const OrderDetailModal = ({
     setUploadFiles((prev) => [...prev, ...fileArray]);
   };
 
+  const sendNotification = async (userId, designerId) => {
+    const data = {
+      designerIds: Array.isArray(designerId) ? designerId : [designerId ?? 0],
+      customerIds: Array.isArray(userId) ? userId : [userId ?? 0],
+      title: 'Trạng thái đơn hàng',
+      message: 'Có đơn hàng của bạn thay đổi trạng thái, vào xem ngay!',
+    };
+
+    dispatch(fetchSendPushNotifications(data));
+  };
+
   const handleSendImages = async () => {
     if (uploadFiles.length === 0) return;
 
@@ -138,7 +155,6 @@ const OrderDetailModal = ({
     try {
       const response = await dispatch(fetchUploadImagesForDesigner({ orderId: order.id, data: formData })).unwrap();
       onClose();
-      console.log(response.success);
       if (response.success === true) {
         toast.update(toastId, {
           render: 'Upload thành công!',
@@ -146,6 +162,10 @@ const OrderDetailModal = ({
           isLoading: false,
           autoClose: 2000,
         });
+        await handleChangeSingleOrderStatus('IN_REVIEW');
+        await dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() }));
+        await dispatch(fetchGetAllStatus(''));
+        await sendNotification(order.userid, order.designerId);
       }
       setUploadedImages([]);
       setUploadFiles([]);
@@ -158,17 +178,6 @@ const OrderDetailModal = ({
       });
       console.error('Upload thất bại:', err);
     }
-  };
-
-  const sendNotification = async (userId, designerId) => {
-    const data = {
-      designerIds: Array.isArray(designerId) ? designerId : [designerId ?? 0],
-      customerIds: Array.isArray(userId) ? userId : [userId ?? 0],
-      title: 'Trạng thái đơn hàng',
-      message: 'Có đơn hàng của bạn thay đổi trạng thái, vào xem ngay!',
-    };
-
-    dispatch(fetchSendPushNotifications(data));
   };
 
   const handleChangeSingleOrderStatus = async (newStatus, optionalComment = '') => {
@@ -207,6 +216,26 @@ const OrderDetailModal = ({
     } else {
       toast.error(message || 'Đổi trạng thái thất bại');
     }
+  };
+
+  const handleAssignOrder = async () => {
+    if (!order?.id || role !== 'designer') return;
+
+    const response = await dispatch(
+      fetchAssignOrdersForDesigner({
+        data: { orderIds: [order?.id] },
+      }),
+    );
+
+    if (response.meta.requestStatus === 'fulfilled') {
+      toast.success('Nhận đơn thành công!');
+      await dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() }));
+      await dispatch(fetchGetAllStatus(''));
+      await sendNotification(order.userid, null);
+    } else {
+      toast.error(message || 'Nhận đơn thất bại!');
+    }
+    onClose();
   };
 
   return (
@@ -462,8 +491,11 @@ const OrderDetailModal = ({
             <DialogActions>
               <Button onClick={() => setConfirmOpen(false)}>{t(tokens.nav.cancel)}</Button>
               <Button
+                disabled={
+                  (confirmStatus === 'IN_REVIEW' && uploadFiles.length <= 0) ||
+                  (confirmStatus === 'NEED_FIX' && commentText.trim() === '')
+                }
                 onClick={async () => {
-                  await handleChangeSingleOrderStatus(confirmStatus, commentText);
                   if (
                     isDesigner &&
                     ((order.status === 'DOING' && confirmStatus === 'IN_REVIEW') ||
@@ -471,6 +503,10 @@ const OrderDetailModal = ({
                     uploadFiles.length > 0
                   ) {
                     await handleSendImages();
+                  } else if (isDesigner && order.status === 'NEW' && confirmStatus === 'DOING') {
+                    await handleAssignOrder();
+                  } else {
+                    await handleChangeSingleOrderStatus(confirmStatus, commentText);
                   }
 
                   setConfirmOpen(false);
@@ -478,7 +514,6 @@ const OrderDetailModal = ({
                 }}
                 variant="contained"
                 color="primary"
-                disabled={confirmStatus === 'NEED_FIX' && commentText.trim() === ''}
               >
                 {t(tokens.nav.submit)}
               </Button>

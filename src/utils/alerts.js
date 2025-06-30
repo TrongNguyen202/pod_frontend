@@ -1,4 +1,4 @@
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 
 const success = (message) => {
   toast.success(message, {

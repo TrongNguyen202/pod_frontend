@@ -9,30 +9,21 @@ const initialState = {
     error: '',
     data: [],
   },
-  finance: {
+  transaction: {
     loading: false,
     error: '',
-    data: [],
-  },
-  financeToday: {
-    loading: false,
-    error: '',
-    data: [],
+    dataTopup: [],
+    dataStatistics: [],
   },
 };
 
-export const fetchGetStatisticsOrder = createAsyncThunk('/statistics/order', async (query) => {
+export const fetchGetStatisticsOrder = createAsyncThunk('/statistics/order', async ({ query }) => {
   const res = await RepositoryRemote.statistics.requestGetStatisticOrder(query);
   return res.data.data;
 });
 
-export const fetchGetStatisticsFinance = createAsyncThunk('/statistics/finance', async (query) => {
-  const res = await RepositoryRemote.statistics.requestGetStatisticFinance(query);
-  return res.data.data;
-});
-
-export const fetchGetStatisticsFinanceToday = createAsyncThunk('/statistics/finance-today', async (query) => {
-  const res = await RepositoryRemote.statistics.requestGetStatisticFinance(query);
+export const fetchGetStatisticsTransaction = createAsyncThunk('/statistics/transaction', async ({ query }) => {
+  const res = await RepositoryRemote.statistics.requestGetStatisticTransaction(query);
   return res.data.data;
 });
 
@@ -53,33 +44,19 @@ const slicer = createSlice({
       state.order.data = [];
       state.order.error = action?.error?.message || 'Error while processing.';
     });
-
-    builder.addCase(fetchGetStatisticsFinance.pending, (state) => {
-      state.finance.loading = true;
+    builder.addCase(fetchGetStatisticsTransaction.pending, (state) => {
+      state.transaction.loading = true;
     });
-    builder.addCase(fetchGetStatisticsFinance.fulfilled, (state, action) => {
-      state.finance.loading = false;
-      state.finance.data = action.payload;
-      state.finance.error = '';
+    builder.addCase(fetchGetStatisticsTransaction.fulfilled, (state, action) => {
+      state.transaction.loading = false;
+      state.transaction.dataTopup = action.payload.topups;
+      state.transaction.dataStatistics = action.payload.statistics;
+      state.transaction.error = '';
     });
-    builder.addCase(fetchGetStatisticsFinance.rejected, (state, action) => {
-      state.finance.loading = false;
-      state.finance.data = [];
-      state.finance.error = action?.error?.message || 'Error while processing.';
-    });
-
-    builder.addCase(fetchGetStatisticsFinanceToday.pending, (state) => {
-      state.financeToday.loading = true;
-    });
-    builder.addCase(fetchGetStatisticsFinanceToday.fulfilled, (state, action) => {
-      state.financeToday.loading = false;
-      state.financeToday.data = action.payload;
-      state.financeToday.error = '';
-    });
-    builder.addCase(fetchGetStatisticsFinanceToday.rejected, (state, action) => {
-      state.financeToday.loading = false;
-      state.financeToday.data = [];
-      state.financeToday.error = action?.error?.message || 'Error while processing.';
+    builder.addCase(fetchGetStatisticsTransaction.rejected, (state, action) => {
+      state.transaction.loading = false;
+      state.transaction.data = [];
+      state.transaction.error = action?.error?.message || 'Error while processing.';
     });
   },
 });
