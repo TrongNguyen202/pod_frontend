@@ -46,6 +46,7 @@ import {
   fetchUserByEmail,
   fetchUsers,
 } from 'src/redux/reducers/user';
+import { users } from 'src/services/user';
 import { Edit } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 
@@ -53,7 +54,14 @@ const AdminUser = () => {
   const dispatch = useDispatch();
   const { loadingUserList, total, data: usersList } = useSelector((state) => state.users.usersList);
 
-  const [users, setUsers] = useState(usersList || []);
+  const [usersStats, setUsersStats] = useState({
+    totalCustomer: 0,
+    totalDesigner: 0,
+    all: 0,
+    inactive: 0,
+  });
+  const [loadingStats, setLoadingStats] = useState(false);
+
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
@@ -70,10 +78,11 @@ const AdminUser = () => {
   const [pageSize, setPageSize] = useState(10);
 
   const { loading, data: userData } = useSelector((state) => state.users.userInfo);
-  console.log(users);
+  console.log("check user lít", usersList);
   // Load users when component mounts or when filters change
   useEffect(() => {
     loadUsers();
+    loadUsersStats(); // Gọi API thống kê khi component mount
   }, [activeTab, currentPage, pageSize]);
 
   const loadUsers = () => {
@@ -101,6 +110,25 @@ const AdminUser = () => {
     }
 
     dispatch(fetchUsers(requestBody));
+  };
+
+  const loadUsersStats = async () => {
+    try {
+      setLoadingStats(true);
+      const response = await users.requestGetUsersStats();
+      setUsersStats(response.data.data);
+    } catch (error) {
+      console.error('Error fetching users stats:', error);
+      // Reset về giá trị mặc định nếu có lỗi
+      setUsersStats({
+        totalCustomer: 0,
+        totalDesigner: 0,
+        all: 0,
+        inactive: 0,
+      });
+    } finally {
+      setLoadingStats(false);
+    }
   };
 
   const handlePageSizeChange = (event) => {
@@ -144,6 +172,7 @@ const AdminUser = () => {
     setSelectedUser(null);
     setShowUserModal(false);
     loadUsers();
+    loadUsersStats(); // Cập nhật lại thống kê sau khi thay đổi status
   };
   const handleShowDialogSetTax = async (email) => {
     setEmail(email);
@@ -171,6 +200,7 @@ const AdminUser = () => {
     setSelectedUser(null);
     setShowUserModal(false);
     loadUsers();
+    loadUsersStats(); // Cập nhật lại thống kê nếu cần
   }, [email, tax, dispatch, loadUsers]); // Dependencies
 
   /**
@@ -186,31 +216,29 @@ const AdminUser = () => {
    * Handle creating new account
    */
   const handleCreateAccount = () => {
-    setIsCreatingNew(true);
-    setSelectedUser(null);
     setActivateDialogOpen(true);
   };
 
-  const handleActivateSubmit = (userData) => {
-    // Reload users list after successful creation
+  const handleActivateSubmit = () => {
+    // Reload users list and stats after successful creation
     loadUsers();
+    loadUsersStats(); // Cập nhật lại thống kê sau khi tạo user mới
     setActivateDialogOpen(false);
     setSelectedUser(null);
     setIsCreatingNew(false);
   };
 
   // Get stats from current data
-  const getStats = () => {
-    const allUsers = usersList || [];
+  const getStatsFromAPI = () => {
     return {
-      totalUsers: allUsers.filter((u) => u.role_name?.toLowerCase() === 'customer').length,
-      totalDesigners: allUsers.filter((u) => u.role_name?.toLowerCase() === 'designer').length,
-      totalLocked: allUsers.filter((u) => u.status === -1).length,
-      totalAll: allUsers.length,
+      totalUsers: usersStats.totalCustomer || 0,
+      totalDesigners: usersStats.totalDesigner || 0,
+      totalLocked: usersStats.inactive || 0,
+      totalAll: usersStats.all || 0,
     };
   };
 
-  const stats = getStats();
+  const stats = getStatsFromAPI();
 
   // Filter users by search term
   const filteredUsers = (usersList || []).filter((user) => {
@@ -262,7 +290,7 @@ const AdminUser = () => {
                   User
                 </Typography>
                 <Typography variant="h6" className="font-bold text-gray-900">
-                  {stats.totalUsers}
+                  {loadingStats ? '...' : stats.totalUsers}
                 </Typography>
               </Box>
             </CardContent>
@@ -278,7 +306,7 @@ const AdminUser = () => {
                   Designer
                 </Typography>
                 <Typography variant="h6" className="font-bold text-gray-900">
-                  {stats.totalDesigners}
+                  {loadingStats ? '...' : stats.totalDesigners}
                 </Typography>
               </Box>
             </CardContent>
@@ -294,7 +322,7 @@ const AdminUser = () => {
                   Tất cả
                 </Typography>
                 <Typography variant="h6" className="font-bold text-gray-900">
-                  {stats.totalAll}
+                  {loadingStats ? '...' : stats.totalAll}
                 </Typography>
               </Box>
             </CardContent>
@@ -310,7 +338,7 @@ const AdminUser = () => {
                   Bị khóa
                 </Typography>
                 <Typography variant="h6" className="font-bold text-gray-900">
-                  {stats.totalLocked}
+                  {loadingStats ? '...' : stats.totalLocked}
                 </Typography>
               </Box>
             </CardContent>
@@ -690,10 +718,7 @@ const AdminUser = () => {
           open={activateDialogOpen}
           onClose={() => {
             setActivateDialogOpen(false);
-            setSelectedUser(null);
-            setIsCreatingNew(false);
           }}
-          userEmail={isCreatingNew ? '' : selectedUser?.email || ''}
           onSuccess={handleActivateSubmit}
         />
       </Box>
