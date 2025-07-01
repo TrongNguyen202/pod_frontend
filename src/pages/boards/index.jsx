@@ -43,7 +43,7 @@ import { categoryLabelsVi } from 'src/constants';
 
 
 const Page = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
   const [selected, setSelected] = useState([]);
   const [allSelected, setAllSelected] = useState(false);

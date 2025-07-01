@@ -43,7 +43,7 @@ const typeTransactionVi = {
 
 const Page = () => {
   const [isHydrated, setIsHydrated] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [role, setRole] = useState('');
 
   const [transactionType, setTransactionType] = useState('');

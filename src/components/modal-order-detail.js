@@ -1,32 +1,30 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Typography,
   Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   IconButton,
   TextField,
-  Chip,
+  Typography,
 } from '@mui/material';
-import { ChevronLeft, ChevronRight } from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-toastify';
+import { categoryColors, categoryLabelsVi, categoryStatusVi, categoryStatusViU } from 'src/constants';
 import { tokens } from 'src/locales/tokens';
-import { listenToOrderComments } from 'src/services/firebase';
+import { useAppDispatch, useAppSelector } from 'src/redux/hook';
 import {
+  addComment,
+  fetchGetCommentsByOrderId,
   fetchPostCommentFirebase,
   fetchPostCommentPosgres,
-  fetchGetCommentsByOrderId,
-  addComment,
 } from 'src/redux/reducers/comments';
-import { useAppDispatch, useAppSelector } from 'src/redux/hook';
-import CommentList from './comments/CommentList';
-import CommentInput from './comments/CommentInput';
-import { checkRole, getAllowedStatusOptions } from 'src/utils';
-import { categoryColors, categoryLabelsVi, categoryStatusVi, categoryStatusViU } from 'src/constants';
+import { fetchSendPushNotifications } from 'src/redux/reducers/notifications';
 import {
   changeStatusOrders,
   fetchAssignOrdersForDesigner,
@@ -34,9 +32,10 @@ import {
   fetchGetOrdersByBoardId,
   fetchUploadImagesForDesigner,
 } from 'src/redux/reducers/orders';
-import { toast } from 'react-toastify';
-import { fetchSendPushNotifications } from 'src/redux/reducers/notifications';
-import { useSelector } from 'react-redux';
+import { listenToOrderComments } from 'src/services/firebase';
+import { checkRole, getAllowedStatusOptions } from 'src/utils';
+import CommentInput from './comments/CommentInput';
+import CommentList from './comments/CommentList';
 
 const OrderDetailModal = ({
   open,
@@ -60,11 +59,8 @@ const OrderDetailModal = ({
   const seenCommentIdsRef = useRef(new Set());
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
-  // const comments = useAppSelector((state) => state.comments.commentsInfo.data, shallowEqual);
   const comments = useAppSelector((state) => state.comments.commentsInfo.data);
-  const { loading, data, error } = useSelector((state) => state.orders.uploadImageService);
   const { isCustomer, isDesigner } = checkRole(role);
-
   useEffect(() => {
     if (order?.id) {
       dispatch(fetchGetCommentsByOrderId(order.id));
@@ -203,7 +199,7 @@ const OrderDetailModal = ({
           break;
         default:
       }
-      if (newStatus === 'NEED_FIX' && optionalComment.trim() !== '') {
+      if (optionalComment.trim() !== '') {
         await handleSubmitComment(optionalComment);
       }
 
@@ -423,7 +419,7 @@ const OrderDetailModal = ({
                 {statusOptions.find((opt) => opt.value === confirmStatus)?.label || confirmStatus}?
               </Box>
 
-              {confirmStatus === 'NEED_FIX' && (
+              {/* {confirmStatus === 'NEED_FIX' && ( */}
                 <TextField
                   autoFocus
                   fullWidth
@@ -435,7 +431,7 @@ const OrderDetailModal = ({
                   placeholder={t(tokens.nav.typing)}
                   sx={{ mb: 2 }}
                 />
-              )}
+              {/* )} */}
 
               {/* Nếu là designer và chuyển từ DOING/NEED_FIX sang IN_REVIEW thì cho upload ảnh */}
               {isDesigner &&

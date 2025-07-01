@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useState, useEffect, use, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Box,
   Card,
@@ -24,40 +24,50 @@ import {
   Button,
   Chip,
   Paper,
-} from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import LockIcon from "@mui/icons-material/Lock";
-import LockOpenIcon from "@mui/icons-material/LockOpen";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
-import MailIcon from "@mui/icons-material/Mail";
-import PhoneIcon from "@mui/icons-material/Phone";
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import PeopleIcon from "@mui/icons-material/People";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
+  Pagination,
+  Select,
+  MenuItem,
+} from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import LockIcon from '@mui/icons-material/Lock';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
+import MailIcon from '@mui/icons-material/Mail';
+import PhoneIcon from '@mui/icons-material/Phone';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import PeopleIcon from '@mui/icons-material/People';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import ActivateUserDialog from './dialog/activate-user';
-import { fetchUsers } from "src/redux/reducers/user";
-
+import { fetchUpdateTaxForDesigner, fetchUserByEmail, fetchUsers } from 'src/redux/reducers/user';
+import { Edit } from '@mui/icons-material';
+import { toast } from 'react-toastify';
 
 const AdminUser = () => {
   const dispatch = useDispatch();
-  const { usersList } = useSelector((state) => state.users);
+  const { loadingUserList, total, data: usersList } = useSelector((state) => state.users.usersList);
 
-  const [activeTab, setActiveTab] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [users, setUsers] = useState(usersList || []);
+  const [activeTab, setActiveTab] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
+  const [email, setEmail] = useState('');
   const [showUserModal, setShowUserModal] = useState(false);
   const [activateDialogOpen, setActivateDialogOpen] = useState(false);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const [showTaxDialog, setShowTaxDialog] = useState(false);
+  const [tax, setTax] = useState(18.5); // Default tax rate for designers
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
 
+  const { loading, data: userData } = useSelector((state) => state.users.userInfo);
+  console.log(users);
   // Load users when component mounts or when filters change
   useEffect(() => {
     loadUsers();
-  }, [activeTab, currentPage]);
+  }, [activeTab, currentPage, pageSize]);
 
   const loadUsers = () => {
     const requestBody = {
@@ -67,13 +77,13 @@ const AdminUser = () => {
 
     // Add filters based on active tab
     switch (activeTab) {
-      case "users":
-        requestBody.roleName = "customer";
+      case 'users':
+        requestBody.roleName = 'customer';
         break;
-      case "designs":
-        requestBody.roleName = "designer";
+      case 'designs':
+        requestBody.roleName = 'designer';
         break;
-      case "locked":
+      case 'locked':
         requestBody.status = 0;
         break;
       default:
@@ -84,16 +94,25 @@ const AdminUser = () => {
     dispatch(fetchUsers(requestBody));
   };
 
+  const handlePageSizeChange = (event) => {
+    console.log(event.target.value);
+    setPageSize(event.target.value);
+    setCurrentPage(1);
+  };
+
   const handleTabChange = (newTab) => {
     setActiveTab(newTab);
     setCurrentPage(1); // Reset to first page when changing tabs
   };
 
+  const handlePageChange = (event, newPage) => {
+    setCurrentPage(newPage);
+  };
   /**
    * Update user status/approval.
    */
   const handleUserAction = (userId, action) => {
-    if (action === "approve") {
+    if (action === 'approve') {
       setActivateDialogOpen(true);
       setSelectedUser(users.find((user) => user.id === userId));
       setIsCreatingNew(false);
@@ -103,25 +122,54 @@ const AdminUser = () => {
       prev.map((user) => {
         if (user.id !== userId) return user;
         switch (action) {
-          case "lock":
-            return { ...user, status: "locked" };
-          case "unlock":
-            return { ...user, status: "active" };
-          case "approve":
-            return { ...user, status: "active", isApproved: true };
-          case "reject":
-            return { ...user, status: "rejected" };
+          case 'lock':
+            return { ...user, status: 'locked' };
+          case 'unlock':
+            return { ...user, status: 'active' };
+          case 'approve':
+            return { ...user, status: 'active', isApproved: true };
+          case 'reject':
+            return { ...user, status: 'rejected' };
           default:
             return user;
         }
-      })
+      }),
     );
   };
+
+  const handleShowDialogSetTax = async (email) => {
+    setEmail(email);
+    const response = await dispatch(fetchUserByEmail({ email }));
+    if (response.meta.requestStatus === 'fulfilled') {
+      setTax(response.payload?.t ?? 18.5);
+      setShowTaxDialog(true);
+    } else {
+      toast.error('Error fetching user data:', response.error);
+    }
+  };
+
+  const handleSetTaxForDesigner = useCallback(async () => {
+    const data = {
+      email,
+      taxDeductionRate: parseFloat(tax), // Ensure tax is a float
+    };
+    const response = await dispatch(fetchUpdateTaxForDesigner(data));
+    if (response.error) {
+      toast.error('Error setting tax for designer:', response.error);
+    } else {
+      toast.success('Tax updated successfully for designer');
+    }
+    setShowTaxDialog(false);
+    setSelectedUser(null);
+    setShowUserModal(false);
+    loadUsers();
+  }, [email, tax, dispatch, loadUsers]); // Dependencies
 
   /**
    * Open details dialog.
    */
-  const showUserDetails = (user) => {
+  const showUserDetails = async (user) => {
+    await dispatch(fetchUserByEmail({ email: user.email }));
     setSelectedUser(user);
     setShowUserModal(true);
   };
@@ -145,11 +193,11 @@ const AdminUser = () => {
 
   // Get stats from current data
   const getStats = () => {
-    const allUsers = usersList.data || [];
+    const allUsers = usersList || [];
     return {
-      totalUsers: allUsers.filter(u => u.role_name?.toLowerCase() === "customer").length,
-      totalDesigners: allUsers.filter(u => u.role_name?.toLowerCase() === "designer").length,
-      totalLocked: allUsers.filter(u => u.status === 0).length,
+      totalUsers: allUsers.filter((u) => u.role_name?.toLowerCase() === 'customer').length,
+      totalDesigners: allUsers.filter((u) => u.role_name?.toLowerCase() === 'designer').length,
+      totalLocked: allUsers.filter((u) => u.status === 0).length,
       totalAll: allUsers.length,
     };
   };
@@ -157,7 +205,7 @@ const AdminUser = () => {
   const stats = getStats();
 
   // Filter users by search term
-  const filteredUsers = (usersList.data || []).filter((user) => {
+  const filteredUsers = (usersList || []).filter((user) => {
     const matchesSearch =
       user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -182,7 +230,7 @@ const AdminUser = () => {
    * Render role chip.
    */
   const getRoleChip = (roleName) => {
-    return roleName?.toLowerCase() === "designer" ? (
+    return roleName?.toLowerCase() === 'designer' ? (
       <Chip label="Designer" size="small" className="bg-purple-100 text-purple-800" />
     ) : (
       <Chip label="Customer" size="small" className="bg-blue-100 text-blue-800" />
@@ -317,7 +365,7 @@ const AdminUser = () => {
 
         {/* Users Table */}
         <Card elevation={0} className="rounded-lg shadow overflow-hidden">
-          {usersList.loading ? (
+          {loadingUserList ? (
             <Box className="text-center py-12">
               <Typography variant="body2" className="text-gray-500">
                 Đang tải dữ liệu...
@@ -378,34 +426,27 @@ const AdminUser = () => {
                       </TableCell>
 
                       {/* Role */}
-                      <TableCell className="px-6 py-4 whitespace-nowrap">
-                        {getRoleChip(user.role_name)}
-                      </TableCell>
+                      <TableCell className="px-6 py-4 whitespace-nowrap">{getRoleChip(user.role_name)}</TableCell>
 
                       {/* Coin */}
                       <TableCell className="px-6 py-4 whitespace-nowrap">
                         <Typography variant="body2" className="font-medium text-gray-900">
                           {user.coin?.toLocaleString() || 0}
                         </Typography>
-                        <Typography variant="caption" className="text-gray-500 ml-1">
-                          coin
-                        </Typography>
                       </TableCell>
 
                       {/* Status */}
-                      <TableCell className="px-6 py-4 whitespace-nowrap">
-                        {getStatusChip(user)}
-                      </TableCell>
+                      <TableCell className="px-6 py-4 whitespace-nowrap">{getStatusChip(user)}</TableCell>
 
                       {/* Created Date */}
                       <TableCell className="px-6 py-4 whitespace-nowrap">
                         <Box className="flex items-center text-sm text-gray-900">
                           <CalendarMonthIcon className="h-3 w-3 mr-1" />
-                          {user.createdDate ? new Date(user.createdDate * 1000).toLocaleDateString("vi-VN") : 'N/A'}
+                          {user.createdDate ? new Date(user.createdDate * 1000).toLocaleDateString('vi-VN') : 'N/A'}
                         </Box>
                         {user.lastModifiedDate && (
                           <Typography variant="caption" className="text-gray-500">
-                            Cập nhật: {new Date(user.lastModifiedDate * 1000).toLocaleDateString("vi-VN")}
+                            Cập nhật: {new Date(user.lastModifiedDate * 1000).toLocaleDateString('vi-VN')}
                           </Typography>
                         )}
                       </TableCell>
@@ -416,28 +457,57 @@ const AdminUser = () => {
                           <IconButton
                             onClick={() => showUserDetails(user)}
                             size="small"
-                            className="text-blue-600 hover:text-blue-900 hover:bg-blue-50"
+                            className="text-green-600 hover:text-green-900 hover:bg-green-50"
                           >
                             <VisibilityIcon className="h-4 w-4" />
                           </IconButton>
 
                           {user.status === 1 ? (
                             <IconButton
-                              onClick={() => handleUserAction(user.id, "lock")}
+                              onClick={() => handleUserAction(user.id, 'lock')}
                               size="small"
-                              className="text-red-600 hover:text-red-900 hover:bg-red-50"
+                              className="text-green-600 hover:text-green-900 hover:bg-green-50"
                             >
                               <LockIcon className="h-4 w-4" />
                             </IconButton>
                           ) : (
                             <IconButton
-                              onClick={() => handleUserAction(user.id, "unlock")}
+                              onClick={() => handleUserAction(user.id, 'unlock')}
                               size="small"
                               className="text-green-600 hover:text-green-900 hover:bg-green-50"
                             >
                               <LockOpenIcon className="h-4 w-4" />
                             </IconButton>
                           )}
+                          {user.role_name?.toLowerCase() === 'designer' && (
+                            <Box>
+                              <IconButton
+                                onClick={() => handleShowDialogSetTax(user.email)}
+                                size="small"
+                                className="text-green-600 hover:text-green-900 hover:bg-green-50"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </IconButton>
+                            </Box>
+                          )}
+                          {!loading ? (
+                            <Dialog open={showTaxDialog} onClose={() => setShowTaxDialog(false)}>
+                              <DialogTitle>Chỉnh sửa thuế cho nhà thiết kế</DialogTitle>
+                              <DialogContent>
+                                <TextField
+                                  label="Tỷ lệ thuế"
+                                  value={tax}
+                                  onChange={(e) => setTax(e.target.value)}
+                                  fullWidth
+                                  margin="normal"
+                                />
+                              </DialogContent>
+                              <DialogActions>
+                                <Button onClick={() => setShowTaxDialog(false)}>Hủy</Button>
+                                <Button onClick={() => handleSetTaxForDesigner(user.email, tax)}>Lưu</Button>
+                              </DialogActions>
+                            </Dialog>
+                          ) : null}
                         </Box>
                       </TableCell>
                     </TableRow>
@@ -447,7 +517,7 @@ const AdminUser = () => {
             </TableContainer>
           )}
 
-          {filteredUsers.length === 0 && !usersList.loading && (
+          {filteredUsers.length === 0 && !loadingUserList && (
             <Box className="text-center py-12">
               <PersonRemoveIcon className="mx-auto h-12 w-12 text-gray-400" />
               <Typography variant="body2" className="mt-2 font-medium text-gray-900">
@@ -463,22 +533,20 @@ const AdminUser = () => {
         {/* User Details Dialog */}
         <Dialog open={showUserModal} onClose={() => setShowUserModal(false)} fullWidth maxWidth="sm">
           <DialogTitle>Chi tiết tài khoản</DialogTitle>
-          {selectedUser && (
+          {userData && (
             <>
               <DialogContent dividers>
                 <Box className="flex items-center space-x-4 mb-6">
                   <Avatar className="h-16 w-16 bg-gradient-to-r from-blue-500 to-purple-600">
-                    <span className="text-white font-bold text-xl">
-                      {selectedUser.name.charAt(0).toUpperCase()}
-                    </span>
+                    <span className="text-white font-bold text-xl">{userData.username?.charAt(0).toUpperCase()}</span>
                   </Avatar>
                   <Box>
                     <Typography variant="h6" className="font-medium text-gray-900">
-                      {selectedUser.name}
+                      {userData.username}
                     </Typography>
                     <Box className="flex space-x-2 mt-1">
-                      {getRoleChip(selectedUser.role)}
-                      {getStatusChip(selectedUser)}
+                      {getRoleChip(userData.role_name)}
+                      {getStatusChip(userData)}
                     </Box>
                   </Box>
                 </Box>
@@ -489,7 +557,7 @@ const AdminUser = () => {
                       Email:
                     </Typography>
                     <Typography variant="body2" className="text-gray-900">
-                      {selectedUser.email}
+                      {userData.email}
                     </Typography>
                   </Box>
                   <Box className="flex justify-between">
@@ -497,7 +565,7 @@ const AdminUser = () => {
                       Số điện thoại:
                     </Typography>
                     <Typography variant="body2" className="text-gray-900">
-                      {selectedUser.phone}
+                      {userData.phone}
                     </Typography>
                   </Box>
                   <Box className="flex justify-between">
@@ -505,7 +573,7 @@ const AdminUser = () => {
                       Points:
                     </Typography>
                     <Typography variant="body2" className="font-medium text-gray-900">
-                      {selectedUser.points.toLocaleString()}
+                      {userData.coin?.toLocaleString()}
                     </Typography>
                   </Box>
                   <Box className="flex justify-between">
@@ -513,16 +581,46 @@ const AdminUser = () => {
                       Ngày đăng ký:
                     </Typography>
                     <Typography variant="body2" className="text-gray-900">
-                      {new Date(selectedUser.registrationDate).toLocaleDateString("vi-VN")}
+                      {new Date(userData?.createdDate * 1000).toLocaleString('vi-VN')}
                     </Typography>
                   </Box>
-                  {selectedUser.lastLogin && (
+                  {userData?.lastModifiedDate && (
                     <Box className="flex justify-between">
                       <Typography variant="body2" className="text-gray-500">
-                        Lần truy cập cuối:
+                        Ngày cập nhật:
                       </Typography>
                       <Typography variant="body2" className="text-gray-900">
-                        {new Date(selectedUser.lastLogin).toLocaleDateString("vi-VN")}
+                        {new Date(userData?.lastModifiedDate * 1000).toLocaleString('vi-VN')}
+                      </Typography>
+                    </Box>
+                  )}
+                  {userData?.role_name === 'designer' && (
+                    <Box className="flex justify-between">
+                      <Typography variant="body2" className="text-gray-500">
+                        T:
+                      </Typography>
+                      <Typography variant="body2" className="text-gray-900">
+                        {userData?.t}
+                      </Typography>
+                    </Box>
+                  )}
+                  {userData?.bankName && (
+                    <Box className="flex justify-between">
+                      <Typography variant="body2" className="text-gray-500">
+                        Ngân hàng:
+                      </Typography>
+                      <Typography variant="body2" className="text-gray-900">
+                        {userData?.bankName}
+                      </Typography>
+                    </Box>
+                  )}
+                  {userData?.bankingId && (
+                    <Box className="flex justify-between">
+                      <Typography variant="body2" className="text-gray-500">
+                        Số tài khoản:
+                      </Typography>
+                      <Typography variant="body2" className="text-gray-900">
+                        {userData?.bankingId}
                       </Typography>
                     </Box>
                   )}
@@ -536,6 +634,35 @@ const AdminUser = () => {
             </>
           )}
         </Dialog>
+        {total && (
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              Hiển thị {pageSize} trong tổng số {total} kết quả
+            </Typography>
+            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box>
+                <Select
+                  value={pageSize}
+                  onChange={handlePageSizeChange}
+                  sx={{ minWidth: 50, ':placeholder-shown': pageSize }}
+                >
+                  <MenuItem value={10}>10</MenuItem>
+                  <MenuItem value={20}>20</MenuItem>
+                  <MenuItem value={50}>50</MenuItem>
+                </Select>
+              </Box>
+
+              <Pagination
+                count={Math.ceil(total / pageSize)}
+                page={currentPage}
+                onChange={handlePageChange}
+                color="primary"
+                showFirstButton
+                showLastButton
+              />
+            </Box>
+          </Box>
+        )}
         <ActivateUserDialog
           open={activateDialogOpen}
           onClose={() => {
@@ -543,7 +670,7 @@ const AdminUser = () => {
             setSelectedUser(null);
             setIsCreatingNew(false);
           }}
-          userEmail={isCreatingNew ? "" : selectedUser?.email || ""}
+          userEmail={isCreatingNew ? '' : selectedUser?.email || ''}
           onSuccess={handleActivateSubmit}
         />
       </Box>

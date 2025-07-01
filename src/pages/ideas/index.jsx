@@ -47,7 +47,7 @@ const useGetDesignerIds = (dispatch, role) => {
 };
 
 const Page = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
   const { boardId, setBoardId } = useInitialBoard();
   const [openConfirm, setOpenConfirm] = useState(false);

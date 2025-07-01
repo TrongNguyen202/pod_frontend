@@ -330,7 +330,7 @@ export default function AdminDashboard() {
       {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {statisticsCards.map(({ title, value, diff, icon: Icon, circle }, index) => (
-          <Grid item xs={12} sm={6} lg={3} key={index}>
+          <Grid item xs={12} sm={6} lg={3} key={index} size={3}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -342,7 +342,7 @@ export default function AdminDashboard() {
                       {value}
                     </Typography>
                     {diff && (
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body3" color="text.secondary">
                         {diff}
                       </Typography>
                     )}

@@ -49,19 +49,58 @@ const FormDialogSplitLayout = ({
   const [formData, setFormData] = useState(() => normalizeInitialData(initialData, fields));
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // State để track validation errors
+  const [errors, setErrors] = useState({});
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
   // Thêm state để track xem user có đang edit description manually không
   const [isManuallyEditingDescription, setIsManuallyEditingDescription] = useState(false);
 
+  // Định nghĩa các trường required
+  const requiredFields = useMemo(() => ({
+    title: true,
+    images: true,
+  }), []);
+
+  // Hàm validate form
+  const validateForm = useCallback(() => {
+    const newErrors = {};
+    
+    // Validate title
+    if (requiredFields.title && (!formData.title || formData.title.trim() === '')) {
+      newErrors.title = 'Tiêu đề là bắt buộc';
+    }
+    
+    // Validate images
+    if (requiredFields.images && (!formData.images || formData.images.length === 0)) {
+      newErrors.images = 'Hình ảnh là bắt buộc';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [formData, requiredFields]);
+
+  // Validate khi formData thay đổi (chỉ khi đã attempt submit)
+  useEffect(() => {
+    if (hasAttemptedSubmit) {
+      validateForm();
+    }
+  }, [formData, hasAttemptedSubmit, validateForm]);
+
   const handleOpen = useCallback(() => {
     setFormData(normalizeInitialData(initialData, fields));
-    setIsManuallyEditingDescription(false); // Reset khi mở dialog
+    setIsManuallyEditingDescription(false);
+    setErrors({});
+    setHasAttemptedSubmit(false);
     setOpen(true);
   }, [initialData, fields]);
 
   const handleClose = useCallback(() => {
     setFormData(normalizeInitialData(initialData, fields));
-    setIsManuallyEditingDescription(false); // Reset khi đóng dialog
+    setIsManuallyEditingDescription(false);
+    setErrors({});
+    setHasAttemptedSubmit(false);
     if (onCloseOverride) {
       onCloseOverride();
     } else {
@@ -72,11 +111,20 @@ const FormDialogSplitLayout = ({
   const handleChange = useCallback((name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
 
+    // Clear error khi user bắt đầu nhập
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+
     // Nếu user đang edit description manually, đánh dấu để không bị ghi đè
     if (name === 'description') {
       setIsManuallyEditingDescription(true);
     }
-  }, []);
+  }, [errors]);
 
   const handleNumericInput = (fieldName) => (e) => {
     const value = e.target.value;
@@ -101,16 +149,20 @@ const FormDialogSplitLayout = ({
 
   const handleFormSubmit = useCallback(
     async (formData, status) => {
+      setHasAttemptedSubmit(true);
+      
+      // Validate form trước khi submit
+      const isValid = validateForm();
+      
+      if (!isValid) {
+        return; // Không submit nếu form không hợp lệ
+      }
+
       setIsSubmitting(true);
 
       const formDataToSubmit = new FormData();
       for (const key in formData) {
         let value = formData[key];
-
-        // LOẠI BỎ logic ghi đè description - để user tự control
-        // if (key === 'description') {
-        //   value = mergedDescription;
-        // }
 
         if (Array.isArray(value)) {
           value.forEach((file) => {
@@ -123,11 +175,16 @@ const FormDialogSplitLayout = ({
         }
       }
 
-      await onSubmit?.(formDataToSubmit, status);
-      setIsSubmitting(false);
-      handleClose();
+      try {
+        await onSubmit?.(formDataToSubmit, status);
+        handleClose();
+      } catch (error) {
+        console.error('Submit error:', error);
+      } finally {
+        setIsSubmitting(false);
+      }
     },
-    [onSubmit, formData, handleClose], // Loại bỏ templatesData dependency
+    [onSubmit, formData, handleClose, validateForm],
   );
 
   // Chỉ tự động merge description khi:
@@ -183,22 +240,24 @@ const FormDialogSplitLayout = ({
         if (prevString === newString) return prev;
         return normalized;
       });
-      setIsManuallyEditingDescription(false); // Reset manual editing flag
+      setIsManuallyEditingDescription(false);
+      setErrors({});
+      setHasAttemptedSubmit(false);
     }
   }, [dialogOpen, initialData, fields]);
 
-  // // Thêm button để merge templates vào description theo ý muốn
-  // const handleMergeTemplates = useCallback(() => {
-  //   const currentDescription = formData['description'] || '';
-  //   const templateDescription = mergedDescription;
+  // Thêm button để merge templates vào description theo ý muốn
+  const handleMergeTemplates = useCallback(() => {
+    const currentDescription = formData['description'] || '';
+    const templateDescription = mergedDescription;
 
-  //   // Merge mà không duplicate
-  //   const finalDescription = currentDescription.trim()
-  //     ? `${currentDescription}\n${templateDescription}`
-  //     : templateDescription;
+    // Merge mà không duplicate
+    const finalDescription = currentDescription.trim()
+      ? `${currentDescription}\n${templateDescription}`
+      : templateDescription;
 
-  //   handleChange('description', finalDescription);
-  // }, [formData, mergedDescription, handleChange]);
+    handleChange('description', finalDescription);
+  }, [formData, mergedDescription, handleChange]);
 
   return (
     <>
@@ -209,7 +268,7 @@ const FormDialogSplitLayout = ({
           </Button>
         </Box>
       )}
-      <Dialog open={dialogOpen} onClose={handleClose} maxWidth="md" fullWidth>
+      <Dialog open={dialogOpen} onClose={handleClose} maxWidth="md" fullWidth sx={{height: '80vh', top: '15vh'}}>
         <DialogTitle>{title}</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ display: 'flex' }}>
@@ -222,11 +281,13 @@ const FormDialogSplitLayout = ({
                   type="text"
                   value={formData['title'] || ''}
                   onChange={(e) => handleChange('title', e.target.value)}
+                  error={!!errors.title}
+                  helperText={errors.title}
                   InputLabelProps={{ required: true }}
                 />
               </Box>
               <Box sx={{ mb: 2 }}>
-                {/* <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                   <span>{t(tokens.nav.description)}</span>
                   {mergedDescription && (
                     <Button
@@ -238,7 +299,7 @@ const FormDialogSplitLayout = ({
                       Thêm từ Templates
                     </Button>
                   )}
-                </Box> */}
+                </Box>
                 <TextareaAutosize
                   aria-label="Description"
                   minRows={4}
@@ -247,12 +308,17 @@ const FormDialogSplitLayout = ({
                     width: '100%',
                     backgroundColor: '#fafafa',
                     padding: '8px',
-                    border: '1px solid #e0e0e0',
+                    border: `1px solid ${errors.description ? '#d32f2f' : '#e0e0e0'}`,
                     borderRadius: '4px',
                   }}
                   value={formData['description'] || ''}
                   onChange={(e) => handleChange('description', e.target.value)}
                 />
+                {errors.description && (
+                  <Box sx={{ color: '#d32f2f', fontSize: '0.75rem', mt: 0.5, ml: 1.75 }}>
+                    {errors.description}
+                  </Box>
+                )}
               </Box>
               <Box sx={{ mb: 2, borderRadius: 1, bgcolor: '#fafafa' }}>
                 <TextField
@@ -261,6 +327,8 @@ const FormDialogSplitLayout = ({
                   label={t(tokens.nav.chosseImages)}
                   type="file"
                   inputProps={{ multiple: true, accept: 'image/*' }}
+                  error={!!errors.images}
+                  helperText={errors.images}
                   onChange={(e) => {
                     const files = Array.from(e.target.files || []);
                     handleChange('images', files);
@@ -424,10 +492,18 @@ const FormDialogSplitLayout = ({
           <Button onClick={handleClose} color="inherit">
             {t(tokens.nav.cancel)}
           </Button>
-          <Button onClick={() => handleFormSubmit(formData, 'DRAFT')} variant="contained" disabled={isSubmitting}>
+          <Button 
+            onClick={() => handleFormSubmit(formData, 'DRAFT')} 
+            variant="contained" 
+            disabled={isSubmitting}
+          >
             {t(tokens.nav.submit_draft)}
           </Button>
-          <Button onClick={() => handleFormSubmit(formData, 'NEW')} variant="contained" disabled={isSubmitting}>
+          <Button 
+            onClick={() => handleFormSubmit(formData, 'NEW')} 
+            variant="contained" 
+            disabled={isSubmitting}
+          >
             {t(tokens.nav.submit)}
           </Button>
         </DialogActions>

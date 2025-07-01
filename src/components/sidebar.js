@@ -162,12 +162,15 @@ const Sidebar = ({ open, toggleSidebar, role }) => {
         <IconButton
           onClick={toggleSidebar}
           sx={{
+            width: '60px',
+            height: '60px',
+            borderRadius: '50%',
             position: 'absolute',
             top: '50%',
             left: '29px',
             transform: 'translate(-50%, -50%)',
             zIndex: 1300,
-            backgroundColor: 'white',
+            backgroundColor: '#f5f5f5',
             boxShadow: 1,
             '&:hover': {
               backgroundColor: '#f0f0f0',

@@ -131,8 +131,7 @@ const Page = () => {
     loading,
     error,
   } = useAppSelector((state) => state.statistics.transaction);
-  console.log(transactionTopupData);
-  console.log(statisticsTransactionData);
+
   // Xử lý thay đổi datetime cho temp states
   const handleTempDateTimeChange = (type, value) => {
     if (!value) {
@@ -350,6 +349,7 @@ const Page = () => {
         console.error('Error exporting Excel:', error);
         // Handle error if needed
       });
+    setOpenDialogExportExcelTransaction(false);
   };
 
   if (error) {
@@ -666,7 +666,13 @@ const Page = () => {
                 <Button onClick={() => setOpenDialogExportExcelTransaction(false)} color="primary">
                   {t(tokens.nav.cancel)}
                 </Button>
-                <Button variant='contained' sx={{backgroundColor: 'primary.main', color: 'white'}} onClick={handleExportExcelTransaction} color="primary" autoFocus>
+                <Button
+                  variant="contained"
+                  sx={{ backgroundColor: 'primary.main', color: 'white' }}
+                  onClick={handleExportExcelTransaction}
+                  color="primary"
+                  autoFocus
+                >
                   {t(tokens.nav.submit)}
                 </Button>
               </DialogActions>

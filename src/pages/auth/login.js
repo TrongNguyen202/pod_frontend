@@ -79,6 +79,11 @@ const Page = () => {
           } else {
             router.push(returnTo || '/ideas');
           }
+        } else {
+          if (isMounted()) {
+            toast.error('Tên đăng nhập hoặc mật khẩu không đúng!');
+          }
+          helpers.setErrors({ submit: 'Tên đăng nhập hoặc mật khẩu không đúng!' });
         }
       } catch (err) {
         if (isMounted()) {
