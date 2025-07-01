@@ -15,6 +15,11 @@ const initialState = {
     dataTopup: [],
     dataStatistics: [],
   },
+  excelTransaction:{
+    loading: false,
+    error: '',
+    data: [],
+  }
 };
 
 export const fetchGetStatisticsOrder = createAsyncThunk('/statistics/order', async ({ query }) => {
@@ -26,6 +31,22 @@ export const fetchGetStatisticsTransaction = createAsyncThunk('/statistics/trans
   const res = await RepositoryRemote.statistics.requestGetStatisticTransaction(query);
   return res.data.data;
 });
+
+export const fetchExportExcelStatisticTransaction = createAsyncThunk(
+  '/statistics/export-excel-transaction',
+  async ({ query }) => {
+    const res = await RepositoryRemote.statistics.requestExportExcelStatisticTransaction(query);
+    const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'statistics_transaction.xlsx'); // Set the file name
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    return res.data; // Return the data if needed for further processing
+  }
+);
 
 const slicer = createSlice({
   name: 'statistics',
@@ -57,6 +78,18 @@ const slicer = createSlice({
       state.transaction.loading = false;
       state.transaction.data = [];
       state.transaction.error = action?.error?.message || 'Error while processing.';
+    });
+    builder.addCase(fetchExportExcelStatisticTransaction.pending, (state) => {
+      state.excelTransaction.loading = true;
+    });
+    builder.addCase(fetchExportExcelStatisticTransaction.fulfilled, (state, action) => {
+      state.excelTransaction.loading = false;
+      state.excelTransaction.error = '';
+      // The file download is handled in the thunk, no need to store it in the state
+    });
+    builder.addCase(fetchExportExcelStatisticTransaction.rejected, (state, action) => {
+      state.excelTransaction.loading = false;
+      state.excelTransaction.error = action?.error?.message || 'Error while processing.';
     });
   },
 });

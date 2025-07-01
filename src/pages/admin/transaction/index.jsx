@@ -19,6 +19,7 @@ import {
   TrendingDownOutlined,
   PriceCheckOutlined,
   FunctionsOutlined,
+  IosShare,
 } from '@mui/icons-material';
 import {
   Alert,
@@ -28,6 +29,11 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   FormControl,
   Grid,
   IconButton,
@@ -47,9 +53,11 @@ import {
   Typography,
 } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import AdminLayout from 'src/layouts/admin/layout';
+import { tokens } from 'src/locales/tokens';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
-import { fetchGetStatisticsTransaction } from 'src/redux/reducers/statistics';
+import { fetchExportExcelStatisticTransaction, fetchGetStatisticsTransaction } from 'src/redux/reducers/statistics';
 import handleAmountFormat from 'src/utils/amount-vnd';
 import { formatDateTime } from 'src/utils/date';
 
@@ -89,6 +97,7 @@ const formatDateTimeForInput = (date) => {
 
 const Page = () => {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
 
   // Filter states
   const [pageSize, setPageSize] = useState(10);
@@ -105,6 +114,7 @@ const Page = () => {
   const [maxCoin, setMaxCoin] = useState('');
   const [page, setPage] = useState(1);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [openDialogExportExcelTransaction, setOpenDialogExportExcelTransaction] = useState(false);
 
   // Temporary states for advanced filters - chỉ apply khi bấm search
   const [tempNameToSearch, setTempNameToSearch] = useState('');
@@ -328,6 +338,18 @@ const Page = () => {
 
   const handleRefresh = () => {
     fetchData();
+  };
+
+  const handleExportExcelTransaction = () => {
+    const query = buildQueryString();
+    dispatch(fetchExportExcelStatisticTransaction({ query }))
+      .then(() => {
+        // Handle success if needed
+      })
+      .catch((error) => {
+        console.error('Error exporting Excel:', error);
+        // Handle error if needed
+      });
   };
 
   if (error) {
@@ -622,7 +644,33 @@ const Page = () => {
                   </Typography>
                 )}
               </Typography>
+              <Button
+                title="Xuất Excel"
+                variant="outlined"
+                color="primary"
+                startIcon={<IosShare />}
+                onClick={() => setOpenDialogExportExcelTransaction(true)}
+                disabled={loading}
+              >
+                Xuất Excel
+              </Button>
             </Box>
+            <Dialog open={openDialogExportExcelTransaction} onClose={() => setOpenDialogExportExcelTransaction(false)}>
+              <DialogTitle>Xuất Excel</DialogTitle>
+              <DialogContent>
+                <DialogContentText>
+                  Bạn có chắc chắn muốn xuất danh sách đơn hàng theo bộ lọc đã chọn ra file Excel không?
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setOpenDialogExportExcelTransaction(false)} color="primary">
+                  {t(tokens.nav.cancel)}
+                </Button>
+                <Button variant='contained' sx={{backgroundColor: 'primary.main', color: 'white'}} onClick={handleExportExcelTransaction} color="primary" autoFocus>
+                  {t(tokens.nav.submit)}
+                </Button>
+              </DialogActions>
+            </Dialog>
 
             {loading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
@@ -684,7 +732,8 @@ const Page = () => {
                 {transactionTopupData.pageable && (
                   <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="body2" color="text.secondary">
-                      Hiển thị {transactionTopupData.numberOfElements} trong tổng số {transactionTopupData.totalElements} kết quả
+                      Hiển thị {transactionTopupData.numberOfElements} trong tổng số{' '}
+                      {transactionTopupData.totalElements} kết quả
                     </Typography>
 
                     <Pagination

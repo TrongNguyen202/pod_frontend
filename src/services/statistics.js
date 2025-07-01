@@ -18,7 +18,18 @@ const requestGetStatisticTransaction = (query) => {
   return axiosAPI(config);
 };
 
+const requestExportExcelStatisticTransaction = (query) => {
+  const config = {
+    method: 'GET',
+    url: `/statistic/topups-statistics-export-excel?${query}`,
+    responseType: 'blob', // Để nhận dữ liệu file Excel
+  };
+
+  return axiosAPI(config);
+};
+
 export const statistics = {
   requestGetStatisticOrder,
   requestGetStatisticTransaction,
+  requestExportExcelStatisticTransaction,
 };
