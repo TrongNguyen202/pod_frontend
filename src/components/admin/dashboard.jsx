@@ -54,24 +54,26 @@ const formatDateTimeForInput = (date) => {
 
 const getStatusColor = (status) => {
   const colors = {
+    DRAFT: 'primary',
     IN_REVIEW: 'warning',
     DONE: 'success',
-    CANCELLED: 'error',
-    PENDING: 'info',
     NEW: 'primary',
     DOING: 'secondary',
     NEED_FIX: 'error',
+    ARCHIVED: 'info',
   };
   return colors[status] || 'default';
 };
 
 const getStatusLabel = (status) => {
   const labels = {
+    DRAFT: 'Bản nháp',
     IN_REVIEW: 'Kiểm tra',
     DONE: 'Hoàn thành',
     NEW: 'Mới',
     DOING: 'Đang xử lý',
     NEED_FIX: 'Cần sửa',
+    ARCHIVED: 'Đã lưu trữ',
   };
   return labels[status] || status;
 };

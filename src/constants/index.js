@@ -118,6 +118,31 @@ export const PRICE_OPTIONS = [
   { id: 5, label: '35,000', value: 35000 },
 ];
 
+// tách theo designType
+export const PRICE_OPTIONS_BY_DESIGN_TYPE = {
+  CLONE: [
+    { id: 1, label: '27,000', value: 27000 },
+    { id: 2, label: '35,000', value: 35000 },
+    { id: 3, label: '45,000', value: 45000 },
+    { id: 4, label: '54,000', value: 54000 },
+
+  ],
+  RE_DESIGN: [
+    { id: 5, label: '40,500', value: 40500 },
+    { id: 6, label: '52,500', value: 52500 },
+    { id: 7, label: '67,500', value: 67500 },
+    { id: 8, label: '81,000', value: 81000 },
+  ],
+  NEW: [
+    { id: 9, label: '135,000', value: 135000 },
+    { id: 10, label: '175,000', value: 175000 },
+    { id: 11, label: '225,000', value: 225000 },
+    { id: 12, label: '270,000', value: 270000 },
+
+  ],
+};
+
+
 export const statusIdentity = {
   PROGRESSING: 0,
   UNAPPROVED: 1,

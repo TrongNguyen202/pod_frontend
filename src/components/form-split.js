@@ -1,21 +1,20 @@
-import React, { useState, useCallback, useEffect, memo, useMemo } from 'react';
 import {
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Grid,
-  TextField,
-  MenuItem,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Grid,
+  MenuItem,
   TextareaAutosize,
+  TextField,
 } from '@mui/material';
-import { useTranslation } from 'react-i18next';
-import { tokens } from 'src/locales/tokens';
 import { Box } from '@mui/system';
-import { optionsDesignType, PRICE_OPTIONS } from 'src/constants';
-import handleAmountFormat from 'src/utils/amount-vnd';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { optionsDesignType, PRICE_OPTIONS, PRICE_OPTIONS_BY_DESIGN_TYPE } from 'src/constants';
+import { tokens } from 'src/locales/tokens';
 
 const normalizeInitialData = (initialData = {}, fields = []) => {
   const normalized = { ...initialData };
@@ -259,6 +258,8 @@ const FormDialogSplitLayout = ({
     handleChange('description', finalDescription);
   }, [formData, mergedDescription, handleChange]);
 
+  const priceOptions = PRICE_OPTIONS_BY_DESIGN_TYPE[formData['designType']] || [];
+
   return (
     <>
       {buttonLabel && (
@@ -458,7 +459,7 @@ const FormDialogSplitLayout = ({
                   value={formData['price'] || ''}
                   onChange={(e) => handleChange('price', e.target.value)}
                 >
-                  {PRICE_OPTIONS.map((option, i) => (
+                  {priceOptions.map((option, i) => (
                     <MenuItem key={option.id} value={option.value}>
                       {option.label}
                     </MenuItem>

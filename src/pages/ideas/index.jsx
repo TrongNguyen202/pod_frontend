@@ -147,7 +147,7 @@ const Page = () => {
       productTypeId: boardData?.productTypeIds?.[0] || '',
       quantity: 1,
       number: 1,
-      price: 35000,
+      price: 0,
       completed_at: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
       templates: [],
     }),

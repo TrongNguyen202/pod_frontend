@@ -10,6 +10,9 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import Head from 'next/head';
+import { Button } from 'antd';
+import { Box } from '@mui/system';
+import { RepositoryRemote } from 'src/services';
 
 export default function AdminLayout({ children }) {
   const router = useRouter();
@@ -31,25 +34,23 @@ export default function AdminLayout({ children }) {
     { segment: 'admin/dashboard', title: 'Dashboard', icon: <DashboardIcon /> },
     { segment: 'admin/transaction', title: 'Transactions', icon: <TimelineIcon /> },
     { segment: 'admin/user', title: 'Users', icon: <PeopleIcon /> },
-    { segment: 'admin/settings', title: 'Settings', icon: <SettingsIcon /> },
-    { kind: 'divider' },
-    {
-      kind: 'header',
-      title: 'Account',
-    },
-    {
-      segment: '',
-      title: 'Logout',
-      icon: <LogoutIcon />,
-      action: handleLogout,
-    },
   ];
 
   return (
     <NextAppProvider navigation={NAVIGATION}>
-      <Head>
-        <title>Admin Dashboard</title>
-      </Head>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'end',
+          position: 'absolute',
+          zIndex: 9999,
+          top: '18px',
+          right: '75px',
+          alignItems: 'center',
+        }}
+      >
+        <Button onClick={handleLogout}>Logout</Button>
+      </Box>
       <DashboardLayout>
         <PageContainer>{children}</PageContainer>
       </DashboardLayout>
