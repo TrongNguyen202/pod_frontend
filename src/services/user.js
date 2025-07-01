@@ -38,6 +38,16 @@ const requestSetTaxForDesigner = async (data) => {
   return axiosAPI(config);
 };
 
+const requestPutStatusUser = async (data) => {
+  const config = {
+    method: 'PUT',
+    url: '/users/update/status',
+    data,
+  };  
+
+  return axiosAPI(config);
+};
+
 const requestGetShopByUser = async () => {
   const config = {
     method: 'GET',
@@ -118,6 +128,7 @@ export const users = {
   requestGetUserInfoByEmail,
   requestGetDesignerIds,
   requestSetTaxForDesigner,
+  requestPutStatusUser,
   requestGetShopByUser,
   requestGetUserInfo,
   requestUpdateUser,

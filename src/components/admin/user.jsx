@@ -32,7 +32,6 @@ import SearchIcon from '@mui/icons-material/Search';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import MailIcon from '@mui/icons-material/Mail';
 import PhoneIcon from '@mui/icons-material/Phone';
@@ -41,7 +40,12 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import PeopleIcon from '@mui/icons-material/People';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import ActivateUserDialog from './dialog/activate-user';
-import { fetchUpdateTaxForDesigner, fetchUserByEmail, fetchUsers } from 'src/redux/reducers/user';
+import {
+  fetchUpdateTaxForDesigner,
+  fetchUpdateUserStatus,
+  fetchUserByEmail,
+  fetchUsers,
+} from 'src/redux/reducers/user';
 import { Edit } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 
@@ -58,6 +62,9 @@ const AdminUser = () => {
   const [activateDialogOpen, setActivateDialogOpen] = useState(false);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [showTaxDialog, setShowTaxDialog] = useState(false);
+  const [confirmDialogStatus, setConfirmDialogStatus] = useState(false);
+  const [selectedUserEmail, setSelectedUserEmail] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState(1);
   const [tax, setTax] = useState(18.5); // Default tax rate for designers
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -84,8 +91,10 @@ const AdminUser = () => {
         requestBody.roleName = 'designer';
         break;
       case 'locked':
-        requestBody.status = 0;
+        requestBody.status = -1;
         break;
+      case 'pending':
+        requestBody.status = 0; // Assuming 0 is the status for pending users
       default:
         // "all" tab - no additional filters
         break;
@@ -111,32 +120,31 @@ const AdminUser = () => {
   /**
    * Update user status/approval.
    */
-  const handleUserAction = (userId, action) => {
-    if (action === 'approve') {
-      setActivateDialogOpen(true);
-      setSelectedUser(users.find((user) => user.id === userId));
-      setIsCreatingNew(false);
-      return;
-    }
-    setUsers((prev) =>
-      prev.map((user) => {
-        if (user.id !== userId) return user;
-        switch (action) {
-          case 'lock':
-            return { ...user, status: 'locked' };
-          case 'unlock':
-            return { ...user, status: 'active' };
-          case 'approve':
-            return { ...user, status: 'active', isApproved: true };
-          case 'reject':
-            return { ...user, status: 'rejected' };
-          default:
-            return user;
-        }
-      }),
-    );
+  const handleOpenDialogSetStatus = (userEmail, userStatus) => {
+    setSelectedUserEmail(userEmail);
+    setSelectedStatus(userStatus);
+    setConfirmDialogStatus(true);
+    setIsCreatingNew(false);
   };
-
+  const handleConfirmSetStatus = async () => {
+    const data = {
+      email: selectedUserEmail,
+      status: -selectedStatus,
+    };
+    const response = await dispatch(fetchUpdateUserStatus(data));
+    console.log(response);
+    if (response.error) {
+      toast.error('Error updating user status:', response.error);
+    } else {
+      toast.success(`User status updated successfully to ${-selectedStatus === 1 ? 'active' : 'locked'}`);
+    }
+    setConfirmDialogStatus(false);
+    setSelectedUserEmail('');
+    setSelectedStatus(1);
+    setSelectedUser(null);
+    setShowUserModal(false);
+    loadUsers();
+  };
   const handleShowDialogSetTax = async (email) => {
     setEmail(email);
     const response = await dispatch(fetchUserByEmail({ email }));
@@ -197,7 +205,7 @@ const AdminUser = () => {
     return {
       totalUsers: allUsers.filter((u) => u.role_name?.toLowerCase() === 'customer').length,
       totalDesigners: allUsers.filter((u) => u.role_name?.toLowerCase() === 'designer').length,
-      totalLocked: allUsers.filter((u) => u.status === 0).length,
+      totalLocked: allUsers.filter((u) => u.status === -1).length,
       totalAll: allUsers.length,
     };
   };
@@ -219,8 +227,10 @@ const AdminUser = () => {
     switch (user.status) {
       case 1:
         return <Chip label="Hoạt động" size="small" className="bg-green-100 text-green-800" />;
-      case 0:
+      case -1:
         return <Chip label="Bị khóa" size="small" className="bg-red-100 text-red-800" />;
+      case 0:
+        return <Chip label="Chờ kích hoạt" size="small" className="bg-red-100 text-red-800" />;
       default:
         return <Chip label="Không xác định" size="small" className="bg-gray-100 text-gray-800" />;
     }
@@ -462,9 +472,9 @@ const AdminUser = () => {
                             <VisibilityIcon className="h-4 w-4" />
                           </IconButton>
 
-                          {user.status === 1 ? (
+                          {user.status === -1 ? (
                             <IconButton
-                              onClick={() => handleUserAction(user.id, 'lock')}
+                              onClick={() => handleOpenDialogSetStatus(user.email, user.status)}
                               size="small"
                               className="text-green-600 hover:text-green-900 hover:bg-green-50"
                             >
@@ -472,7 +482,7 @@ const AdminUser = () => {
                             </IconButton>
                           ) : (
                             <IconButton
-                              onClick={() => handleUserAction(user.id, 'unlock')}
+                              onClick={() => handleOpenDialogSetStatus(user.email, user.status)}
                               size="small"
                               className="text-green-600 hover:text-green-900 hover:bg-green-50"
                             >
@@ -510,6 +520,19 @@ const AdminUser = () => {
                           ) : null}
                         </Box>
                       </TableCell>
+                      <Dialog open={confirmDialogStatus} onClose={() => setConfirmDialogStatus(false)}>
+                        <DialogTitle>Xác nhận thay đổi trạng thái</DialogTitle>
+                        <DialogContent>
+                          <Typography variant="body1">
+                            Bạn có chắc chắn muốn <strong>{-selectedStatus === 1 ? 'kích hoạt' : 'khóa'}</strong> người
+                            dùng {selectedUserEmail} không?
+                          </Typography>
+                        </DialogContent>
+                        <DialogActions>
+                          <Button onClick={() => setConfirmDialogStatus(false)}>Hủy</Button>
+                          <Button onClick={() => handleConfirmSetStatus()}>Đồng ý</Button>
+                        </DialogActions>
+                      </Dialog>
                     </TableRow>
                   ))}
                 </TableBody>

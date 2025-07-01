@@ -24,6 +24,11 @@ const initialState = {
     error: '',
     data: [],
   },
+  userStatus: {
+    loading: false,
+    error: '',
+    data: [],
+  },
   usersList: {
     loading: false,
     error: '',
@@ -54,6 +59,11 @@ export const fetchGetDesginerIds = createAsyncThunk('/get/designer/ids', async (
 
 export const fetchUpdateTaxForDesigner = createAsyncThunk('/put/designer/tax', async (data) => {
   const res = await RepositoryRemote.users.requestSetTaxForDesigner(data);
+  return res.data.data;
+});
+
+export const fetchUpdateUserStatus = createAsyncThunk('/put/user/status', async (data) => {
+  const res = await RepositoryRemote.users.requestPutStatusUser(data);
   return res.data.data;
 });
 
@@ -197,6 +207,29 @@ const slicer = createSlice({
         loading: false,
         error: action?.error?.message || 'Error while processing.',
         data: [],
+      };
+    });
+
+    // Update user status
+    builder.addCase(fetchUpdateUserStatus.pending, (state) => {
+      state.loading = true;
+      state.userStatus.loading = true;
+    });
+    builder.addCase(fetchUpdateUserStatus.fulfilled, (state, action) => {
+      state.loading = false;
+      state.userStatus = {
+        loading: false,
+        error: '',
+        data: action.payload,
+      };
+      state.error = '';
+    });
+    builder.addCase(fetchUpdateUserStatus.rejected, (state, action) => {
+      state.loading = false;
+      state.userStatus = {
+        loading: false,
+        error: action?.error?.message || 'Error while processing.',
+        data: null,
       };
     });
 
