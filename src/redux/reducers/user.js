@@ -35,6 +35,16 @@ const initialState = {
     data: [],
     total: 0,
   },
+  usersStats: {
+    loading: false,
+    error: '',
+    data: {
+      totalCustomer: 0,
+      totalDesigner: 0,
+      all: 0,
+      inactive: 0,
+    },
+  },
 };
 
 export const fetchUserByEmail = createAsyncThunk('/user/post/user-detail', async (email) => {
@@ -77,6 +87,11 @@ export const fetchUsers = createAsyncThunk('/user/fetch-list', async (filterData
   return res.data;
 });
 
+export const fetchUsersStats = createAsyncThunk('/user/stats', async () => {
+  const res = await RepositoryRemote.users.requestGetUsersStats();
+  return res.data.data;
+});
+
 const slicer = createSlice({
   name: 'users',
   initialState,
@@ -104,6 +119,18 @@ const slicer = createSlice({
         error: '',
         data: [],
         total: 0,
+      };
+    },
+    resetUsersStats(state) {
+      state.usersStats = {
+        loading: false,
+        error: '',
+        data: {
+          totalCustomer: 0,
+          totalDesigner: 0,
+          all: 0,
+          inactive: 0,
+        },
       };
     },
   },
@@ -260,9 +287,23 @@ const slicer = createSlice({
       state.usersList.loading = false;
       state.usersList.error = action?.error?.message || 'Error fetching users.';
     });
+
+    // Fetch users stats
+    builder.addCase(fetchUsersStats.pending, (state) => {
+      state.usersStats.loading = true;
+    });
+    builder.addCase(fetchUsersStats.fulfilled, (state, action) => {
+      state.usersStats.loading = false;
+      state.usersStats.data = action.payload;
+      state.usersStats.error = '';
+    });
+    builder.addCase(fetchUsersStats.rejected, (state, action) => {
+      state.usersStats.loading = false;
+      state.usersStats.error = action?.error?.message || 'Error fetching users stats.';
+    });
   },
 });
 
-export const { resetDataDesginerIds, updateUserInfoLocal, resetUsersList } = slicer.actions;
+export const { resetDataDesginerIds, updateUserInfoLocal, resetUsersList, resetUsersStats } = slicer.actions;
 
 export default slicer.reducer;
