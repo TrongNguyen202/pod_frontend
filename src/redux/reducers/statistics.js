@@ -15,11 +15,11 @@ const initialState = {
     dataTopup: [],
     dataStatistics: [],
   },
-  excelTransaction:{
+  excelTransaction: {
     loading: false,
     error: '',
     data: [],
-  }
+  },
 };
 
 export const fetchGetStatisticsOrder = createAsyncThunk('/statistics/order', async ({ query }) => {
@@ -40,12 +40,20 @@ export const fetchExportExcelStatisticTransaction = createAsyncThunk(
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', 'statistics_transaction.xlsx'); // Set the file name
+
+    // Lấy ngày hiện tại và định dạng YYYY-MM-DD
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const formattedDate = `${dd}-${mm}-${yyyy}`;
+
+    link.setAttribute('download', `statistics_transaction_${formattedDate}.xlsx`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    return res.data; // Return the data if needed for further processing
-  }
+    return res.data;
+  },
 );
 
 const slicer = createSlice({
