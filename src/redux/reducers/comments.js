@@ -55,7 +55,14 @@ const slicer = createSlice({
     },
     addComment: (state, action) => {
       const comment = action.payload;
-      if (!state.commentsInfo.data.some((c) => c.commentId === comment.commentId)) {
+      const newId = comment.commentId || comment.comment_id;
+
+      const exists = state.commentsInfo.data.some((c) => {
+        const existingId = c.commentId || c.comment_id;
+        return existingId === newId;
+      });
+
+      if (!exists && newId) {
         state.commentsInfo.data.push(comment);
       }
     },

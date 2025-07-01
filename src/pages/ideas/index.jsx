@@ -215,8 +215,8 @@ const Page = () => {
   };
 
   const handleCloseDetailModal = () => {
-    setOpenDetailModal(false);
     setSelectedOrder(null);
+    setOpenDetailModal(false);
   };
 
   const selectedOrders = useMemo(

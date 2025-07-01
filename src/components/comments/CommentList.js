@@ -3,11 +3,17 @@ import { Typography, Box } from '@mui/material';
 import { formatMiliToDateTime } from 'src/utils/date';
 
 const CommentList = ({ comments }) => {
+  console.log('Comments received:', comments);
+  console.log('Comments length:', comments.length);
+  const uniqueComments = Array.from(
+    new Map(comments.map((comment) => [comment.commentId || comment.comment_id, comment])).values(),
+  );
+  console.log('Unique comments length:', uniqueComments.length);
   return (
     <>
-      {comments.map((comment, index) => (
+      {uniqueComments.map((comment, index) => (
         <Box
-          key={comment.commentId || index}
+          key={comment.commentId || `comment-${index}`}
           sx={{
             border: '1px solid #f2f2f2',
             borderRadius: 2,

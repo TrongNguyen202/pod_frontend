@@ -12,7 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import { categoryColors, categoryLabelsVi, categoryStatusVi, categoryStatusViU } from 'src/constants';
@@ -55,17 +55,52 @@ const OrderDetailModal = ({
   const [uploadFiles, setUploadFiles] = useState([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmStatus, setConfirmStatus] = useState('');
+  const [isOnCooldown, setIsOnCooldown] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const COOLDOWN_TIME = 2000;
   const inputCommentRef = useRef(null);
   const seenCommentIdsRef = useRef(new Set());
+  const hasInitializedComments = useRef(false); // Track comment initialization
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
   const comments = useAppSelector((state) => state.comments.commentsInfo.data);
   const { isCustomer, isDesigner } = checkRole(role);
+
+  // Optimized: Only fetch comments once when modal opens
   useEffect(() => {
-    if (order?.id) {
+    if (open && order?.id && !hasInitializedComments.current) {
+      hasInitializedComments.current = true;
       dispatch(fetchGetCommentsByOrderId(order.id));
     }
+
+    // Reset when modal closes
+    if (!open) {
+      hasInitializedComments.current = false;
+    }
   }, [dispatch, order?.id, open]);
+
+  // Memoized cooldown function to prevent duplicate calls
+  const withCooldown = useCallback(
+    async (asyncFunction) => {
+      if (isOnCooldown || isProcessing) {
+        toast.warning('Vui lòng đợi một chút trước khi thực hiện lại!');
+        return;
+      }
+
+      setIsOnCooldown(true);
+      setIsProcessing(true);
+
+      try {
+        await asyncFunction();
+      } finally {
+        setIsProcessing(false);
+        setTimeout(() => {
+          setIsOnCooldown(false);
+        }, COOLDOWN_TIME);
+      }
+    },
+    [isOnCooldown, isProcessing],
+  );
 
   useEffect(() => {
     if (order?.status === 'NEED_FIX') {
@@ -79,22 +114,34 @@ const OrderDetailModal = ({
     }
   }, [showComments]);
 
+  // Optimized: Firebase listener with better cleanup
   useEffect(() => {
-    if (!order?.id) return;
+    if (!order?.id || !open) return;
+
+    seenCommentIdsRef.current = new Set();
+
+    // Initialize với comments hiện tại
+    comments.forEach((comment) => {
+      const id = comment.commentId || comment.comment_id;
+      if (id) {
+        seenCommentIdsRef.current.add(id);
+      }
+    });
 
     const unsubscribe = listenToOrderComments(order.id, (newComment) => {
-      if (!seenCommentIdsRef.current.has(newComment.commentId)) {
-        seenCommentIdsRef.current.add(newComment.commentId);
+      const id = newComment.commentId || newComment.comment_id;
+      if (id && !seenCommentIdsRef.current.has(id)) {
+        seenCommentIdsRef.current.add(id);
         dispatch(addComment(newComment));
       }
     });
 
     return () => {
-      unsubscribe?.();
-      const currentSeenIds = seenCommentIdsRef.current;
-      currentSeenIds.clear();
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
     };
-  }, [dispatch, order?.id]);
+  }, [dispatch, order?.id, open]); // Removed comments dependency to prevent re-subscription
 
   if (!order) return null;
 
@@ -107,18 +154,25 @@ const OrderDetailModal = ({
   }));
 
   const handleSubmitComment = async (commentText) => {
-    const data = {
-      message: commentText,
-      orderId: order.id,
-      userId: userData.id,
-      username: userData.username,
-      role: userData.role_name,
-    };
-    const response = await dispatch(fetchPostCommentFirebase(data));
-    if (response.meta.requestStatus === 'fulfilled') {
-      await dispatch(fetchPostCommentPosgres(response.payload));
+    if (!commentText.trim() || !order?.id || !userData?.id || isProcessing) return;
+
+    setIsProcessing(true);
+    try {
+      const data = {
+        message: commentText,
+        orderId: order.id,
+        userId: userData.id,
+        username: userData.username,
+        role: userData.role_name,
+      };
+      const response = await dispatch(fetchPostCommentFirebase(data));
+      if (response.meta.requestStatus === 'fulfilled') {
+        await dispatch(fetchPostCommentPosgres(response.payload));
+      }
+      setCommentText('');
+    } finally {
+      setIsProcessing(false);
     }
-    setCommentText('');
   };
 
   const handleUploadImages = (files) => {
@@ -140,99 +194,136 @@ const OrderDetailModal = ({
   };
 
   const handleSendImages = async () => {
-    if (uploadFiles.length === 0 || uploadedImages.length === 0) return;
+    await withCooldown(async () => {
+      if (uploadFiles.length === 0 || uploadedImages.length === 0) return;
 
-    const formData = new FormData();
-    uploadFiles.forEach((file) => {
-      formData.append('files', file);
-    });
-
-    const toastId = toast.loading('Đang upload ảnh...');
-    try {
-      const response = await dispatch(fetchUploadImagesForDesigner({ orderId: order.id, data: formData })).unwrap();
-      onClose();
-      if (response.success === true) {
-        toast.update(toastId, {
-          render: 'Upload thành công!',
-          type: 'success',
-          isLoading: false,
-          autoClose: 2000,
-        });
-        await handleChangeSingleOrderStatus('IN_REVIEW');
-        await dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() }));
-        await dispatch(fetchGetAllStatus(''));
-        await sendNotification(order.userid, order.designerId);
-      }
-      setUploadedImages([]);
-      setUploadFiles([]);
-    } catch (err) {
-      toast.update(toastId, {
-        render: 'Upload thất bại!',
-        type: 'error',
-        isLoading: false,
-        autoClose: 3000,
+      const formData = new FormData();
+      uploadFiles.forEach((file) => {
+        formData.append('files', file);
       });
-      console.error('Upload thất bại:', err);
-    }
+
+      const toastId = toast.loading('Đang upload ảnh...');
+      try {
+        const response = await dispatch(fetchUploadImagesForDesigner({ orderId: order.id, data: formData })).unwrap();
+
+        if (response.success === true) {
+          toast.update(toastId, {
+            render: 'Upload thành công!',
+            type: 'success',
+            isLoading: false,
+            autoClose: 2000,
+          });
+
+          // Send comment first if exists
+          if (commentText.trim()) {
+            await handleSubmitComment(commentText);
+          }
+
+          await handleChangeSingleOrderStatus('IN_REVIEW', '', false); // Don't close modal yet
+          await Promise.all([
+            dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() })),
+            dispatch(fetchGetAllStatus('')),
+            sendNotification(order.userid, order.designerId),
+          ]);
+
+          // Reset states and close modal
+          setUploadedImages([]);
+          setUploadFiles([]);
+          setConfirmOpen(false);
+          setCommentText('');
+          onClose();
+        }
+      } catch (err) {
+        toast.update(toastId, {
+          render: 'Upload thất bại!',
+          type: 'error',
+          isLoading: false,
+          autoClose: 3000,
+        });
+        console.error('Upload thất bại:', err);
+      }
+    });
   };
 
-  const handleChangeSingleOrderStatus = async (newStatus, optionalComment = '') => {
-    if (!order?.id) return;
+  const handleChangeSingleOrderStatus = async (newStatus, optionalComment = '', shouldClose = true) => {
+    await withCooldown(async () => {
+      if (!order?.id) return;
 
-    const data = {
-      ids: [order.id],
-      status: newStatus,
-    };
+      const data = {
+        ids: [order.id],
+        status: newStatus,
+      };
 
-    const response = await dispatch(changeStatusOrders({ data }));
-    const { status, message } = response.payload || {};
+      const response = await dispatch(changeStatusOrders({ data }));
+      const { status, message } = response.payload || {};
 
-    if (status === 200) {
-      toast.success('Cập nhật trạng thái thành công');
-      switch (newStatus) {
-        case 'DOING':
-        case 'IN_REVIEW':
-          await sendNotification(order.userid, null);
-          break;
-        case 'NEED_FIX':
-          await sendNotification(null, order.designerId);
-          break;
-        default:
+      if (status === 200) {
+        toast.success('Cập nhật trạng thái thành công');
+
+        // Send notifications based on status
+        switch (newStatus) {
+          case 'DOING':
+          case 'IN_REVIEW':
+            await sendNotification(order.userid, null);
+            break;
+          case 'NEED_FIX':
+            await sendNotification(null, order.designerId);
+            break;
+          default:
+        }
+
+        // Send comment if provided
+        if (optionalComment.trim()) {
+          await handleSubmitComment(optionalComment);
+        }
+
+        // Batch API calls
+        await Promise.all([dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() })), onStatusChanged?.()]);
+
+        // Reset states
+        setUploadedImages([]);
+        setUploadFiles([]);
+        setConfirmOpen(false);
+        setCommentText('');
+
+        if (shouldClose) {
+          onClose();
+        }
+      } else {
+        toast.error(message || 'Đổi trạng thái thất bại');
       }
-      if (optionalComment.trim() !== '') {
-        await handleSubmitComment(optionalComment);
-      }
-
-      await dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() }));
-      if (onStatusChanged) {
-        onStatusChanged();
-      }
-      setUploadedImages([]);
-      setUploadFiles([]);
-      onClose();
-    } else {
-      toast.error(message || 'Đổi trạng thái thất bại');
-    }
+    });
   };
 
   const handleAssignOrder = async () => {
-    if (!order?.id || role !== 'designer') return;
+    await withCooldown(async () => {
+      if (!order?.id || role !== 'designer') return;
 
-    const response = await dispatch(
-      fetchAssignOrdersForDesigner({
-        data: { orderIds: [order?.id] },
-      }),
-    );
+      const response = await dispatch(
+        fetchAssignOrdersForDesigner({
+          data: { orderIds: [order?.id] },
+        }),
+      );
 
-    if (response.meta.requestStatus === 'fulfilled') {
-      toast.success('Nhận đơn thành công!');
-      await dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() }));
-      await dispatch(fetchGetAllStatus(''));
-      await sendNotification(order.userid, null);
-    } else {
-      toast.error(message || 'Nhận đơn thất bại!');
-    }
-    onClose();
+      if (response.meta.requestStatus === 'fulfilled') {
+        toast.success('Nhận đơn thành công!');
+
+        // Send comment if exists
+        if (commentText.trim()) {
+          await handleSubmitComment(commentText);
+        }
+
+        // Batch API calls
+        await Promise.all([
+          dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() })),
+          dispatch(fetchGetAllStatus('')),
+          sendNotification(order.userid, null),
+        ]);
+      } else {
+        toast.error('Nhận đơn thất bại!');
+      }
+      onClose();
+    });
   };
 
   return (
@@ -400,6 +491,7 @@ const OrderDetailModal = ({
                     key={option.value}
                     variant="contained"
                     size="small"
+                    disabled={isProcessing || isOnCooldown}
                     onClick={() => {
                       setConfirmStatus(option.value);
                       setConfirmOpen(true);
@@ -412,26 +504,26 @@ const OrderDetailModal = ({
             </Box>
           )}
 
-          <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+          <Dialog open={confirmOpen} onClose={() => !isProcessing && setConfirmOpen(false)}>
             <DialogTitle>{t(tokens.nav.confirmStatusChange)}</DialogTitle>
             <DialogContent>
               <Box sx={{ textAlign: 'center', mb: 2, fontSize: 20, fontWeight: 'bold' }}>
                 {statusOptions.find((opt) => opt.value === confirmStatus)?.label || confirmStatus}?
               </Box>
 
-              {/* {confirmStatus === 'NEED_FIX' && ( */}
-                <TextField
-                  autoFocus
-                  fullWidth
-                  multiline
-                  rows={3}
-                  label={t(tokens.nav.commentRequired)}
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder={t(tokens.nav.typing)}
-                  sx={{ mb: 2 }}
-                />
-              {/* )} */}
+              {/* Always show comment field for all status changes */}
+              <TextField
+                autoFocus
+                fullWidth
+                multiline
+                rows={3}
+                label={confirmStatus === 'NEED_FIX' ? t(tokens.nav.commentRequired) : t(tokens.nav.comment)}
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder={t(tokens.nav.typing)}
+                sx={{ mb: 2 }}
+                required={confirmStatus === 'NEED_FIX'}
+              />
 
               {/* Nếu là designer và chuyển từ DOING/NEED_FIX sang IN_REVIEW thì cho upload ảnh */}
               {isDesigner &&
@@ -439,7 +531,7 @@ const OrderDetailModal = ({
                   (order.status === 'NEED_FIX' && confirmStatus === 'IN_REVIEW')) && (
                   <Box>
                     <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center">
-                      <Button variant="contained" component="label" size="small">
+                      <Button variant="contained" component="label" size="small" disabled={isProcessing}>
                         {t(tokens.nav.chosseImages)}
                         <input
                           type="file"
@@ -488,9 +580,13 @@ const OrderDetailModal = ({
                 )}
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setConfirmOpen(false)}>{t(tokens.nav.cancel)}</Button>
+              <Button onClick={() => setConfirmOpen(false)} disabled={isProcessing}>
+                {t(tokens.nav.cancel)}
+              </Button>
               <Button
                 disabled={
+                  isOnCooldown ||
+                  isProcessing ||
                   (confirmStatus === 'IN_REVIEW' && uploadFiles.length <= 0 && uploadedImages.length === 0) ||
                   (confirmStatus === 'NEED_FIX' && commentText.trim() === '')
                 }
@@ -508,14 +604,11 @@ const OrderDetailModal = ({
                   } else {
                     await handleChangeSingleOrderStatus(confirmStatus, commentText);
                   }
-
-                  setConfirmOpen(false);
-                  setCommentText('');
                 }}
                 variant="contained"
                 color="primary"
               >
-                {t(tokens.nav.submit)}
+                {isProcessing ? 'Đang xử lý...' : t(tokens.nav.submit)}
               </Button>
             </DialogActions>
           </Dialog>
@@ -532,13 +625,16 @@ const OrderDetailModal = ({
                 onSubmit={(text) => handleSubmitComment(text)}
                 placeholder={t(tokens.nav.typing)}
                 t={t(tokens.nav.send)}
+                disabled={isProcessing}
               />
             </Box>
           )}
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t(tokens.nav.close)}</Button>
+        <Button onClick={onClose} disabled={isProcessing}>
+          {t(tokens.nav.close)}
+        </Button>
       </DialogActions>
 
       <Dialog open={zoomImageIndex !== null} onClose={() => setZoomImageIndex(null)} maxWidth="md">
