@@ -41,7 +41,6 @@ import {
 import { tokens } from '../../locales/tokens';
 import { categoryLabelsVi } from 'src/constants';
 
-
 const Page = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
@@ -179,7 +178,7 @@ const Page = () => {
   return (
     <>
       <Seo title="Boards" />
-      <Header showBoards={false} />
+      <Header showBoards={false} role={role} />
       <Toolbar />
       <Box sx={{ display: 'flex' }}>
         {role && <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} role={role} />}

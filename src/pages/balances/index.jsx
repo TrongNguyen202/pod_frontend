@@ -1,39 +1,37 @@
-import React, { useEffect, useMemo, useState } from 'react';
 import {
   Box,
-  Card,
-  CardContent,
-  Grid,
-  IconButton,
-  Typography,
-  Paper,
   Button,
-  TableContainer,
+  Chip,
   FormControl,
+  Grid,
   InputLabel,
-  Select,
   MenuItem,
-  TextField,
+  Paper,
+  Select,
   Table,
+  TableBody,
+  TableCell,
+  TableContainer,
   TableHead,
   TableRow,
-  TableCell,
-  TableBody,
-  Chip,
+  TextField,
+  Typography,
 } from '@mui/material';
-import { Seo } from 'src/components/seo';
-import Header from 'src/components/header';
-import Sidebar from 'src/components/sidebar';
-import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
+import { DateTimePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { format } from 'date-fns';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useDispatch } from 'react-redux';
+import Header from 'src/components/header';
+import { useDialogHandlers } from 'src/components/header/handlers/useDialogHandlers';
+import OrderPagination from 'src/components/ideas/order/OrderPagination';
+import { Seo } from 'src/components/seo';
+import Sidebar from 'src/components/sidebar';
 import { tokens } from 'src/locales/tokens';
 import { useAppSelector } from 'src/redux/hook';
-import handleAmountFormat from 'src/utils/amount-vnd';
-import { useDispatch } from 'react-redux';
 import { fetchGetTopupInfo } from 'src/redux/reducers/usertopups';
-import { format } from 'date-fns';
-import OrderPagination from 'src/components/ideas/order/OrderPagination';
+import handleAmountFormat from 'src/utils/amount-vnd';
 
 const typeTransactionVi = {
   IN: 'Nạp tiền',
@@ -64,6 +62,7 @@ const Page = () => {
   const [isHydrated, setIsHydrated] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [role, setRole] = useState('');
+  const headerRef = useRef(null);
 
   const [transactionType, setTransactionType] = useState('');
   const [startDate, setStartDate] = useState(null);
@@ -221,13 +220,22 @@ const Page = () => {
   return (
     <>
       <Seo title="Balances" />
-      <Header showBoards={false} />
+      <Header showBoards={false} role={role} ref={headerRef}/>
       <Box sx={{ display: 'flex' }}>
         {role && <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} role={role} />}
         <Box component="main" sx={{ flexGrow: 1, padding: 2 }}>
           <Box sx={{ padding: 2 }}>
             <Typography variant="h4">Balances</Typography>
-            <Button variant="contained" color="primary" sx={{ marginBottom: 2 }}>
+            <Button
+              variant="contained"
+              color="primary"
+              sx={{ marginBottom: 2 }}
+              onClick={() => {
+                if (headerRef.current) {
+                  headerRef.current.openMakeDepositDialog(); // Call the exposed method
+                }
+              }}
+            >
               {t(tokens.nav.make_deposit)}
             </Button>
 

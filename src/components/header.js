@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useRef, Profiler } from 'react';
+import React, { useMemo, useState, useEffect, useRef, Profiler, forwardRef, useImperativeHandle } from 'react';
 import { useRouter } from 'src/hooks/use-router';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch } from 'src/redux/hook';
@@ -28,7 +28,7 @@ import { useDialogHandlers } from './header/handlers/useDialogHandlers';
 import { updateBankInfo } from 'src/redux/reducers/user';
 import { fetchCreateWithdraw } from 'src/redux/reducers/usertopups';
 
-const Header = ({ onBoardChange, showBoards, role }) => {
+const Header = ({ onBoardChange, showBoards, role, onMenuSelect }, ref) => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -173,6 +173,17 @@ const Header = ({ onBoardChange, showBoards, role }) => {
     }
   };
 
+  useImperativeHandle(ref, () => ({
+    openMakeDepositDialog: () => {
+      handleToggleDrawer(); // Open the drawer
+      setTimeout(() => {
+        if (amountRef.current) {
+          amountRef.current.focus(); // Focus the amount input
+        }
+      }, 100);
+    },
+  }));
+
   const handleMenuSelect = async (opt) => {
     switch (opt.value) {
       case 'make_deposit':
@@ -200,6 +211,9 @@ const Header = ({ onBoardChange, showBoards, role }) => {
         break;
       case 'changepassword':
         toggleChangePassword(true);
+        break;
+      case 'monthly_balances':
+        router.push('/balances');
         break;
       case 'userprofile':
         router.push('/profile');
@@ -453,7 +467,7 @@ const Header = ({ onBoardChange, showBoards, role }) => {
                 <DropdownMenu
                   buttonLabel={<MoreVertIcon />}
                   options={optionsSelect}
-                  onSelect={handleMenuSelect}
+                  onSelect={onMenuSelect || handleMenuSelect}
                   buttonProps={{
                     variant: 'contained',
                     sx: {
@@ -775,11 +789,11 @@ const Header = ({ onBoardChange, showBoards, role }) => {
             onSubmit={handlePostTemplate}
             selectedBoardId={selectedBoardId}
           />
-          <Button sx={{ ml: 1, color: 'black' }} onClick={() => alert('Notifications')}>
+          {/* <Button sx={{ ml: 1, color: 'black' }} onClick={() => alert('Notifications')}>
             <Box component="span" sx={{ fontSize: '1.5rem' }}>
               🔔
             </Box>
-          </Button>
+          </Button> */}
           <ClickDropdownMenu
             buttonLabel={'👤'}
             component="span"
@@ -789,7 +803,7 @@ const Header = ({ onBoardChange, showBoards, role }) => {
               { label: t(tokens.nav.profile), value: 'userprofile' },
               { label: t(tokens.nav.logout), value: 'logout' },
             ]}
-            onSelect={handleMenuSelect}
+            onSelect={onMenuSelect || handleMenuSelect}
             buttonProps={{
               variant: 'text',
               sx: {
@@ -814,4 +828,4 @@ const Header = ({ onBoardChange, showBoards, role }) => {
   );
 };
 
-export default React.memo(Header);
+export default React.memo(forwardRef(Header));
