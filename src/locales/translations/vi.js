@@ -27,6 +27,7 @@ export const vi = {
   [tokens.nav.more_filter]: 'Bộ lọc',
   [tokens.nav.package_amount]: 'Số tiền',
   [tokens.nav.note]: 'Ghi chú',
+  [tokens.nav.bankAccountName]: 'Tên chủ tài khoản',
   [tokens.nav.bankName]: 'Tên ngân hàng',
   [tokens.nav.accountNumber]: 'Số tài khoản',
   [tokens.nav.submit]: 'Xác nhận',

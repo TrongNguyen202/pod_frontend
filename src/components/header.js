@@ -25,6 +25,8 @@ import { useBoardsData } from 'src/hooks/Header/useBoardsData';
 import { useUserData } from 'src/hooks/Header/useUserData';
 import ChangePasswordDialog from './header/components/ChangePasswordDialog';
 import { useDialogHandlers } from './header/handlers/useDialogHandlers';
+import { updateBankInfo } from 'src/redux/reducers/user';
+import { fetchCreateWithdraw } from 'src/redux/reducers/usertopups';
 
 const Header = ({ onBoardChange, showBoards, role }) => {
   const { t } = useTranslation();
@@ -33,10 +35,7 @@ const Header = ({ onBoardChange, showBoards, role }) => {
   const [selectedBoardId, setSelectedBoardId] = useState(null);
   const [email, setEmail] = useState(null);
   const [amount, setAmount] = useState('');
-  const [amountWithdraw, setAmountWithdraw] = useState('');
   const [note, setNote] = useState('');
-  const [bankName, setBankName] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
   const [qrCode, setQrCode] = useState('');
   const [walletUpdated, setWalletUpdated] = useState(false);
   const amountRef = useRef();
@@ -61,6 +60,20 @@ const Header = ({ onBoardChange, showBoards, role }) => {
   const { data: productTypeData } = useProductTypes(dispatch);
   const { data: boardInfoData } = useBoardInfo(dispatch, selectedBoardId, productTypeData, setInitialFormData);
 
+  const [amountWithdraw, setAmountWithdraw] = useState(0);
+  const [bankName, setBankName] = useState('');
+  const [bankNumber, setBankNumber] = useState('');
+  const [bankAccountName, setBankAccountName] = useState('');
+
+  // Thêm useEffect để sync với userData
+  useEffect(() => {
+    if (userData) {
+      setBankName(userData.bankName || '');
+      setBankNumber(userData.bankNumber || '');
+      setBankAccountName(userData.bankAccountName || '');
+      setAmountWithdraw(userData.coin || 0);
+    }
+  }, [userData]);
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedBoardId = localStorage.getItem('b');
@@ -208,28 +221,63 @@ const Header = ({ onBoardChange, showBoards, role }) => {
 
   const handleGenerateQR = async () => {
     try {
-      if (role === 'customer') {
-        const response = await dispatch(
-          fetchCreateQr({
-            userId: userData.id,
-            amount: Number(amount),
-            transactionCode: transactionCode?.toString(),
-          }),
-        );
-        const rawExpiresAt = Math.floor(response.payload.expiresAt);
-        const expiresAtDate = new Date(rawExpiresAt * 1000);
+      const response = await dispatch(
+        fetchCreateQr({
+          userId: userData.id,
+          amount: Number(amount),
+          transactionCode: transactionCode?.toString(),
+        }),
+      );
+      const rawExpiresAt = Math.floor(response.payload.expiresAt);
+      const expiresAtDate = new Date(rawExpiresAt * 1000);
 
-        setQrCode(response.payload.qrCodeBase64);
-        setExpiresAt(expiresAtDate);
-        handleToggleDrawer();
-        setTimeout(() => setOpenQRDialog(true), 500);
-      } else if (role === 'designer') {
-        console.log(123);
-        handleToggleDrawer();
-        setOpenQRDialog(true);
-      }
+      setQrCode(response.payload.qrCodeBase64);
+      setExpiresAt(expiresAtDate);
+      handleToggleDrawer();
+      setTimeout(() => setOpenQRDialog(true), 500);
     } catch (error) {
       toast.error('Lỗi tạo QR:', error);
+    }
+  };
+
+  const handleMakeWidthraw = async () => {
+    try {
+      const data = {
+        bankName,
+        bankNumber,
+        bankAccountName,
+      };
+      console.log(data);
+
+      // Call API để update bank info
+      const response = await dispatch(updateBankInfo(data));
+      console.log(response);
+
+      if (response.meta.requestStatus === 'fulfilled') {
+        const withdrawData = {
+          coin: amountWithdraw,
+          transactionCode,
+          bankNumber,
+          bankName,
+        };
+
+        const withdrawResponse = await dispatch(fetchCreateWithdraw(withdrawData));
+        console.log(withdrawResponse);
+
+        if (withdrawResponse.meta.requestStatus === 'fulfilled') {
+          toast.success('Tạo yêu cầu rút tiền thành công!');
+        } else {
+          toast.error('Tạo yêu cầu rút tiền thất bại!');
+        }
+      } else {
+        toast.error('Cập nhật thông tin thất bại!');
+      }
+
+      handleToggleDrawer();
+      setOpenQRDialog(true);
+    } catch (error) {
+      toast.error('Lỗi khi tạo giao dịch');
+      console.error('Withdraw error:', error);
     }
   };
 
@@ -400,7 +448,7 @@ const Header = ({ onBoardChange, showBoards, role }) => {
                   }}
                   onClick={() => handleMenuSelect({ value: 'make_deposit', label: t(tokens.nav.make_deposit) })}
                 >
-                  {handleAmountFormat(userData.coin)} VND
+                  {handleAmountFormat(userData?.coin)} VND
                 </Button>
                 <DropdownMenu
                   buttonLabel={<MoreVertIcon />}
@@ -508,6 +556,12 @@ const Header = ({ onBoardChange, showBoards, role }) => {
                     ) : (
                       <Box>
                         <input
+                          placeholder={t(tokens.nav.bankAccountName)}
+                          style={{ margin: '12px 0', borderRadius: '5px', width: '100%', padding: 8 }}
+                          value={bankAccountName}
+                          onChange={(e) => setBankAccountName(e.target.value)}
+                        />
+                        <input
                           placeholder={t(tokens.nav.bankName)}
                           style={{ margin: '12px 0', borderRadius: '5px', width: '100%', padding: 8 }}
                           value={bankName}
@@ -516,8 +570,8 @@ const Header = ({ onBoardChange, showBoards, role }) => {
                         <input
                           placeholder={t(tokens.nav.accountNumber)}
                           style={{ margin: '12px 0', borderRadius: '5px', width: '100%', padding: 8 }}
-                          value={accountNumber}
-                          onChange={(e) => setAccountNumber(e.target.value)}
+                          value={bankNumber}
+                          onChange={(e) => setBankNumber(e.target.value)}
                         />
                       </Box>
                     )}
@@ -525,8 +579,10 @@ const Header = ({ onBoardChange, showBoards, role }) => {
                       variant="contained"
                       color="primary"
                       sx={{ mt: 2 }}
-                      onClick={handleGenerateQR}
-                      disabled={role === 'designer' ? amountWithdraw > userData.coin || amountWithdraw <= 0 : amount <= 0}
+                      onClick={role === 'customer' ? handleGenerateQR : role === 'designer' ? handleMakeWidthraw : null}
+                      disabled={
+                        role === 'designer' ? amountWithdraw > userData.coin || amountWithdraw <= 0 : amount <= 0
+                      }
                     >
                       {t(tokens.nav.submit)}
                     </Button>
@@ -627,22 +683,31 @@ const Header = ({ onBoardChange, showBoards, role }) => {
                     }}
                   >
                     {/* Số tiền */}
-                    <Typography variant="h5" sx={{ mt: 4, fontWeight: 'bold' }}>
-                      {Number(amount).toLocaleString('vi-VN')}₫
+                    <Typography variant="h2" sx={{ mt: 4, fontWeight: 'bold' }}>
+                      {Number(amountWithdraw).toLocaleString('vi-VN')}₫
                     </Typography>
 
-                    <Typography variant="body2" color="success.main">
-                      Yêu cầu rút tiền của bạn đã được ghi nhận, vui lòng chờ!.
+                    <Typography variant="h6" color="success.main">
+                      Yêu cầu rút tiền của bạn đã được ghi nhận, vui lòng chờ!
                     </Typography>
 
                     {/* Mã giao dịch */}
-                    <Typography variant="body2" sx={{ mt: 1, color: 'gray' }}>
+                    <Typography variant="h5" sx={{ mt: 2, color: 'gray' }}>
                       Mã giao dịch: {transactionCode}
                     </Typography>
 
                     {/* Số tài khoản */}
-                    <Typography variant="body2" sx={{ mt: 0.5, color: 'gray', cursor: 'pointer' }}>
-                      STK: {accountNumber} ({bankName})
+                    <Typography
+                      variant="body1"
+                      sx={{ mt: 2, color: 'primary.main', cursor: 'pointer', fontSize: '32px' }}
+                    >
+                      Tên chủ tài khoản: {bankAccountName}
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      sx={{ mt: 2, color: 'primary.main', cursor: 'pointer', fontSize: '32px' }}
+                    >
+                      STK: {bankNumber} ({bankName})
                     </Typography>
 
                     <Button onClick={() => setOpenQRDialog(false)} sx={{ mt: 6 }} variant="outlined">
@@ -718,7 +783,7 @@ const Header = ({ onBoardChange, showBoards, role }) => {
           <ClickDropdownMenu
             buttonLabel={'👤'}
             component="span"
-            userInfo={{ username: userData.username, email: userData.email }}
+            userInfo={{ username: userData?.username, email: userData?.email }}
             options={[
               { label: t(tokens.nav.resetPassword), value: 'changepassword' },
               { label: t(tokens.nav.profile), value: 'userprofile' },

@@ -20,6 +20,16 @@ const requestUpdateUserProfile = async (data) => {
   return axiosAPI(config);
 };
 
+const requestUpdateBankInfo = async (data) => {
+  const config = {
+    method: 'PUT',
+    url: '/users/update/user/bank',
+    data,
+  };
+
+  return axiosAPI(config);
+};
+
 const requestGetDesignerIds = async () => {
   const config = {
     method: 'GET',
@@ -43,7 +53,7 @@ const requestPutStatusUser = async (data) => {
     method: 'PUT',
     url: '/users/update/status',
     data,
-  };  
+  };
 
   return axiosAPI(config);
 };
@@ -138,6 +148,7 @@ export const users = {
   requestGetDesignerIds,
   requestSetTaxForDesigner,
   requestPutStatusUser,
+  requestUpdateBankInfo,
   requestGetShopByUser,
   requestGetUserInfo,
   requestUpdateUser,
@@ -147,5 +158,5 @@ export const users = {
   requestUpdateUserProfile,
   requestCreateUserAccount,
   requestGetUsers,
-  requestGetUsersStats
+  requestGetUsersStats,
 };

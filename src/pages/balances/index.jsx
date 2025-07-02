@@ -19,6 +19,7 @@ import {
   TableRow,
   TableCell,
   TableBody,
+  Chip,
 } from '@mui/material';
 import { Seo } from 'src/components/seo';
 import Header from 'src/components/header';
@@ -39,6 +40,24 @@ const typeTransactionVi = {
   OUT: 'Rút tiền',
   USE: 'Sử dụng',
   MAKE: 'Trả đơn',
+};
+
+const formatStatusTransaction = (status) => {
+  const list = {
+    '-1': 'Hủy',
+    1: 'Thành công',
+    0: 'Chờ duyệt',
+  };
+  return list[status] || status;
+};
+
+const getStatusTransactionColor = (status) => {
+  const colors = {
+    1: 'success',
+    '-1': 'error',
+    0: 'warning',
+  };
+  return colors[status] || 'default';
 };
 
 const Page = () => {
@@ -67,9 +86,7 @@ const Page = () => {
   const userTopupsInfo = transactionsData?.transactions || [];
   const totalRecords = transactionsData?.total || 0;
   const totalPages = transactionsData?.totalPages || 0;
-  const currentPage = transactionsData?.currentPage || 0;
-  const hasNext = transactionsData?.hasNext || false;
-  const hasPrevious = transactionsData?.hasPrevious || false;
+  console.log(userTopupsInfo);
 
   // Handle hydration
   useEffect(() => {
@@ -393,6 +410,7 @@ const Page = () => {
                       <TableCell>{t(tokens.nav.amount)} (VND)</TableCell>
                       <TableCell>{t(tokens.nav.createdDate)}</TableCell>
                       <TableCell>{t(tokens.nav.transactionType)}</TableCell>
+                      <TableCell>{t(tokens.nav.status)}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -451,6 +469,13 @@ const Page = () => {
                             >
                               {typeTransactionVi[row.transactionType] || '-'}
                             </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={formatStatusTransaction(row.status)}
+                              color={getStatusTransactionColor(row.status)}
+                              size="small"
+                            />
                           </TableCell>
                         </TableRow>
                       ))

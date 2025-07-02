@@ -45,6 +45,7 @@ export const tokens = {
     transaction: 'nav.transaction',
     records: 'nav.records',
     note: 'nav.note',
+    bankAccountName: 'nav.bankAccountName',
     bankName: 'nav.bankName',
     accountNumber: 'nav.accountNumber',
     design_type: 'nav.design_type',

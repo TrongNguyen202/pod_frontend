@@ -20,7 +20,7 @@ import {
 import EditProfileDrawer from 'src/components/drawer/edit-profile-drawer';
 import PageLayout from '../../components/ideas/page-layout';
 import { useAppSelector, useAppDispatch } from '../../redux/hook';
-import { updateUserProfile } from '../../redux/reducers/user';
+import { fetchUserByEmail, updateUserProfile } from '../../redux/reducers/user';
 import { toast } from 'react-toastify';
 
 export default function UserProfile() {
@@ -28,18 +28,19 @@ export default function UserProfile() {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const dispatch = useAppDispatch();
   const { data: userData } = useAppSelector((state) => state.users.userInfo);
-  console.log("check data userData", userData);
+  console.log('check data userData', userData);
 
   const handleUpdateProfile = async (updatedData) => {
     try {
+      console.log(updatedData);
       const profileUpdateData = {
         email: updatedData.email,
         username: updatedData.username,
         phone: updatedData.phone,
         link_telegram: updatedData.link_telegram,
-        bank_name: updatedData.bankName,
-        accountName: updatedData.accountName,
-        accountNumber: updatedData.accountNumber,
+        bankName: updatedData.bankName,
+        bankNumber: updatedData.bankNumber,
+        bankAccountName: updatedData.bankAccountName,
       };
 
       // Dispatch action update profile
@@ -47,6 +48,7 @@ export default function UserProfile() {
 
       if (updateUserProfile.fulfilled.match(result)) {
         toast.success('Cập nhật thông tin thành công!');
+        await dispatch(fetchUserByEmail({ email: updatedData.email }));
         setIsEditProfileOpen(false);
       } else {
         toast.error('Cập nhật thông tin thất bại!');
@@ -61,7 +63,7 @@ export default function UserProfile() {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
-      currency: 'VND'
+      currency: 'VND',
     }).format(amount);
   };
 
@@ -201,10 +203,7 @@ export default function UserProfile() {
                 }}
               >
                 <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{ fontWeight: 600, color: '#111827', marginBottom: 2 }}
-                  >
+                  <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', marginBottom: 2 }}>
                     Thông tin cơ bản
                   </Typography>
                   <InfoItem
@@ -212,11 +211,7 @@ export default function UserProfile() {
                     label="Tên người dùng"
                     value={userData?.username}
                   />
-                  <InfoItem
-                    icon={<EmailIcon sx={{ color: '#2563eb' }} />}
-                    label="Email"
-                    value={userData?.email}
-                  />
+                  <InfoItem icon={<EmailIcon sx={{ color: '#2563eb' }} />} label="Email" value={userData?.email} />
                   <InfoItem
                     icon={<SecurityIcon sx={{ color: statusInfo.color }} />}
                     label="Trạng thái"
@@ -233,10 +228,7 @@ export default function UserProfile() {
                 </Box>
 
                 <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{ fontWeight: 600, color: '#111827', marginBottom: 2 }}
-                  >
+                  <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', marginBottom: 2 }}>
                     Thông tin liên hệ
                   </Typography>
                   <InfoItem
@@ -257,16 +249,13 @@ export default function UserProfile() {
                 </Box>
 
                 <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{ fontWeight: 600, color: '#111827', marginBottom: 2 }}
-                  >
+                  <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', marginBottom: 2 }}>
                     Thông tin ngân hàng
                   </Typography>
                   <InfoItem
                     icon={<PersonIcon sx={{ color: '#059669' }} />}
                     label="Chủ tài khoản"
-                    value={userData?.accountName}
+                    value={userData?.bankAccountName}
                   />
                   <InfoItem
                     icon={<BankIcon sx={{ color: '#059669' }} />}
@@ -276,7 +265,7 @@ export default function UserProfile() {
                   <InfoItem
                     icon={<CardIcon sx={{ color: '#059669' }} />}
                     label="Số tài khoản"
-                    value={userData?.accountNumber}
+                    value={userData?.bankNumber}
                   />
                 </Box>
               </Box>
@@ -316,10 +305,7 @@ export default function UserProfile() {
                   >
                     {item.value}
                   </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: '#6b7280', marginTop: 0.5 }}
-                  >
+                  <Typography variant="body2" sx={{ color: '#6b7280', marginTop: 0.5 }}>
                     {item.label}
                   </Typography>
                 </CardContent>

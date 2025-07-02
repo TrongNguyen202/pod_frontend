@@ -29,6 +29,7 @@ export const en = {
   [tokens.nav.transaction]: 'Transaction',
   [tokens.nav.records]: 'records',
   [tokens.nav.note]: 'Note',
+  [tokens.nav.bankAccountName]: 'Bank Account Name',
   [tokens.nav.bankName]: 'Bank Name',
   [tokens.nav.accountNumber]: 'Account Number',
   [tokens.nav.no_board]: 'Please, select a board',

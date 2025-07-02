@@ -14,6 +14,11 @@ const initialState = {
     error: '',
     data: [],
   },
+  bankInfo: {
+    loading: false,
+    error: '',
+    data: [],
+  },
   designerIds: {
     loading: false,
     error: '',
@@ -54,6 +59,11 @@ export const fetchUserByEmail = createAsyncThunk('/user/post/user-detail', async
 
 export const updateUserProfile = createAsyncThunk('/user/update/profile', async (profileData) => {
   const res = await RepositoryRemote.users.requestUpdateUserProfile(profileData);
+  return res.data.data;
+});
+
+export const updateBankInfo = createAsyncThunk('/put/bank/info', async (data) => {
+  const res = await RepositoryRemote.users.requestUpdateBankInfo(data);
   return res.data.data;
 });
 
@@ -183,7 +193,7 @@ const slicer = createSlice({
           ...state.userInfo.data,
           ...action.payload,
           // Map các field từ backend response sang format hiện tại
-          bankName: action.payload.bank_name || state.userInfo.data.bankName,
+          bankName: action.payload.bankName || state.userInfo.data.bankName,
         };
       }
       state.userInfo.error = '';
@@ -213,6 +223,19 @@ const slicer = createSlice({
         error: action?.error?.message || 'Error while processing.',
         data: [],
       };
+    });
+
+    builder.addCase(updateBankInfo.pending, (state) => {
+      state.bankInfo.loading = true;
+    });
+    builder.addCase(updateBankInfo.fulfilled, (state, action) => {
+      state.bankInfo.loading = false;
+      state.bankInfo = action.payload.data;
+    });
+    builder.addCase(updateBankInfo.rejected, (state, action) => {
+      state.bankInfo.loading = false;
+      state.bankInfo = [];
+      state.bankInfo.error = action?.error?.message || 'Error while processing.';
     });
 
     builder.addCase(fetchUpdateTaxForDesigner.pending, (state) => {

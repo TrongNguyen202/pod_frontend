@@ -31,8 +31,8 @@ export default function EditProfileDrawer({ open, onClose, userData, onSubmit })
     email: "",
     phone: "",
     link_telegram: "",
-    accountName: "",
-    accountNumber: "",
+    bankAccountName: "",
+    bankNumber: "",
     bankName: "",
   })
   const [errors, setErrors] = useState({})
@@ -46,8 +46,8 @@ export default function EditProfileDrawer({ open, onClose, userData, onSubmit })
         email: userData?.email || "",
         phone: userData?.phone || "",
         link_telegram: userData?.link_telegram || "",
-        accountName: userData?.accountName || "",
-        accountNumber: userData?.accountNumber || "",
+        bankAccountName: userData?.bankAccountName || "",
+        bankNumber: userData?.bankNumber || "",
         bankName: userData?.bankName || "",
       })
     }
@@ -86,12 +86,12 @@ export default function EditProfileDrawer({ open, onClose, userData, onSubmit })
     //   newErrors.link_telegram = "Link Telegram phải bắt đầu bằng @"
     // }
 
-    if (formData.accountName && formData.accountName.length < 2) {
-      newErrors.accountName = "Tên chủ tài khoản phải có ít nhất 2 ký tự"
+    if (formData.bankAccountName && formData.bankAccountName.length < 2) {
+      newErrors.bankAccountName = "Tên chủ tài khoản phải có ít nhất 2 ký tự"
     }
 
-    if (formData.accountNumber && !/^[0-9]{8,20}$/.test(formData.accountNumber)) {
-      newErrors.accountNumber = "Số tài khoản phải từ 8-20 chữ số"
+    if (formData.bankNumber && !/^[0-9]{8,20}$/.test(formData.bankNumber)) {
+      newErrors.bankNumber = "Số tài khoản phải từ 8-20 chữ số"
     }
 
     if (formData.bankName && formData.bankName.length < 2) {
@@ -298,10 +298,10 @@ export default function EditProfileDrawer({ open, onClose, userData, onSubmit })
           <TextField
             fullWidth
             label="Tên chủ tài khoản"
-            value={formData.accountName}
-            onChange={(e) => handleInputChange("accountName", e.target.value)}
-            error={!!errors.accountName}
-            helperText={errors.accountName}
+            value={formData.bankAccountName}
+            onChange={(e) => handleInputChange("bankAccountName", e.target.value)}
+            error={!!errors.bankAccountName}
+            helperText={errors.bankAccountName}
             margin="normal"
             placeholder="Nguyễn Văn A"
             InputProps={{
@@ -316,10 +316,10 @@ export default function EditProfileDrawer({ open, onClose, userData, onSubmit })
           <TextField
             fullWidth
             label="Số tài khoản"
-            value={formData.accountNumber}
-            onChange={(e) => handleInputChange("accountNumber", e.target.value)}
-            error={!!errors.accountNumber}
-            helperText={errors.accountNumber}
+            value={formData.bankNumber}
+            onChange={(e) => handleInputChange("bankNumber", e.target.value)}
+            error={!!errors.bankNumber}
+            helperText={errors.bankNumber}
             margin="normal"
             placeholder="1234567890"
             inputProps={{ maxLength: 20 }}

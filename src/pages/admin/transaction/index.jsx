@@ -20,6 +20,10 @@ import {
   PriceCheckOutlined,
   FunctionsOutlined,
   IosShare,
+  VerifiedOutlined,
+  TaskAltOutlined,
+  HowToReg,
+  FactCheck,
 } from '@mui/icons-material';
 import {
   Alert,
@@ -54,10 +58,13 @@ import {
 } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-toastify';
 import AdminLayout from 'src/layouts/admin/layout';
 import { tokens } from 'src/locales/tokens';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
 import { fetchExportExcelStatisticTransaction, fetchGetStatisticsTransaction } from 'src/redux/reducers/statistics';
+import { fetchUserByEmail } from 'src/redux/reducers/user';
+import { fetchUpdateStatusTransaction } from 'src/redux/reducers/usertopups';
 import handleAmountFormat from 'src/utils/amount-vnd';
 import { formatDateTime } from 'src/utils/date';
 
@@ -79,6 +86,24 @@ const getTransactionTypeColor = (type) => {
     MAKE: 'warning',
   };
   return colors[type] || 'default';
+};
+
+const formatStatusTransaction = (status) => {
+  const list = {
+    '-1': 'Hủy',
+    1: 'Thành công',
+    0: 'Chờ duyệt',
+  };
+  return list[status] || status;
+};
+
+const getStatusTransactionColor = (status) => {
+  const colors = {
+    1: 'success',
+    '-1': 'error',
+    0: 'warning',
+  };
+  return colors[status] || 'default';
 };
 
 const formatDateTimeForInput = (date) => {
@@ -123,6 +148,13 @@ const Page = () => {
   const [tempStartDate, setTempStartDate] = useState(null);
   const [tempEndDate, setTempEndDate] = useState(null);
   const [tempTransactionIdToSearch, setTempTransactionIdToSearch] = useState('');
+
+  const [openDialogConfirmWithdraw, setOpenDialogConfirmWithdraw] = useState(false);
+  const [coinWithdraw, setCoinWithdraw] = useState(0);
+  const [bankName, setBankName] = useState('');
+  const [bankNumber, setBankNumber] = useState('');
+  const [bankAccountName, setBankAccountName] = useState('');
+  const [transactionCode, setTransactionCode] = useState('');
 
   // Get data from Redux store
   const {
@@ -350,6 +382,44 @@ const Page = () => {
         // Handle error if needed
       });
     setOpenDialogExportExcelTransaction(false);
+  };
+
+  const handleOpenConfirmWithdraw = async (email, code, coin) => {
+    try {
+      const response = await dispatch(fetchUserByEmail({ email }));
+      if (response.meta.requestStatus === 'fulfilled') {
+        setBankName(response.payload.bankName);
+        setBankNumber(response.payload.bankNumber);
+        setBankAccountName(response.payload.bankAccountName);
+        setCoinWithdraw(coin);
+        setTransactionCode(code);
+        setOpenDialogConfirmWithdraw(true);
+      } else {
+        toast.error('Error when fetch user data!');
+      }
+    } catch (error) {
+      toast.error('Error when open confirm withdraw');
+    }
+  };
+
+  const handleVetifyWithdrawRequest = async () => {
+    try {
+      const data = {
+        status: 1,
+        transactionCode,
+      };
+      const response = await dispatch(fetchUpdateStatusTransaction(data));
+      console.log(response);
+      if (response.meta.requestStatus === 'fulfilled') {
+        fetchData();
+        toast.success('Xác thực thành công.');
+      } else {
+        toast.error('Xác thực thất bại!');
+      }
+      setOpenDialogConfirmWithdraw(false);
+    } catch (error) {
+      toast.error('Loi khi thao tac');
+    }
   };
 
   if (error) {
@@ -696,6 +766,7 @@ const Page = () => {
                         <TableCell align="center">Loại giao dịch</TableCell>
                         <TableCell>Ngày tạo</TableCell>
                         <TableCell>Trạng thái</TableCell>
+                        <TableCell>Thao tác</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -727,7 +798,82 @@ const Page = () => {
                           </TableCell>
                           {/* <TableCell align="center">{formatTransactionType(contents.transactionType)}</TableCell> */}
                           <TableCell>{formatDateTime(contents.createdDate)}</TableCell>
-                          <TableCell>{formatDateTime(contents.status)}</TableCell>
+                          <TableCell>
+                            <Chip
+                              label={formatStatusTransaction(contents.status)}
+                              color={getStatusTransactionColor(contents.status)}
+                              size="small"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            {contents.status === 0 ? (
+                              // <Button onClick={() => handleVetifyWithdrawRequest(contents.transactionCode)}>
+                              <Button
+                                onClick={() =>
+                                  handleOpenConfirmWithdraw(contents.createdBy, contents.transactionCode, contents.coin)
+                                }
+                              >
+                                <FactCheck />
+                              </Button>
+                            ) : contents.status === 1 ? (
+                              <Box color="primary.main" textAlign="center">
+                                <VerifiedOutlined />
+                              </Box>
+                            ) : (
+                              <Box></Box>
+                            )}
+                          </TableCell>
+                          <Dialog open={openDialogConfirmWithdraw} onClose={() => setOpenDialogConfirmWithdraw(false)}>
+                            <DialogTitle textAlign="center">Xác nhận giao dịch</DialogTitle>
+
+                            <DialogContent>
+                              <DialogContentText
+                                sx={{
+                                  textAlign: 'center',
+                                  mb: 2, // margin bottom
+                                  fontSize: '1rem',
+                                  lineHeight: 1.6,
+                                }}
+                              >
+                                Xác nhận thanh toán{' '}
+                                <strong style={{ color: '#1976d2' }}>{handleAmountFormat(coinWithdraw)}</strong> tới
+                                <br />
+                                Số tài khoản:{' '}
+                                <strong style={{ color: '#1976d2' }}>
+                                  {bankNumber} - {bankName}
+                                </strong>
+                                .
+                                <br />
+                                Chủ tài khoản: <strong style={{ color: '#1976d2' }}>{bankAccountName}</strong>
+                              </DialogContentText>
+                            </DialogContent>
+
+                            <DialogActions
+                              sx={{
+                                justifyContent: 'center',
+                                pb: 3,
+                              }}
+                            >
+                              <Button
+                                onClick={() => setOpenDialogConfirmWithdraw(false)}
+                                color="inherit"
+                                variant="outlined"
+                                sx={{ minWidth: 120 }}
+                              >
+                                {t(tokens.nav.cancel)}
+                              </Button>
+
+                              <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={handleVetifyWithdrawRequest}
+                                sx={{ minWidth: 120, ml: 2 }}
+                                autoFocus
+                              >
+                                {t(tokens.nav.submit)}
+                              </Button>
+                            </DialogActions>
+                          </Dialog>
                         </TableRow>
                       ))}
                     </TableBody>
