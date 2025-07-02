@@ -48,7 +48,7 @@ const FormDialogSplitLayout = ({
   const [formData, setFormData] = useState(() => normalizeInitialData(initialData, fields));
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // State để track validation errors
   const [errors, setErrors] = useState({});
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
@@ -57,25 +57,34 @@ const FormDialogSplitLayout = ({
   const [isManuallyEditingDescription, setIsManuallyEditingDescription] = useState(false);
 
   // Định nghĩa các trường required
-  const requiredFields = useMemo(() => ({
-    title: true,
-    images: true,
-  }), []);
+  const requiredFields = useMemo(
+    () => ({
+      title: true,
+      images: true,
+      price: true,
+    }),
+    [],
+  );
 
   // Hàm validate form
   const validateForm = useCallback(() => {
     const newErrors = {};
-    
+
     // Validate title
     if (requiredFields.title && (!formData.title || formData.title.trim() === '')) {
       newErrors.title = 'Tiêu đề là bắt buộc';
     }
-    
+
     // Validate images
     if (requiredFields.images && (!formData.images || formData.images.length === 0)) {
       newErrors.images = 'Hình ảnh là bắt buộc';
     }
-    
+
+    // Validate price
+    if (requiredFields.price && (!formData.price || formData.price === 0)) {
+      newErrors.price = 'Giá là bắt buộc';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [formData, requiredFields]);
@@ -107,23 +116,26 @@ const FormDialogSplitLayout = ({
     }
   }, [initialData, fields, onCloseOverride]);
 
-  const handleChange = useCallback((name, value) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const handleChange = useCallback(
+    (name, value) => {
+      setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Clear error khi user bắt đầu nhập
-    if (errors[name]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
+      // Clear error khi user bắt đầu nhập
+      if (errors[name]) {
+        setErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors[name];
+          return newErrors;
+        });
+      }
 
-    // Nếu user đang edit description manually, đánh dấu để không bị ghi đè
-    if (name === 'description') {
-      setIsManuallyEditingDescription(true);
-    }
-  }, [errors]);
+      // Nếu user đang edit description manually, đánh dấu để không bị ghi đè
+      if (name === 'description') {
+        setIsManuallyEditingDescription(true);
+      }
+    },
+    [errors],
+  );
 
   const handleNumericInput = (fieldName) => (e) => {
     const value = e.target.value;
@@ -149,10 +161,10 @@ const FormDialogSplitLayout = ({
   const handleFormSubmit = useCallback(
     async (formData, status) => {
       setHasAttemptedSubmit(true);
-      
+
       // Validate form trước khi submit
       const isValid = validateForm();
-      
+
       if (!isValid) {
         return; // Không submit nếu form không hợp lệ
       }
@@ -269,7 +281,7 @@ const FormDialogSplitLayout = ({
           </Button>
         </Box>
       )}
-      <Dialog open={dialogOpen} onClose={handleClose} maxWidth="md" fullWidth sx={{height: '80vh', top: '15vh'}}>
+      <Dialog open={dialogOpen} onClose={handleClose} maxWidth="md" fullWidth sx={{ height: '80vh', top: '15vh' }}>
         <DialogTitle>{title}</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ display: 'flex' }}>
@@ -316,9 +328,7 @@ const FormDialogSplitLayout = ({
                   onChange={(e) => handleChange('description', e.target.value)}
                 />
                 {errors.description && (
-                  <Box sx={{ color: '#d32f2f', fontSize: '0.75rem', mt: 0.5, ml: 1.75 }}>
-                    {errors.description}
-                  </Box>
+                  <Box sx={{ color: '#d32f2f', fontSize: '0.75rem', mt: 0.5, ml: 1.75 }}>{errors.description}</Box>
                 )}
               </Box>
               <Box sx={{ mb: 2, borderRadius: 1, bgcolor: '#fafafa' }}>
@@ -451,6 +461,7 @@ const FormDialogSplitLayout = ({
               <Box sx={{ mb: 2, border: '1px solid #e0e0e0', borderRadius: 1, bgcolor: '#fafafa' }}>
                 <TextField
                   select
+                  required
                   fullWidth
                   label={t(tokens.nav.price)}
                   SelectProps={{
@@ -458,6 +469,9 @@ const FormDialogSplitLayout = ({
                   }}
                   value={formData['price'] || ''}
                   onChange={(e) => handleChange('price', e.target.value)}
+                  InputLabelProps={{ required: true }}
+                  error={!!errors.price}
+                  helperText={errors.price}
                 >
                   {priceOptions.map((option, i) => (
                     <MenuItem key={option.id} value={option.value}>
@@ -493,18 +507,10 @@ const FormDialogSplitLayout = ({
           <Button onClick={handleClose} color="inherit">
             {t(tokens.nav.cancel)}
           </Button>
-          <Button 
-            onClick={() => handleFormSubmit(formData, 'DRAFT')} 
-            variant="contained" 
-            disabled={isSubmitting}
-          >
+          <Button onClick={() => handleFormSubmit(formData, 'DRAFT')} variant="contained" disabled={isSubmitting}>
             {t(tokens.nav.submit_draft)}
           </Button>
-          <Button 
-            onClick={() => handleFormSubmit(formData, 'NEW')} 
-            variant="contained" 
-            disabled={isSubmitting}
-          >
+          <Button onClick={() => handleFormSubmit(formData, 'NEW')} variant="contained" disabled={isSubmitting}>
             {t(tokens.nav.submit)}
           </Button>
         </DialogActions>

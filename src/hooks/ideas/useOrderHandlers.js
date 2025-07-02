@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { useAppDispatch } from 'src/redux/hook';
 
-import { requestUploadImages } from 'src/redux/reducers/images';
 import { fetchSendPushNotifications } from 'src/redux/reducers/notifications';
 import {
   changeStatusOrders,
@@ -13,6 +12,7 @@ import {
   requestDeleteOrders,
 } from 'src/redux/reducers/orders';
 import { fetchUserByEmail } from 'src/redux/reducers/user';
+import { uploadImagesConcurrently } from 'src/utils/axiosUploadImages';
 import isFormValid from 'src/utils/ideas/isFormValid';
 
 const useOrderHandlers = ({
@@ -47,16 +47,14 @@ const useOrderHandlers = ({
           toast.error('Vui lòng điền đầy đủ thông tin');
           return;
         }
+        if (boardId === 0) {
+          toast.error('Bảng không phù hợp, vui lòng chọn lại!');
+          return;
+        }
 
         const imageFiles = formData.getAll('images[]');
-        const uploadFormData = new FormData();
-        imageFiles.forEach((file) => {
-          uploadFormData.append('files', file);
-        });
-
-        const imagesUpload = await dispatch(requestUploadImages({ data: uploadFormData }));
-        const imageUrls = imagesUpload.payload?.map((p) => p.url) || [];
-
+        const imageUrls = await uploadImagesConcurrently(imageFiles);
+        console.log(imageUrls);
         if (imageUrls.length === 0) {
           toast.error('Không có ảnh nào được upload!');
           return;
@@ -74,7 +72,7 @@ const useOrderHandlers = ({
           number: Number(formData.get('number') || 1),
           quantity: Number(formData.get('quantity') || 1),
           price: Number(formData.get('price') || 35000),
-          completedAt: formData.get('completed_at'),
+          // completedAt: formData.get('completed_at'),
         };
 
         const response = await dispatch(postOrder({ data: finalPayload }));
