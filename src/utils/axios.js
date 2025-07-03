@@ -2,17 +2,14 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { LOCAL_STORAGE_KEY } from 'src/constants';
 
-// Sử dụng proxy routes thay vì direct URLs
-const axiosAPI = axios.create({
-  baseURL: '/api/proxy/com', // Sẽ proxy đến BASE_URL
-});
+const axiosAPI = axios.create({ baseURL: 'http://14.225.255.106:8000/api/v1' });
 
 const axiosAPIFlashShip = axios.create({
-  baseURL: '/api/proxy/com', // Sẽ proxy đến API_FLASH_SHIP
+  baseURL: 'ENVIRONMENT_URL.API_FLASH_SHIP',
 });
 
 const axiosAPIPrintCare = axios.create({
-  baseURL: '/api/proxy/com', // Sẽ proxy đến API_PRINT_CARE
+  baseURL: 'ENVIRONMENT_URL.API_PRINT_CARE',
 });
 
 const getCommonHeaders = () => {
@@ -62,9 +59,8 @@ const refreshToken = async () => {
   const refreshToken = localStorage.getItem(LOCAL_STORAGE_KEY.REFRESH_TOKEN);
   if (!refreshToken) throw new Error('Không tìm thấy refresh token');
 
-  // Sử dụng proxy route cho refresh token
   const response = await axios.post(
-    '/api/proxy/com/auth/refresh',
+    'http://14.225.255.106:8000/api/v1/auth/refresh',
     { refreshToken },
     { headers: { ...getCommonHeaders(), 'Content-Type': 'application/json' } },
   );
@@ -104,7 +100,6 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// Interceptors giữ nguyên logic
 axiosAPI.interceptors.request.use(refreshTokenApi, (error) => Promise.reject(error));
 
 axiosAPI.interceptors.response.use(
