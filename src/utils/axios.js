@@ -2,8 +2,7 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { LOCAL_STORAGE_KEY } from 'src/constants';
 
-// const axiosAPI = axios.create({ baseURL: process.env.NEXT_PUBLIC_BASE_URL });
-const axiosAPI = axios.create({ baseURL: 'http://localhost:8000/api/v1' });
+const axiosAPI = axios.create({ baseURL: 'http://14.225.255.106:8000/api/v1' });
 
 const axiosAPIFlashShip = axios.create({
   baseURL: 'ENVIRONMENT_URL.API_FLASH_SHIP',
