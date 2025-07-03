@@ -69,12 +69,12 @@ const Page = () => {
           localStorage.setItem(LOCAL_STORAGE_KEY.DEVICE_ID, decodedToken.deviceId);
           localStorage.setItem(LOCAL_STORAGE_KEY.USER_EMAIL, decodedToken.sub);
 
-          // Sau 3 giây thì xóa các thông tin decoded tạm
-          setTimeout(() => {
-            localStorage.removeItem(LOCAL_STORAGE_KEY.USER_IP);
-            localStorage.removeItem(LOCAL_STORAGE_KEY.DEVICE_ID);
-            localStorage.removeItem(LOCAL_STORAGE_KEY.USER_EMAIL);
-          }, 3000);
+          // // Sau 3 giây thì xóa các thông tin decoded tạm
+          // setTimeout(() => {
+          //   localStorage.removeItem(LOCAL_STORAGE_KEY.USER_IP);
+          //   localStorage.removeItem(LOCAL_STORAGE_KEY.DEVICE_ID);
+          //   localStorage.removeItem(LOCAL_STORAGE_KEY.USER_EMAIL);
+          // }, 3000);
 
           dispatch(setInitialized(true));
           dispatch(setAuthenticate({ isAuthenticated: true }));

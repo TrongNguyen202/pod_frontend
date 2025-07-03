@@ -15,28 +15,26 @@ const axiosAPIPrintCare = axios.create({
 const getCommonHeaders = () => {
   const headers = {};
 
-  if (typeof window !== 'undefined') {
-    // Thử lấy từ localStorage trước
+  // if (typeof window !== 'undefined') {
     let deviceId = localStorage.getItem(LOCAL_STORAGE_KEY.DEVICE_ID);
     let userIp = localStorage.getItem(LOCAL_STORAGE_KEY.USER_IP);
 
-    // Nếu không có trong localStorage decode từ token
-    if (!deviceId || !userIp) {
-      const token = localStorage.getItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN);
-      if (token) {
-        try {
-          const decodedToken = jwtDecode(token);
-          deviceId = decodedToken.deviceId;
-          userIp = decodedToken.ipAddress;
-        } catch (error) {
-          console.error('Error decoding token in getCommonHeaders:', error);
-        }
-      }
-    }
+    // if (!deviceId || !userIp) {
+    //   const token = localStorage.getItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN);
+    //   if (token) {
+    //     try {
+    //       const decodedToken = jwtDecode(token);
+    //       deviceId = decodedToken.deviceId;
+    //       userIp = decodedToken.ipAddress;
+    //     } catch (error) {
+    //       console.error('Error decoding token in getCommonHeaders:', error);
+    //     }
+    //   }
+    // }
 
     if (deviceId) headers['X-Device-Id'] = deviceId;
     if (userIp) headers['X-Forwarded-For'] = userIp;
-  }
+  // }
 
   return headers;
 };
