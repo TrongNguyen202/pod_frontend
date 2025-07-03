@@ -41,11 +41,27 @@ const withTM = require('next-transpile-modules')([
 module.exports = withTM({
   reactStrictMode: false,
   
-  // Add experimental settings for better ES module support
+  // Environment variables
+  env: {
+    BASE_URL: process.env.BASE_URL,
+    NEXT_PUBLIC_API_FLASH_SHIP: process.env.NEXT_PUBLIC_API_FLASH_SHIP,
+    NEXT_PUBLIC_API_PRINT_CARE: process.env.NEXT_PUBLIC_API_PRINT_CARE,
+  },
+
+  // Server runtime config
+  serverRuntimeConfig: {
+    baseUrl: process.env.BASE_URL,
+    apiFlashShip: process.env.NEXT_PUBLIC_API_FLASH_SHIP,
+    apiPrintCare: process.env.NEXT_PUBLIC_API_PRINT_CARE,
+  },
+
+  // Experimental settings
   experimental: {
     esmExternals: 'loose',
+    allowMiddlewareResponseBody: true,
   },
-  
+
+  // Images config
   images: {
     remotePatterns: [
       {
@@ -56,9 +72,18 @@ module.exports = withTM({
         protocol: 'http',
         hostname: '**.localhost',
       },
+      {
+        protocol: 'http',
+        hostname: '14.225.255.106',
+      },
+      {
+        protocol: 'https',
+        hostname: 'your-backend-domain.com',
+      },
     ],
   },
-  
+
+  // Webpack config
   webpack(config, { isServer }) {
     // Your existing SVG rule
     config.module.rules.push({
@@ -66,7 +91,7 @@ module.exports = withTM({
       use: ['@svgr/webpack'],
     });
 
-    // Add fallbacks for client-side builds to prevent module resolution errors
+    // Add fallbacks for client-side builds
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const BACKEND_ENDPOINTS = {
-  com: process.env.BASE_URL,
+  com: process.env.BASE_URL || 'http://14.225.255.106:8000/api/v1',
   flashShip: process.env.NEXT_PUBLIC_API_FLASH_SHIP || 'your-flashship-url',
   printCare: process.env.NEXT_PUBLIC_API_PRINT_CARE || 'your-printcare-url',
 };
@@ -13,9 +13,9 @@ const createProxyRequest = async (endpoint, path, method = 'GET', data = null, h
   }
 
   const fullUrl = `${baseURL}${path}`;
-  // console.log(`Proxying: ${method} ${fullUrl}`);
-  // console.log('Headers:', headers);
-  // console.log('Data:', data);
+  console.log(`🔄 Proxying: ${method} ${fullUrl}`);
+  // console.log('📋 Headers:', headers);
+  console.log('📦 Data:', data);
 
   try {
     const response = await axios({
@@ -24,11 +24,14 @@ const createProxyRequest = async (endpoint, path, method = 'GET', data = null, h
       data,
       headers: {
         ...headers,
+        // Thêm các headers cần thiết
+        'Accept': 'application/json',
+        'Content-Type': headers['content-type'] || 'application/json',
       },
-      timeout: 10000,
+      timeout: 30000, // Tăng timeout
     });
 
-    // console.log('Backend response:', response.status);
+    // console.log('✅ Backend response:', response.status);
     return response.data;
   } catch (error) {
     console.error('Proxy request failed:', {
@@ -44,7 +47,9 @@ const createProxyRequest = async (endpoint, path, method = 'GET', data = null, h
 export default async function handler(req, res) {
   const { slug, ...queryParams } = req.query;
   const { method } = req;
+
   try {
+    console.log('Proxy request received:', { method, slug, queryParams });
     if (!slug || slug.length === 0) {
       return res.status(400).json({ error: 'Missing endpoint and path' });
     }
@@ -59,17 +64,23 @@ export default async function handler(req, res) {
 
     // Kiểm tra endpoint hợp lệ
     if (!BACKEND_ENDPOINTS[endpoint]) {
-      console.error('Invalid endpoint:', endpoint);
-      return res.status(400).json({
-        error: 'Invalid endpoint',
+      console.error('❌ Invalid endpoint:', endpoint);
+      return res.status(400).json({ 
+        error: 'Invalid endpoint', 
         available: Object.keys(BACKEND_ENDPOINTS),
       });
     }
 
     // Forward headers từ client
     const forwardHeaders = {};
-    const headersToForward = ['authorization', 'x-device-id', 'x-forwarded-for', 'user-agent', 'content-type'];
-
+    const headersToForward = [
+      'authorization', 
+      'x-device-id', 
+      'x-forwarded-for', 
+      'user-agent', 
+      'content-type'
+    ];
+    
     headersToForward.forEach((headerName) => {
       const value = req.headers[headerName];
       if (value) {
@@ -77,13 +88,14 @@ export default async function handler(req, res) {
       }
     });
 
-    // console.log('📋 Forwarded headers:', forwardHeaders);
+    console.log('📋 Forwarded headers:', forwardHeaders);
 
     // Gọi backend
     const result = await createProxyRequest(endpoint, fullPath, method, req.body, forwardHeaders);
-
+    
     res.status(200).json(result);
   } catch (error) {
+    console.error('❌ Proxy handler error:', error);
     res.status(error.response?.status || 500).json({
       error: 'Proxy request failed',
       message: error.message,
@@ -91,3 +103,12 @@ export default async function handler(req, res) {
     });
   }
 }
+
+// Tăng limit cho body parser
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
+  },
+};
