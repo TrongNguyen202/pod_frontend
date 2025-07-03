@@ -341,7 +341,7 @@ const Header = ({ onBoardChange, showBoards, role, onMenuSelect }, ref) => {
     { label: t(tokens.nav.monthly_balances), value: 'monthly_balances' },
   ];
   let op2 = [
-    { label: t(tokens.nav.make_withdraw), value: 'make_deposit' },
+    { label: t(tokens.nav.make_deposit), value: 'make_deposit' },
     { label: t(tokens.nav.monthly_balances), value: 'monthly_balances' },
   ];
 

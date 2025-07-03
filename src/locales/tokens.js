@@ -16,7 +16,6 @@ export const tokens = {
     contact: 'nav.contact',
     course: 'nav.course',
     create: 'nav.create',
-    createdDate: 'nav.createdDate',
     crypto: 'nav.crypto',
     customers: 'nav.customers',
     dashboard: 'nav.dashboard',
