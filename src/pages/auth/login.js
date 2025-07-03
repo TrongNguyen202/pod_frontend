@@ -113,10 +113,10 @@ const Page = () => {
 
   return (
     <>
-      <Seo title="Login" />
+      <Seo title={t(tokens.nav.login)} />
       <div>
         <Card elevation={16}>
-          <CardHeader sx={{ pb: 0, fontSize: 26 }} title="Log in" className="!text-3xl" />
+          <CardHeader sx={{ pb: 0, fontSize: 26 }} title={t(tokens.nav.login)} className="!text-3xl" />
           <CardContent className="relative">
             <form noValidate onSubmit={formik.handleSubmit}>
               <Stack spacing={3}>
@@ -156,7 +156,7 @@ const Page = () => {
                 type="submit"
                 variant="contained"
               >
-                Log In
+                {t(tokens.nav.login)}
               </Button>
             </form>
           </CardContent>
