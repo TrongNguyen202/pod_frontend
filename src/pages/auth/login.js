@@ -1,3 +1,5 @@
+'use client';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import Button from '@mui/material/Button';
