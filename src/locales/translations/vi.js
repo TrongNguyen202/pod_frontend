@@ -36,6 +36,7 @@ export const vi = {
   [tokens.nav.concepts]: 'Khái niệm',
   [tokens.nav.contact]: 'Liên hệ',
   [tokens.nav.create]: 'Tạo mới',
+  [tokens.nav.createdDate]: 'Ngày tạo',
   [tokens.nav.createNewIdea]: 'Tạo đơn hàng',
   [tokens.nav.creator]: 'Người tạo',
   [tokens.nav.crawlProduct]: 'Quét sản phẩm',
