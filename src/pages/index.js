@@ -2,7 +2,6 @@ import { Box, Container, Grid, Stack, Typography } from '@mui/material';
 import { usePageView } from 'src/hooks/use-page-view';
 import { useSettings } from 'src/hooks/use-settings';
 import { Layout as DashboardLayout } from 'src/layouts/dashboard';
-import { OverviewPage } from '../sections/overview';
 import { RoleGuard } from '../guards/role-guard';
 import { pagePermissions } from '../layouts/dashboard/config';
 import { Seo } from '../components/seo';
@@ -35,7 +34,6 @@ const Page = () => {
               </Stack>
             </Grid>
             <Grid item xs={12}>
-              <OverviewPage />
             </Grid>
           </Grid>
         </Container>
