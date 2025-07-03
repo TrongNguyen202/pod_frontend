@@ -93,10 +93,10 @@ export default function ActivateUserDialog({ open, onClose, onSuccess }) {
   //   return userNameRegex.test(userName)
   // }
 
-  const validatePassword = (password) => {
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    return passwordRegex.test(password);
-  };
+  // const validatePassword = (password) => {
+  //   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  //   return passwordRegex.test(password);
+  // };
 
   const validatePhone = (phone) => {
     if (!phone) return true; // Phone is optional
@@ -147,11 +147,11 @@ export default function ActivateUserDialog({ open, onClose, onSuccess }) {
     // }
 
     // Password validation
-    if (!formData.password.trim()) {
-      newErrors.password = 'Mật khẩu là bắt buộc';
-    } else if (!validatePassword(formData.password)) {
-      newErrors.password = 'Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt';
-    }
+    // if (!formData.password.trim()) {
+    //   newErrors.password = 'Mật khẩu là bắt buộc';
+    // } else if (!validatePassword(formData.password)) {
+    //   newErrors.password = 'Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt';
+    // }
 
     // Phone validation (optional)
     if (formData.phone && !validatePhone(formData.phone)) {
@@ -188,7 +188,8 @@ export default function ActivateUserDialog({ open, onClose, onSuccess }) {
         const userData = {
           email: formData.email,
           userName: formData.userName,
-          password: formData.password,
+          // password: formData.password,
+          password: 'Sun@123',
           phone: formData.phone || null,
           status: formData.status,
           link_telegram: formData.link_telegram || null,
@@ -314,7 +315,7 @@ export default function ActivateUserDialog({ open, onClose, onSuccess }) {
             </Grid>
 
             {/* Password */}
-            <Grid item xs={12} md={6}>
+            {/* <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 label="Mật khẩu *"
@@ -338,7 +339,7 @@ export default function ActivateUserDialog({ open, onClose, onSuccess }) {
                   ),
                 }}
               />
-            </Grid>
+            </Grid> */}
 
             {/* Phone */}
             <Grid item xs={12} md={6}>
