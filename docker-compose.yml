@@ -2,8 +2,8 @@ version: '3.9'
 
 services:
   frontend:
-    container_name: sun-fe
-    image: sun-fe  
+    container_name: frontend-app
+    image: frontend-app  
     build:
       context: .
       dockerfile: Dockerfile
