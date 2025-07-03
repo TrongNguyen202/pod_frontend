@@ -20,17 +20,18 @@ jobs:
       - name: Copy frontend files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: 14.225.255.106
+          host: ${{ secrets.VPS_HOST }}
           username: root
           port: 22
           password: ${{ secrets.VPS_PASSWORD }}
-          source: "."  # gửi toàn bộ project
-          target: "/root/frontend"  # thư mục chứa FE trên VPS
+          source: "."  # Toàn bộ project
+          target: "/root/frontend"  # Thư mục FE trên VPS
+          overwrite: true
 
-      - name: Run frontend deployment on VPS
+      - name: Deploy frontend via SSH
         uses: appleboy/ssh-action@v0.1.7
         with:
-          host: 14.225.255.106
+          host: ${{ secrets.VPS_HOST }}
           username: root
           port: 22
           password: ${{ secrets.VPS_PASSWORD }}
@@ -38,15 +39,11 @@ jobs:
             set -e
             cd /root/frontend
 
-            echo "Stopping old frontend container..."
-            docker stop frontend-app || true
-            docker rm frontend-app || true
+            echo "Stopping existing frontend container..."
+            docker compose down || true
 
-            echo "Pruning unused Docker resources..."
-            docker system prune -f
+            echo "Pruning Docker..."
+            docker system prune -af || true
 
-            echo "Building new Docker image..."
-            docker build -t frontend-app .
-
-            echo "Starting frontend container..."
-            docker run -d --name frontend-app -p 3000:3000 frontend-app
+            echo "Starting new frontend container..."
+            docker compose up -d --build
