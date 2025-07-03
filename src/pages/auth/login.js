@@ -50,53 +50,89 @@ const Page = () => {
     validationSchema,
     onSubmit: async (values, helpers) => {
       try {
+        console.log('🚀 Starting login process...', values);
+
+        // Debug user agent
         const userAgent = navigator.userAgent;
-        const deviceId = crypto.randomUUID();
-        const ipRes = await fetch('https://api64.ipify.org?format=json');
-        const { ip } = await ipRes.json();
-        const res = await RepositoryRemote.auth.requestLogin({
+        console.log('📱 User Agent:', userAgent);
+
+        // Debug device ID generation
+        let deviceId;
+        try {
+          deviceId = crypto.randomUUID();
+          console.log('🔑 Device ID generated:', deviceId);
+        } catch (error) {
+          console.error('❌ Crypto API error:', error);
+          deviceId = 'fallback-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+          console.log('🔄 Fallback Device ID:', deviceId);
+        }
+
+        // Debug IP detection
+        let ip;
+        try {
+          console.log('🌐 Fetching IP address...');
+          const ipRes = await fetch('https://api64.ipify.org?format=json');
+          if (!ipRes.ok) {
+            throw new Error(`HTTP error! status: ${ipRes.status}`);
+          }
+          const ipData = await ipRes.json();
+          ip = ipData.ip;
+          console.log('📍 IP Address:', ip);
+        } catch (error) {
+          console.error('❌ IP detection error:', error);
+          ip = 'unknown';
+        }
+
+        // Debug login request
+        const loginData = {
           email: values.email,
           password: values.password,
           ipAddress: ip,
           userAgent,
           deviceId,
-        });
-        if (res?.data?.accessToken && res?.data?.refreshToken) {
-          const decodedToken = jwtDecode(res?.data?.accessToken);
+        };
+        console.log('📤 Login request data:', loginData);
 
+        console.log('🔄 Sending login request...');
+        const res = await RepositoryRemote.auth.requestLogin(loginData);
+        console.log('📥 Login response:', res);
+
+        if (res?.data?.accessToken && res?.data?.refreshToken) {
+          console.log('✅ Login successful, processing tokens...');
+
+          const decodedToken = jwtDecode(res?.data?.accessToken);
+          console.log('🔓 Decoded token:', decodedToken);
+
+          // Store tokens
           localStorage.setItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN, res.data.accessToken);
           localStorage.setItem(LOCAL_STORAGE_KEY.REFRESH_TOKEN, res.data.refreshToken);
-
           localStorage.setItem(LOCAL_STORAGE_KEY.USER_IP, decodedToken.ipAddress);
           localStorage.setItem(LOCAL_STORAGE_KEY.DEVICE_ID, decodedToken.deviceId);
           localStorage.setItem(LOCAL_STORAGE_KEY.USER_EMAIL, decodedToken.sub);
-
-          // // Sau 3 giây thì xóa các thông tin decoded tạm
-          // setTimeout(() => {
-          //   localStorage.removeItem(LOCAL_STORAGE_KEY.USER_IP);
-          //   localStorage.removeItem(LOCAL_STORAGE_KEY.DEVICE_ID);
-          //   localStorage.removeItem(LOCAL_STORAGE_KEY.USER_EMAIL);
-          // }, 3000);
 
           dispatch(setInitialized(true));
           dispatch(setAuthenticate({ isAuthenticated: true }));
           toast.success('Đăng nhập thành công!');
 
-          if (decodedToken.role === 'admin') {
-            router.push(returnTo || '/admin/dashboard');
-          } else {
-            router.push(returnTo || '/ideas');
-          }
+          const redirectPath = decodedToken.role === 'admin' ? returnTo || '/admin/dashboard' : returnTo || '/ideas';
+
+          console.log('🏃 Redirecting to:', redirectPath);
+          router.push(redirectPath);
         } else {
+          console.error('❌ Invalid response structure:', res);
           if (isMounted()) {
             toast.error('Tên đăng nhập hoặc mật khẩu không đúng!');
           }
           helpers.setErrors({ submit: 'Tên đăng nhập hoặc mật khẩu không đúng!' });
         }
       } catch (err) {
+        console.error('💥 Login error:', err);
+        console.error('Error stack:', err.stack);
+
         if (isMounted()) {
           toast.error('Tên đăng nhập hoặc mật khẩu không đúng!');
         }
+        helpers.setErrors({ submit: 'Có lỗi xảy ra trong quá trình đăng nhập!' });
       }
     },
   });
