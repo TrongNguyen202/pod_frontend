@@ -9,9 +9,7 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - .env
+      - .env  # Load tất cả biến từ file .env
     restart: unless-stopped
     volumes:
       - .:/app
-    environment:
-      - NODE_ENV=production
