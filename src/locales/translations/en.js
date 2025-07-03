@@ -36,6 +36,7 @@ export const en = {
   [tokens.nav.concepts]: 'Concepts',
   [tokens.nav.contact]: 'Contact',
   [tokens.nav.create]: 'Create',
+  [tokens.nav.createdDate]: 'Created Date',
   [tokens.nav.createNewIdea]: 'Create new idea',
   [tokens.nav.creator]: 'Creator',
   [tokens.nav.crawlProduct]: 'Crawl Product',
