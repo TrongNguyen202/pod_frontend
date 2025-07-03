@@ -2,12 +2,10 @@ import axios from 'axios';
 
 export const uploadImagesConcurrently = async (imageFiles) => {
   try {
-    console.log(imageFiles, "12312312")
     const uploadPromises = imageFiles.map(async (file) => {
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
       uploadFormData.append('source', 'tts_product');
-      
       const response = await axios.post(
         'https://upload-service-staging-api.ecomdy.com/api/upload/image',
         uploadFormData,

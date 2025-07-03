@@ -24,7 +24,6 @@ export default function AdminLayout({ children }) {
       toast.success('Đăng xuất thành công!');
       router.push('/auth/login');
     } catch (error) {
-      console.error('Logout failed:', error);
       toast.error('Đăng xuất thất bại!');
     }
   };

@@ -28,11 +28,9 @@ export default function UserProfile() {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const dispatch = useAppDispatch();
   const { data: userData } = useAppSelector((state) => state.users.userInfo);
-  console.log('check data userData', userData);
 
   const handleUpdateProfile = async (updatedData) => {
     try {
-      console.log(updatedData);
       const profileUpdateData = {
         email: updatedData.email,
         username: updatedData.username,

@@ -78,7 +78,6 @@ const AdminUser = () => {
   const [pageSize, setPageSize] = useState(10);
 
   const { loading, data: userData } = useSelector((state) => state.users.userInfo);
-  console.log("check user lít", usersList);
   // Load users when component mounts or when filters change
   useEffect(() => {
     loadUsers();
@@ -132,7 +131,6 @@ const AdminUser = () => {
   };
 
   const handlePageSizeChange = (event) => {
-    console.log(event.target.value);
     setPageSize(event.target.value);
     setCurrentPage(1);
   };
@@ -160,7 +158,6 @@ const AdminUser = () => {
       status: -selectedStatus,
     };
     const response = await dispatch(fetchUpdateUserStatus(data));
-    console.log(response);
     if (response.error) {
       toast.error('Error updating user status:', response.error);
     } else {

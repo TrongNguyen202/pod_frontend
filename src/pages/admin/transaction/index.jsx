@@ -409,7 +409,6 @@ const Page = () => {
         transactionCode,
       };
       const response = await dispatch(fetchUpdateStatusTransaction(data));
-      console.log(response);
       if (response.meta.requestStatus === 'fulfilled') {
         fetchData();
         toast.success('Xác thực thành công.');

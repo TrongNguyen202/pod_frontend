@@ -47,14 +47,14 @@ const useOrderHandlers = ({
           toast.error('Vui lòng điền đầy đủ thông tin');
           return;
         }
-        if (boardId === 0) {
+        if (!boardId) {
           toast.error('Bảng không phù hợp, vui lòng chọn lại!');
           return;
         }
 
         const imageFiles = formData.getAll('images[]');
         const imageUrls = await uploadImagesConcurrently(imageFiles);
-        console.log(imageUrls);
+
         if (imageUrls.length === 0) {
           toast.error('Không có ảnh nào được upload!');
           return;
@@ -98,7 +98,7 @@ const useOrderHandlers = ({
             );
           }
 
-          toast.success('Order created successfully!');
+          toast.success('Tạo order thành công!');
         } else {
           toast.error('Tạo order thất bại!');
         }
@@ -179,7 +179,7 @@ const useOrderHandlers = ({
         }
 
         await fetchAllStatuses();
-        toast.success('Change status successfully!');
+        toast.success('Chuyển trạng thái thành công!');
       } else {
         toast.error(message || 'Lỗi khi chuyển trạng thái đơn hàng');
       }

@@ -80,12 +80,10 @@ const Page = () => {
 
   const { data: userData } = useAppSelector((state) => state.users.userInfo);
   const { data: transactionsData, loading } = useAppSelector((state) => state.usertopups.userTransactionInfo);
-  console.log(transactionsData);
 
   const userTopupsInfo = transactionsData?.transactions || [];
   const totalRecords = transactionsData?.total || 0;
   const totalPages = transactionsData?.totalPages || 0;
-  console.log(userTopupsInfo);
 
   // Handle hydration
   useEffect(() => {

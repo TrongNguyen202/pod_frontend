@@ -16,7 +16,6 @@ export const fetchGetCkfVariant = createAsyncThunk(
   "/Ckf/POD-variant/",
   async () => {
     const res = await RepositoryRemote.flashShip.requestGetCkfVariant();
-    console.log("resssssssss", res)
     return res?.data;
     }
 )

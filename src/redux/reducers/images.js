@@ -11,10 +11,17 @@ const initialState = {
   },
 };
 
-export const requestUploadImages = createAsyncThunk('/images/upload', async ({ data }) => {
-  const res = await RepositoryRemote.images.requestPostImages(data);
-  return res?.data?.data;
-});
+export const requestUploadImages = createAsyncThunk(
+  '/images/upload',
+  async ({ data }, { rejectWithValue }) => {
+    try {
+      const res = await RepositoryRemote.images.requestPostImages(data);
+      return res?.data?.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
 
 const slicer = createSlice({
   name: 'images',

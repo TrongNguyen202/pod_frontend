@@ -13,7 +13,6 @@ const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
 const getBase64 = (file) =>
   new Promise((resolve, reject) => {
-    console.log("file hehe ssssssssssssssssss", file)
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => resolve(reader.result);
@@ -58,7 +57,6 @@ export default function ModalProductDetail({ product, setIsOpenModal, isOpenModa
   }, []);
 
   const handlePreview = async (file) => {
-    console.log('file: ', file);
     if (!file.url && !file.preview) file.preview = await getBase64(file.originFileObj);
     setPreviewImage(file.thumbUrl || file.url || file.preview);
     setPreviewOpen(true);
@@ -155,8 +153,6 @@ export default function ModalProductDetail({ product, setIsOpenModal, isOpenModa
   };
 
   const ShowImageFileList = (data) => {
-    console.log("hello", data);
-  
     return data.map((item) => {
       // Trường hợp URL là đường dẫn chứa 'white_' (dạng link ảnh)
       if (item?.url?.includes('white_')) {

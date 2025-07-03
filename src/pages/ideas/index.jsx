@@ -57,6 +57,15 @@ const Page = () => {
   const [role, setRole] = useState('');
   const [openDrawerFilter, setOpenDrawerFilter] = useState(false);
   const [openConfirmAssign, setOpenConfirmAssign] = useState(false);
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedBoardId = localStorage.getItem('b');
+      if (storedBoardId && storedBoardId !== 'null') {
+        setBoardId(Number(storedBoardId));
+      }
+    }
+  }, []);
 
   const {
     page,
@@ -426,7 +435,7 @@ const Page = () => {
             alignItems: 'center',
             minHeight: '80vh', // hoặc 100vh nếu bạn muốn chiếm full viewport
             textAlign: 'center',
-            px: 2, 
+            px: 2,
             color: 'text.secondary',
           }}
         >

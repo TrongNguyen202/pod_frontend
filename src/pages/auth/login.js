@@ -64,16 +64,22 @@ const Page = () => {
 
           localStorage.setItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN, res.data.accessToken);
           localStorage.setItem(LOCAL_STORAGE_KEY.REFRESH_TOKEN, res.data.refreshToken);
+
           localStorage.setItem(LOCAL_STORAGE_KEY.USER_IP, decodedToken.ipAddress);
           localStorage.setItem(LOCAL_STORAGE_KEY.DEVICE_ID, decodedToken.deviceId);
           localStorage.setItem(LOCAL_STORAGE_KEY.USER_EMAIL, decodedToken.sub);
 
+          // Sau 3 giây thì xóa các thông tin decoded tạm
+          setTimeout(() => {
+            localStorage.removeItem(LOCAL_STORAGE_KEY.USER_IP);
+            localStorage.removeItem(LOCAL_STORAGE_KEY.DEVICE_ID);
+            localStorage.removeItem(LOCAL_STORAGE_KEY.USER_EMAIL);
+          }, 3000);
+
           dispatch(setInitialized(true));
-
-          // const profileRes = await dispatch(fetchUserInfo()).unwrap();
           dispatch(setAuthenticate({ isAuthenticated: true }));
-
           toast.success('Đăng nhập thành công!');
+
           if (decodedToken.role === 'admin') {
             router.push(returnTo || '/admin/dashboard');
           } else {

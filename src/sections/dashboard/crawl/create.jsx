@@ -128,10 +128,7 @@ export const PageCrawlProduct = () => {
   };
 
   const onChangeOptionCrawl = (key, value) => {
-    console.log({
-      ...optionCrawl,
-      [key]: value,
-    });
+
     setOptionCrawl({
       ...optionCrawl,
       [key]: value,
@@ -244,7 +241,6 @@ export const PageCrawlProduct = () => {
     // gọi đồng thời các request lấy dữ liệu sản phẩm
     const responses = await Promise.allSettled(urls.map((url) => fetchProductList(url)));
     // concat các sản phẩm vào chung 1 mảng
-    console.log("data cao", responses)
     const productData = responses
       .filter((response) => response.status === 'fulfilled' && response.value.data)
       .reduce((acc, response) => {
@@ -269,7 +265,6 @@ export const PageCrawlProduct = () => {
     });
     // lấy danh sách id của sản phẩm để get thông tin sản phẩm
     const ids = productData.map((item) => item.id.split('.')[0]).join(',');
-    console.log("product data", productData)
     setProductList(productData);
     localStorage.setItem('productCrawlList', JSON.stringify(productData));
     setCheckedItems([]);

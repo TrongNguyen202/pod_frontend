@@ -19,12 +19,10 @@ export const listenToOrderComments = (orderId, onNewComment) => {
 export const requestPermissionAndListen = async (userId, dispatch) => {
   try {
     if (sessionStorage.getItem('fcmTokenRegistered') === 'true') {
-      console.log('FCM đã được đăng ký trong phiên này.');
       return;
     }
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
-      console.warn('User từ chối cấp quyền thông báo.');
       return;
     }
     // await deleteToken(messaging);

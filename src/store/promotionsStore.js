@@ -97,7 +97,6 @@ export const usePromotionsStore = create((set, get) => ({
       set({ loading: true });
       const response = await RepositoryRemote.promotions.requestPromotionDetail(shopId, promotionId);
 
-      console.log('response.data***', response.data);
       onSuccess(response.data);
     } catch (error) {
       onFail(error?.response?.data?.message || 'Có lỗi xảy ra lấy dữ liệu promotion!');

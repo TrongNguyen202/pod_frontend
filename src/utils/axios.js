@@ -1,23 +1,45 @@
 import axios from 'axios';
-import { ENVIRONMENT_URL, LOCAL_STORAGE_KEY } from 'src/constants';
+import { jwtDecode } from 'jwt-decode';
+import { LOCAL_STORAGE_KEY } from 'src/constants';
 
-const axiosAPI = axios.create({ baseURL: 'http://localhost:8080/api/v1' });
+// Sử dụng proxy routes thay vì direct URLs
+const axiosAPI = axios.create({
+  baseURL: '/api/proxy/com', // Sẽ proxy đến BASE_URL
+});
 
 const axiosAPIFlashShip = axios.create({
-  baseURL: ENVIRONMENT_URL.API_FLASH_SHIP,
+  baseURL: '/api/proxy/com', // Sẽ proxy đến API_FLASH_SHIP
 });
 
 const axiosAPIPrintCare = axios.create({
-  baseURL: ENVIRONMENT_URL.API_PRINT_CARE,
+  baseURL: '/api/proxy/com', // Sẽ proxy đến API_PRINT_CARE
 });
 
 const getCommonHeaders = () => {
   const headers = {};
-  const deviceId = localStorage.getItem('deviceId') || 'unknown';
-  const userIp = localStorage.getItem('ipAdrress') || '';
 
-  headers['X-Device-Id'] = deviceId;
-  if (userIp) headers['X-Forwarded-For'] = userIp;
+  if (typeof window !== 'undefined') {
+    // Thử lấy từ localStorage trước
+    let deviceId = localStorage.getItem(LOCAL_STORAGE_KEY.DEVICE_ID);
+    let userIp = localStorage.getItem(LOCAL_STORAGE_KEY.USER_IP);
+
+    // Nếu không có trong localStorage decode từ token
+    if (!deviceId || !userIp) {
+      const token = localStorage.getItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN);
+      if (token) {
+        try {
+          const decodedToken = jwtDecode(token);
+          deviceId = decodedToken.deviceId;
+          userIp = decodedToken.ipAddress;
+        } catch (error) {
+          console.error('Error decoding token in getCommonHeaders:', error);
+        }
+      }
+    }
+
+    if (deviceId) headers['X-Device-Id'] = deviceId;
+    if (userIp) headers['X-Forwarded-For'] = userIp;
+  }
 
   return headers;
 };
@@ -25,9 +47,7 @@ const getCommonHeaders = () => {
 const refreshTokenApi = async (config) => {
   const accessToken = localStorage.getItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN) || '';
 
-  // Luôn tồn tại
   if (!config.headers) config.headers = {};
-
   config.headers.Authorization = `Bearer ${accessToken}`;
 
   const commonHeaders = getCommonHeaders();
@@ -42,8 +62,9 @@ const refreshToken = async () => {
   const refreshToken = localStorage.getItem(LOCAL_STORAGE_KEY.REFRESH_TOKEN);
   if (!refreshToken) throw new Error('Không tìm thấy refresh token');
 
+  // Sử dụng proxy route cho refresh token
   const response = await axios.post(
-    'http://localhost:8080/api/v1/auth/refresh',
+    '/api/proxy/com/auth/refresh',
     { refreshToken },
     { headers: { ...getCommonHeaders(), 'Content-Type': 'application/json' } },
   );
@@ -51,7 +72,6 @@ const refreshToken = async () => {
   const newAccessToken = response.data?.accessToken;
   const newRefreshToken = response.data?.refreshToken;
 
-  // Cập nhật token mới
   localStorage.setItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN, newAccessToken);
   localStorage.setItem(LOCAL_STORAGE_KEY.REFRESH_TOKEN, newRefreshToken);
 
@@ -84,6 +104,7 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
+// Interceptors giữ nguyên logic
 axiosAPI.interceptors.request.use(refreshTokenApi, (error) => Promise.reject(error));
 
 axiosAPI.interceptors.response.use(
@@ -124,6 +145,7 @@ axiosAPI.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
 axiosAPIFlashShip.interceptors.request.use(refreshTokenApiFlashShip, (error) => Promise.reject(error));
 axiosAPIPrintCare.interceptors.request.use(refreshTokenApiPrintCare, (error) => Promise.reject(error));
 

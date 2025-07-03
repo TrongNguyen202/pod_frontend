@@ -224,13 +224,11 @@ export const buildNestedArrays = (items, parentId) => {
 };
 
 export const buildNestedArraysMenu = (items) => {
-  console.log('item', items);
   const itemsByParentId = items.reduce((acc, item) => {
     if (!acc[item.parent_id]) {
       acc[item.parent_id] = [];
     }
     acc[item.parent_id].push(item);
-    // console.log("acc", acc)
     return acc;
   }, {});
 
@@ -241,7 +239,6 @@ export const buildNestedArraysMenu = (items) => {
     }
     return children.map((item) => {
       const grandChildren = buildTree(item.id);
-      // console.log("grand childent", grandChildren)
       return grandChildren
         ? {
             label: item.local_name,

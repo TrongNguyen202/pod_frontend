@@ -107,7 +107,6 @@ export default function AdminDashboard() {
 
   // Get data from Redux store
   const { data: statisticsOrderData, loading, error } = useAppSelector((state) => state.statistics.order);
-  console.log("check data usser: ", statisticsOrderData);
 
   // Xử lý thay đổi datetime cho temp states
   const handleTempDateTimeChange = (type, value) => {

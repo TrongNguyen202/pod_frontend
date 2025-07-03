@@ -104,10 +104,10 @@ const Page = () => {
       const res = await dispatch(fetchPostBoard({ data: formData }));
       if (res.payload.status === 200) {
         await dispatch(fetchGetBoardsByUserId({ query: `` }));
-        toast.success('Created Board Successfully!');
+        toast.success('Tạo bảng thành công!');
       }
     } catch (err) {
-      toast.error('Create board fail:', err);
+      toast.error('Tạo bảng thất bại! ', err);
     }
   };
   const optionProductType = productTypeData.map((pt) => ({
@@ -139,13 +139,13 @@ const Page = () => {
 
       const res = await dispatch(putBoardInfoByBoardId({ boardId, data: payload }));
       if (res.payload?.status === 200) {
-        toast.success('Board updated successfully');
+        toast.success('Cập nhật thành công');
         await dispatch(fetchGetBoardsByUserId({ query: `` }));
       } else {
-        toast.error('Update failed');
+        toast.error('Cập nhật thất bại!');
       }
     } catch (error) {
-      toast.error('Error updating board');
+      toast.error('Lỗi khi cập nhật bảng vui lòng thử lại!');
     }
   };
 
@@ -153,14 +153,14 @@ const Page = () => {
     try {
       const res = await dispatch(fetchDeleteBoardByIds({ data: boardIds }));
       if (res.payload?.status === 200) {
-        toast.success('Deleted successfully!');
+        toast.success('Xóa bảng thành công!');
         setSelected([]);
         dispatch(fetchGetBoardsByUserId({ query: `` }));
       } else {
         toast.error('Không thể xóa board đang có đơn hàng chưa hoàn tất hoặc đang xử lý');
       }
     } catch (err) {
-      toast.error('Delete fail!');
+      toast.error('Xóa bảng thất bại!');
     } finally {
       setOpenDialogDelete(false);
     }

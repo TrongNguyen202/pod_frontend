@@ -1,32 +1,32 @@
-import React, { useMemo, useState, useEffect, useRef, Profiler, forwardRef, useImperativeHandle } from 'react';
-import { useRouter } from 'src/hooks/use-router';
-import { useTranslation } from 'react-i18next';
-import { useAppDispatch } from 'src/redux/hook';
-import { AppBar, Toolbar, Typography, FormControl, Select, MenuItem, Button, Box, Drawer, Dialog } from '@mui/material';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { AppBar, Box, Button, Dialog, Drawer, FormControl, MenuItem, Select, Toolbar, Typography } from '@mui/material';
 import Card from '@mui/material/Card';
 import Link from 'next/link';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
-import { tokens } from 'src/locales/tokens';
-import { RepositoryRemote } from 'src/services';
-import FormDialog from 'src/components/popup';
 import DropdownMenu from 'src/components/dropdown';
-import ClickDropdownMenu from './dropdown_click';
-import TableModalDialog from './table-modal';
-import { putBoardInfoByBoardId } from 'src/redux/reducers/boards';
-import { postTemplate } from 'src/redux/reducers/templates';
-import { getFields } from 'src/utils/fields-edit.board';
-import generateTransactionCode from 'src/utils/generate';
-import handleAmountFormat from 'src/utils/amount-vnd';
-import { fetchCreateQr, fetchGetInfoPayment } from 'src/redux/reducers/qrtransaction';
-import { useProductTypes } from 'src/hooks/Header/useProductTypes';
+import FormDialog from 'src/components/popup';
 import { useBoardInfo } from 'src/hooks/Header/useBoardInfo';
 import { useBoardsData } from 'src/hooks/Header/useBoardsData';
+import { useProductTypes } from 'src/hooks/Header/useProductTypes';
 import { useUserData } from 'src/hooks/Header/useUserData';
-import ChangePasswordDialog from './header/components/ChangePasswordDialog';
-import { useDialogHandlers } from './header/handlers/useDialogHandlers';
+import { useRouter } from 'src/hooks/use-router';
+import { tokens } from 'src/locales/tokens';
+import { useAppDispatch } from 'src/redux/hook';
+import { putBoardInfoByBoardId } from 'src/redux/reducers/boards';
+import { fetchCreateQr, fetchGetInfoPayment } from 'src/redux/reducers/qrtransaction';
+import { postTemplate } from 'src/redux/reducers/templates';
 import { updateBankInfo } from 'src/redux/reducers/user';
 import { fetchCreateWithdraw } from 'src/redux/reducers/usertopups';
+import { RepositoryRemote } from 'src/services';
+import handleAmountFormat from 'src/utils/amount-vnd';
+import { getFields } from 'src/utils/fields-edit.board';
+import generateTransactionCode from 'src/utils/generate';
+import ClickDropdownMenu from './dropdown_click';
+import ChangePasswordDialog from './header/components/ChangePasswordDialog';
+import { useDialogHandlers } from './header/handlers/useDialogHandlers';
+import TableModalDialog from './table-modal';
 
 const Header = ({ onBoardChange, showBoards, role, onMenuSelect }, ref) => {
   const { t } = useTranslation();
@@ -205,7 +205,6 @@ const Header = ({ onBoardChange, showBoards, role, onMenuSelect }, ref) => {
           toast.success('Đăng xuất thành công!');
           router.push('/auth/login');
         } catch (error) {
-          console.error('Logout failed:', error);
           toast.error('Đăng xuất thất bại!');
         }
         break;
@@ -261,12 +260,8 @@ const Header = ({ onBoardChange, showBoards, role, onMenuSelect }, ref) => {
         bankNumber,
         bankAccountName,
       };
-      console.log(data);
-
       // Call API để update bank info
       const response = await dispatch(updateBankInfo(data));
-      console.log(response);
-
       if (response.meta.requestStatus === 'fulfilled') {
         const withdrawData = {
           coin: amountWithdraw,
@@ -276,7 +271,6 @@ const Header = ({ onBoardChange, showBoards, role, onMenuSelect }, ref) => {
         };
 
         const withdrawResponse = await dispatch(fetchCreateWithdraw(withdrawData));
-        console.log(withdrawResponse);
 
         if (withdrawResponse.meta.requestStatus === 'fulfilled') {
           toast.success('Tạo yêu cầu rút tiền thành công!');
@@ -410,25 +404,20 @@ const Header = ({ onBoardChange, showBoards, role, onMenuSelect }, ref) => {
                   ))}
                 </Select>
               </FormControl>
-              <Profiler
-                id="FormDialog"
-                onRender={(id, phase, actualDuration) => console.log(`${id} ${phase} in ${actualDuration}ms`)}
-              >
-                <FormDialog
-                  buttonLabel={t(tokens.nav.quick_design)}
-                  title="Edit Board"
-                  fields={fields}
-                  onSubmit={handleSubmitBoardInfo}
-                  initialData={initialFormData}
-                  buttonProps={{
-                    component: 'span',
-                    variant: 'outlined',
-                    size: 'medium',
-                    disabled: !selectedBoardId,
-                    sx: { ml: 1, mr: 2, color: 'black', height: '40px' },
-                  }}
-                />
-              </Profiler>
+              <FormDialog
+                buttonLabel={t(tokens.nav.quick_design)}
+                title="Edit Board"
+                fields={fields}
+                onSubmit={handleSubmitBoardInfo}
+                initialData={initialFormData}
+                buttonProps={{
+                  component: 'span',
+                  variant: 'outlined',
+                  size: 'medium',
+                  disabled: !selectedBoardId,
+                  sx: { ml: 1, mr: 2, color: 'black', height: '40px' },
+                }}
+              />
               <Button
                 variant="outlined"
                 size="medium"
