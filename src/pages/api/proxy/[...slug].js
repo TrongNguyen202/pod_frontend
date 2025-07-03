@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const BACKEND_ENDPOINTS = {
-  com: process.env.BASE_URL,
+  com: process.env.NEXT_PUBLIC_BASE_URL,
   flashShip: process.env.NEXT_PUBLIC_API_FLASH_SHIP || 'your-flashship-url',
   printCare: process.env.NEXT_PUBLIC_API_PRINT_CARE || 'your-printcare-url',
 };

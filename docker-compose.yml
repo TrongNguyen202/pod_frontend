@@ -1,7 +1,7 @@
 version: '3.9'
 
 services:
-  frontend:
+  frontend-app:
     container_name: frontend-app
     image: frontend-app  
     build:
@@ -11,4 +11,4 @@ services:
       - "3000:3000"
     env_file:
       - .env
-  
+    
