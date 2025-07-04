@@ -2,39 +2,44 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { LOCAL_STORAGE_KEY } from 'src/constants';
 
-const axiosAPI = axios.create({ baseURL: 'http://14.225.255.106:8000/api/v1' });
+// Sử dụng proxy routes thay vì direct URLs
+const axiosAPI = axios.create({
+  baseURL: '/api/proxy/com', // Sẽ proxy đến BASE_URL
+});
 
 const axiosAPIFlashShip = axios.create({
-  baseURL: 'ENVIRONMENT_URL.API_FLASH_SHIP',
+  baseURL: '/api/proxy/com', // Sẽ proxy đến API_FLASH_SHIP
 });
 
 const axiosAPIPrintCare = axios.create({
-  baseURL: 'ENVIRONMENT_URL.API_PRINT_CARE',
+  baseURL: '/api/proxy/com', // Sẽ proxy đến API_PRINT_CARE
 });
 
 const getCommonHeaders = () => {
   const headers = {};
 
-  // if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined') {
+    // Thử lấy từ localStorage trước
     let deviceId = localStorage.getItem(LOCAL_STORAGE_KEY.DEVICE_ID);
     let userIp = localStorage.getItem(LOCAL_STORAGE_KEY.USER_IP);
 
-    // if (!deviceId || !userIp) {
-    //   const token = localStorage.getItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN);
-    //   if (token) {
-    //     try {
-    //       const decodedToken = jwtDecode(token);
-    //       deviceId = decodedToken.deviceId;
-    //       userIp = decodedToken.ipAddress;
-    //     } catch (error) {
-    //       console.error('Error decoding token in getCommonHeaders:', error);
-    //     }
-    //   }
-    // }
+    // Nếu không có trong localStorage decode từ token
+    if (!deviceId || !userIp) {
+      const token = localStorage.getItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN);
+      if (token) {
+        try {
+          const decodedToken = jwtDecode(token);
+          deviceId = decodedToken.deviceId;
+          userIp = decodedToken.ipAddress;
+        } catch (error) {
+          console.error('Error decoding token in getCommonHeaders:', error);
+        }
+      }
+    }
 
     if (deviceId) headers['X-Device-Id'] = deviceId;
     if (userIp) headers['X-Forwarded-For'] = userIp;
-  // }
+  }
 
   return headers;
 };
@@ -58,7 +63,7 @@ const refreshToken = async () => {
   if (!refreshToken) throw new Error('Không tìm thấy refresh token');
 
   const response = await axios.post(
-    'http://14.225.255.106:8000/api/v1/auth/refresh',
+    '/api/proxy/com/auth/refresh',
     { refreshToken },
     { headers: { ...getCommonHeaders(), 'Content-Type': 'application/json' } },
   );
