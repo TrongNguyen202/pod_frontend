@@ -83,7 +83,8 @@ export const en = {
   [tokens.nav.management]: 'Management',
   [tokens.nav.manageTemplates]: 'Manage Templates',
   [tokens.nav.manageUser]: 'Manage Users',
-  [tokens.nav.messageDeleteBoards]: 'Are you sure you want to delete the selected tables? The entire order table will be deleted.',
+  [tokens.nav.messageDeleteBoards]:
+    'Are you sure you want to delete the selected tables? The entire order table will be deleted.',
   [tokens.nav.message_delete]: 'Are you sure you want to delete the selected item?',
   [tokens.nav.monthly_balances]: 'Monthly Balances',
   [tokens.nav.more_filter]: 'More filter',
@@ -127,6 +128,7 @@ export const en = {
   [tokens.nav.sortDirection]: 'Sort direction',
   [tokens.nav.start]: 'Start',
   [tokens.nav.status]: 'Status',
+  [tokens.nav.changeStatus]: 'Change Status',
   [tokens.nav.submit]: 'Submit',
   [tokens.nav.submit_draft]: 'Save as draft',
   [tokens.nav.templates]: 'Templates',

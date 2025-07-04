@@ -126,6 +126,7 @@ export const vi = {
   [tokens.nav.sortDirection]: 'Kiểu sắp xếp',
   [tokens.nav.start]: 'Bắt đầu',
   [tokens.nav.status]: 'Trạng thái',
+  [tokens.nav.changeStatus]: 'Thay đổi trạng thái',
   [tokens.nav.submit]: 'Xác nhận',
   [tokens.nav.submit_draft]: 'Lưu bản nháp',
   [tokens.nav.templates]: 'Templates',
