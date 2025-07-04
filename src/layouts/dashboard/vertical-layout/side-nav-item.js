@@ -1,3 +1,5 @@
+'use client';
+
 import { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 import ChevronDownIcon from '@untitled-ui/icons-react/build/esm/ChevronDown';

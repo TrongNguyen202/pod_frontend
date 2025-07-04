@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import createCache from '@emotion/cache';

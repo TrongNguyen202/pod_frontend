@@ -2,7 +2,7 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { LOCAL_STORAGE_KEY } from 'src/constants';
 
-const axiosAPI = axios.create({ baseURL: 'http://14.225.255.106:8000/api/v1' });
+const axiosAPI = axios.create({ baseURL: 'http://localhost:8000/api/v1' });
 
 const axiosAPIFlashShip = axios.create({
   baseURL: 'ENVIRONMENT_URL.API_FLASH_SHIP',
@@ -58,7 +58,7 @@ const refreshToken = async () => {
   if (!refreshToken) throw new Error('Không tìm thấy refresh token');
 
   const response = await axios.post(
-    'http://14.225.255.106:8000/api/v1/auth/refresh',
+    'http://localhost:8000/api/v1/auth/refresh',
     { refreshToken },
     { headers: { ...getCommonHeaders(), 'Content-Type': 'application/json' } },
   );

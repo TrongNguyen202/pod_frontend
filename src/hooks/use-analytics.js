@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect } from 'react';
 import { gtm } from 'src/libs/gtm';
 

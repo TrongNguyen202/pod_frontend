@@ -63,7 +63,7 @@ const Page = () => {
           console.log('🔑 Device ID generated:', deviceId);
         } catch (error) {
           console.error('❌ Crypto API error:', error);
-          deviceId = 'fallback-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+          deviceId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
           console.log('🔄 Fallback Device ID:', deviceId);
         }
 

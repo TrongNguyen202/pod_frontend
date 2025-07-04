@@ -1,17 +1,13 @@
-import { useState } from 'react';
-import { NextAppProvider } from '@toolpad/core/nextjs';
-import { DashboardLayout } from '@toolpad/core/DashboardLayout';
-import { PageContainer } from '@toolpad/core/PageContainer';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import TimelineIcon from '@mui/icons-material/Timeline';
 import PeopleIcon from '@mui/icons-material/People';
-import SettingsIcon from '@mui/icons-material/Settings';
-import LogoutIcon from '@mui/icons-material/Logout';
+import TimelineIcon from '@mui/icons-material/Timeline';
+import { Box } from '@mui/system';
+import { DashboardLayout } from '@toolpad/core/DashboardLayout';
+import { NextAppProvider } from '@toolpad/core/nextjs';
+import { PageContainer } from '@toolpad/core/PageContainer';
+import { Button } from 'antd';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
-import Head from 'next/head';
-import { Button } from 'antd';
-import { Box } from '@mui/system';
 import { RepositoryRemote } from 'src/services';
 
 export default function AdminLayout({ children }) {

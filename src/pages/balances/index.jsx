@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Box,
   Button,
@@ -24,7 +26,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import Header from 'src/components/header';
-import { useDialogHandlers } from 'src/components/header/handlers/useDialogHandlers';
 import OrderPagination from 'src/components/ideas/order/OrderPagination';
 import { Seo } from 'src/components/seo';
 import Sidebar from 'src/components/sidebar';
@@ -218,7 +219,7 @@ const Page = () => {
   return (
     <>
       <Seo title="Balances" />
-      <Header showBoards={false} role={role} ref={headerRef}/>
+      <Header showBoards={false} role={role} ref={headerRef} />
       <Box sx={{ display: 'flex' }}>
         {role && <Sidebar open={sidebarOpen} toggleSidebar={toggleSidebar} role={role} />}
         <Box component="main" sx={{ flexGrow: 1, padding: 2 }}>
@@ -234,7 +235,13 @@ const Page = () => {
                 }
               }}
             >
-              {t(tokens.nav.make_deposit)}
+              {role === 'customer' ? (
+                <Box>{t(tokens.nav.make_deposit)}</Box>
+              ) : role === 'designer' ? (
+                <Box>{t(tokens.nav.make_withdraw)}</Box>
+              ) : (
+                <Box></Box>
+              )}
             </Button>
 
             {/* Balance Summary Cards */}

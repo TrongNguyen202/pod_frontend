@@ -1,3 +1,5 @@
+'use client';
+
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { AppBar, Box, Button, Dialog, Drawer, FormControl, MenuItem, Select, Toolbar, Typography } from '@mui/material';
 import Card from '@mui/material/Card';

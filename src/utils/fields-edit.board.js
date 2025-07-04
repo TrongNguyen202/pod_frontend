@@ -7,7 +7,7 @@ export const getFields = (productTypeData = []) => [
     label: 'Product Types',
     type: 'select',
     multiple: true,
-    options: productTypeData.map((pt) => ({ label: pt.name, value: pt.id })),
+    options: productTypeData?.map((pt) => ({ label: pt.name, value: pt.id })),
   },
   {
     name: 'designType',
@@ -52,7 +52,7 @@ export const getFieldsIdeas = (productTypeData = [], templatesData = []) => [
     width: '25%',
     location: 'right',
     multiple: false,
-    options: productTypeData.map((pt) => ({ label: pt.name, value: pt.id })),
+    options: productTypeData?.map((pt) => ({ label: pt.name, value: pt.id })),
   },
   {
     name: 'quantity',

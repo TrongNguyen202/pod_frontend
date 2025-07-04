@@ -1,3 +1,5 @@
+'use client';
+
 import { useCallback, useMemo, useState } from 'react';
 import Bell01Icon from '@untitled-ui/icons-react/build/esm/Bell01';
 import Badge from '@mui/material/Badge';

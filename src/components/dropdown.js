@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useRef } from 'react';
 import { Button, Menu, MenuItem } from '@mui/material';
 

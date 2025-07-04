@@ -54,7 +54,7 @@ const Sidebar = ({ open, toggleSidebar, role }) => {
             minHeight: 48,
             px: 2,
           }}
-          button
+          // button
         >
           <ListItemIcon
             sx={{
@@ -92,7 +92,7 @@ const Sidebar = ({ open, toggleSidebar, role }) => {
               minHeight: 48,
               px: 2,
             }}
-            button
+            // button
           >
             <ListItemIcon
               sx={{
@@ -129,7 +129,7 @@ const Sidebar = ({ open, toggleSidebar, role }) => {
             minHeight: 48,
             px: 2,
           }}
-          button
+          // button
         >
           <ListItemIcon
             sx={{

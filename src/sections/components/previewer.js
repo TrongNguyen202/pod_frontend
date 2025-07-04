@@ -1,3 +1,5 @@
+'use client';
+
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import Moon01Icon from '@untitled-ui/icons-react/build/esm/Moon01';

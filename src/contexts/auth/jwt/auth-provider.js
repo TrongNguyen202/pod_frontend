@@ -1,3 +1,5 @@
+'use client';
+
 import { useCallback, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { LOCAL_STORAGE_KEY } from 'src/constants';

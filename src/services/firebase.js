@@ -1,3 +1,5 @@
+'use client';
+
 import { app, messaging, getToken, onMessage } from 'src/utils/firebase';
 import { getDatabase, ref, onChildAdded, off } from 'firebase/database';
 import { fetchPostFcmToken } from 'src/redux/reducers/fcmtoken';

@@ -1,3 +1,5 @@
+'use client';
+
 import {
   AttachMoney as AttachMoneyIcon,
   CalendarToday as CalendarTodayIcon,

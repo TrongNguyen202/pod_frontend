@@ -1,3 +1,5 @@
+'use client';
+
 import { useCallback } from 'react';
 import PropTypes from 'prop-types';
 import RefreshCcw01Icon from '@untitled-ui/icons-react/build/esm/RefreshCcw01';
