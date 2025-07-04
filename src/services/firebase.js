@@ -1,6 +1,7 @@
 'use client';
 
-import { app, messaging, getToken, onMessage } from 'src/utils/firebase';
+import { app, messaging } from 'src/utils/firebase';
+import { getToken, onMessage } from 'firebase/messaging';
 import { getDatabase, ref, onChildAdded, off } from 'firebase/database';
 import { fetchPostFcmToken } from 'src/redux/reducers/fcmtoken';
 import { toast } from 'react-toastify';
@@ -20,14 +21,41 @@ export const listenToOrderComments = (orderId, onNewComment) => {
 
 export const requestPermissionAndListen = async (userId, dispatch) => {
   try {
+    // Check if running in browser
+    if (typeof window === 'undefined') {
+      console.warn('Not running in browser environment');
+      return;
+    }
+
+    // Check if messaging is available
+    if (!messaging) {
+      console.warn('Firebase messaging not initialized');
+      return;
+    }
+
+    // Check if already registered
     if (sessionStorage.getItem('fcmTokenRegistered') === 'true') {
       return;
     }
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
+
+    // Check if notifications are supported
+    if (!('Notification' in window)) {
+      console.warn('This browser does not support notifications');
       return;
     }
-    // await deleteToken(messaging);
+
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      console.warn('Notification permission not granted');
+      return;
+    }
+
+    // Check if service worker is supported
+    if (!('serviceWorker' in navigator)) {
+      console.warn('Service Worker not supported');
+      return;
+    }
+    
     const swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
     const fcmToken = await getToken(messaging, {
       vapidKey: 'BP3Ie7-PY4bZp2q95_lkSqmvdFygr4zoY7Y_F17fmCKCy7hJL_NmFPR06cI7r_snmGRQlA9qwTmPz07L4AVGS_A',

@@ -20,7 +20,12 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 let messaging;
-if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
-  messaging = getMessaging(app);
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  try {
+    messaging = getMessaging(app);
+  } catch (error) {
+    console.error('Error initializing Firebase messaging:', error);
+  }
 }
+
 export { app, messaging, getToken, onMessage };
