@@ -14,6 +14,11 @@ const initialState = {
     error: '',
     data: [],
   },
+  createUser: {
+    loading: false,
+    error: '',
+    data: [],
+  },
   bankInfo: {
     loading: false,
     error: '',
@@ -285,15 +290,15 @@ const slicer = createSlice({
 
     // Create user account
     builder.addCase(createUserAccount.pending, (state) => {
-      state.loading = true;
+      state.createUser.loading = true;
     });
     builder.addCase(createUserAccount.fulfilled, (state, action) => {
-      state.loading = false;
-      state.error = '';
+      state.createUser.loading = false;
+      state.createUser.error = '';
     });
     builder.addCase(createUserAccount.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action?.error?.message || 'Error creating user.';
+      state.createUser.loading = false;
+      state.createUser.error = action?.error?.message || 'Error creating user.';
     });
 
     // Fetch users list

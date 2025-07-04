@@ -35,6 +35,7 @@ import {
   Warning as WarningIcon,
 } from '@mui/icons-material';
 import { createUserAccount } from 'src/redux/reducers/user';
+import { useAppSelector } from 'src/redux/hook';
 
 const roles = [
   { id: 'e02c4f2d-2482-4327-8cd1-4a8f090e6159', lable: 'Admin', name: 'admin' },
@@ -62,8 +63,8 @@ export default function ActivateUserDialog({ open, onClose, onSuccess }) {
   });
 
   const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false);
   const [showCloseConfirmation, setShowCloseConfirmation] = useState(false);
+  const { loading: isLoading } = useAppSelector((state) => state.users.createUser);
 
   useEffect(() => {
     if (open) {
@@ -79,7 +80,6 @@ export default function ActivateUserDialog({ open, onClose, onSuccess }) {
         role_name: '',
       });
       setErrors({});
-      setShowPassword(false);
     }
   }, [open]);
 
@@ -179,7 +179,6 @@ export default function ActivateUserDialog({ open, onClose, onSuccess }) {
       role_name: '',
     });
     setErrors({});
-    setShowPassword(false);
     setShowCloseConfirmation(false);
   };
   const handleSubmit = async () => {
@@ -189,7 +188,7 @@ export default function ActivateUserDialog({ open, onClose, onSuccess }) {
           email: formData.email,
           userName: formData.userName,
           // password: formData.password,
-          password: 'Sun@123',
+          password: 'c',
           phone: formData.phone || null,
           status: formData.status,
           link_telegram: formData.link_telegram || null,
@@ -225,7 +224,6 @@ export default function ActivateUserDialog({ open, onClose, onSuccess }) {
       role_name: '',
     });
     setErrors({});
-    setShowPassword(false);
     setShowCloseConfirmation(false);
     onClose();
   };
@@ -251,7 +249,7 @@ export default function ActivateUserDialog({ open, onClose, onSuccess }) {
         fullWidth
         PaperProps={{
           sx: { borderRadius: 2 },
-        }}s
+        }}
         disableEscapeKeyDown // Disable ESC key to close
       >
         <DialogTitle>
@@ -435,6 +433,7 @@ export default function ActivateUserDialog({ open, onClose, onSuccess }) {
             color="primary"
             size="large"
             startIcon={<CheckCircleIcon />}
+            disabled={isLoading}
           >
             Kích hoạt tài khoản
           </Button>

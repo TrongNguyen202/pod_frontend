@@ -16,14 +16,14 @@ messaging.onBackgroundMessage(function (payload) {
   const notificationOptions = {
     body: payload.notification.body,
     data: {
-      click_action: payload.data?.click_action || 'http://14.225.255.106:3000',
+      click_action: payload.data?.click_action || 'https://sundesign.io/',
     },
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 self.addEventListener('notificationclick', function (event) {
-  const clickAction = event.notification.data?.click_action || 'http://14.225.255.106:3000';
+  const clickAction = event.notification.data?.click_action || 'https://sundesign.io/';
   event.notification.close();
 
   event.waitUntil(
