@@ -3,16 +3,26 @@ import { jwtDecode } from 'jwt-decode';
 import { LOCAL_STORAGE_KEY } from 'src/constants';
 
 // Sử dụng proxy routes thay vì direct URLs
-const axiosAPI = axios.create({
-  baseURL: '/api/proxy/com', // Sẽ proxy đến BASE_URL
-});
+// const axiosAPI = axios.create({
+//   baseURL: '/api/proxy/com', // Sẽ proxy đến BASE_URL
+// });
+
+// const axiosAPIFlashShip = axios.create({
+//   baseURL: '/api/proxy/com', // Sẽ proxy đến API_FLASH_SHIP
+// });
+
+// const axiosAPIPrintCare = axios.create({
+//   baseURL: '/api/proxy/com', // Sẽ proxy đến API_PRINT_CARE
+// });
+
+const axiosAPI = axios.create({ baseURL: 'https://sundesign.io/api/v1' });
 
 const axiosAPIFlashShip = axios.create({
-  baseURL: '/api/proxy/com', // Sẽ proxy đến API_FLASH_SHIP
+  baseURL: "ENVIRONMENT_URL.API_FLASH_SHIP",
 });
 
 const axiosAPIPrintCare = axios.create({
-  baseURL: '/api/proxy/com', // Sẽ proxy đến API_PRINT_CARE
+  baseURL: "ENVIRONMENT_URL.API_PRINT_CARE",
 });
 
 const getCommonHeaders = () => {
@@ -63,7 +73,7 @@ const refreshToken = async () => {
   if (!refreshToken) throw new Error('Không tìm thấy refresh token');
 
   const response = await axios.post(
-    '/api/proxy/com/auth/refresh',
+    'https://sundesign.io/api/v1/auth/refresh',
     { refreshToken },
     { headers: { ...getCommonHeaders(), 'Content-Type': 'application/json' } },
   );
