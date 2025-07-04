@@ -15,7 +15,7 @@ import { LOCAL_STORAGE_KEY } from 'src/constants';
 //   baseURL: '/api/proxy/com', // Sẽ proxy đến API_PRINT_CARE
 // });
 
-const axiosAPI = axios.create({ baseURL: 'https://sundesign.io/api/v1' });
+const axiosAPI = axios.create({ baseURL: 'https://api.sundesign.io/api/v1' });
 
 const axiosAPIFlashShip = axios.create({
   baseURL: "ENVIRONMENT_URL.API_FLASH_SHIP",
@@ -73,7 +73,7 @@ const refreshToken = async () => {
   if (!refreshToken) throw new Error('Không tìm thấy refresh token');
 
   const response = await axios.post(
-    'https://sundesign.io/api/v1/auth/refresh',
+    'https://api.sundesign.io/api/v1/auth/refresh',
     { refreshToken },
     { headers: { ...getCommonHeaders(), 'Content-Type': 'application/json' } },
   );
