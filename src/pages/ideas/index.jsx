@@ -154,7 +154,7 @@ const Page = () => {
       title: '',
       description: '',
       images: '',
-      designType: boardData.designType,
+      designType: boardData?.designType,
       productTypeId: boardData?.productTypeIds?.[0] || '',
       quantity: 1,
       number: 1,

@@ -59,8 +59,8 @@ const useOrderHandlers = ({
           toast.error('Không có ảnh nào được upload!');
           return;
         }
-        console.log(userData.coin);
-        if (userData.coin < formData.get('price')) {
+
+        if (status === 'NEW' && userData.coin < formData.get('price')) {
           toast.error('Số dư không đủ, vui lòng nạp thêm để sử dụng dịch vụ');
           return;
         }
