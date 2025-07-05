@@ -54,7 +54,6 @@ const Page = () => {
 
         // Debug user agent
         const userAgent = navigator.userAgent;
-        console.log('📱 User Agent:', userAgent);
 
         // Debug device ID generation
         let deviceId;
@@ -62,7 +61,6 @@ const Page = () => {
           deviceId = crypto.randomUUID();
           console.log('🔑 Device ID generated:', deviceId);
         } catch (error) {
-          console.error('❌ Crypto API error:', error);
           deviceId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
           console.log('🔄 Fallback Device ID:', deviceId);
         }
