@@ -28,7 +28,6 @@ const createProxyRequest = async (endpoint, path, method = 'GET', data = null, h
       timeout: 10000,
     });
 
-    // console.log('Backend response:', response.status);
     return response.data;
   } catch (error) {
     console.error('Proxy request failed:', {
