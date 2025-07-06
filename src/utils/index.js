@@ -38,10 +38,7 @@ export const formatNumber = (str) => {
   return '';
 };
 
-export const getCategoryCounts = (
-  role,
-  statusCountMap = {},
-) => {
+export const getCategoryCounts = (role, statusCountMap = {}) => {
   const visibleCategories = categoryList.filter((label) => {
     if (role === 'designer' && label === 'DRAFT') return false;
     if (role === 'customer' && label === 'ARCHIVED') return false;
@@ -97,6 +94,48 @@ export const transformBoardToFormInitialData = (boardInfoData) => ({
     ? boardInfoData.productTypeIds.filter((id) => id != null).map(Number)
     : [],
 });
+
+// Hàm tính toán thời gian thanh toán theo block
+export const calculatePaymentTime = (completedTimestamp) => {
+  // Chuyển đổi timestamp sang Date object
+  const completedDate = new Date(completedTimestamp);
+
+  // Tạo ngày thanh toán (sau 2 ngày)
+  const paymentDate = new Date(completedDate);
+  paymentDate.setDate(paymentDate.getDate() + 2);
+
+  // Lấy giờ hiện tại của ngày thanh toán
+  const currentHour = paymentDate.getHours();
+
+  // Xác định block thời gian tiếp theo
+  let paymentHour;
+  if (currentHour < 6) {
+    paymentHour = 6;
+  } else if (currentHour < 12) {
+    paymentHour = 12;
+  } else if (currentHour < 18) {
+    paymentHour = 18;
+  } else {
+    // Nếu >= 18h thì chuyển sang ngày hôm sau lúc 0h
+    paymentDate.setDate(paymentDate.getDate() + 1);
+    paymentHour = 0;
+  }
+
+  // Set giờ chính xác
+  paymentDate.setHours(paymentHour, 0, 0, 0);
+
+  return paymentDate;
+};
+
+// Hàm format thời gian hiển thị
+export const formatPaymentTime = (date) => {
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  const hour = date.getHours().toString().padStart(2, '0');
+
+  return `${day}/${month}/${year} lúc ${hour}:00`;
+};
 
 export const formatPriceOrContact = (p) => {
   if (!p) return 'Liên hệ';

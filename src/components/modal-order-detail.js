@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronLeft, ChevronRight } from '@mui/icons-material';
+import { ChevronLeft, ChevronRight, Download } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -35,9 +35,10 @@ import {
   fetchUploadImagesForDesigner,
 } from 'src/redux/reducers/orders';
 import { listenToOrderComments } from 'src/services/firebase';
-import { checkRole, getAllowedStatusOptions } from 'src/utils';
+import { calculatePaymentTime, checkRole, formatPaymentTime, getAllowedStatusOptions } from 'src/utils';
 import CommentInput from './comments/CommentInput';
 import CommentList from './comments/CommentList';
+import JSZip from 'jszip';
 
 const OrderDetailModal = ({
   open,
@@ -221,11 +222,15 @@ const OrderDetailModal = ({
             await handleSubmitComment(commentText);
           }
 
-          await handleChangeSingleOrderStatus('IN_REVIEW', '', false); // Don't close modal yet
+          // Gọi handleChangeSingleOrderStatus với shouldNotify = false để tránh gửi thông báo trùng
+          await handleChangeSingleOrderStatus('IN_REVIEW', '', false, false);
+
+          // Gửi thông báo chỉ 1 lần ở đây
+          await sendNotification(order.userid, order.designerId);
+
           await Promise.all([
             dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() })),
             dispatch(fetchGetAllStatus('')),
-            sendNotification(order.userid, order.designerId),
           ]);
 
           // Reset states and close modal
@@ -247,7 +252,12 @@ const OrderDetailModal = ({
     });
   };
 
-  const handleChangeSingleOrderStatus = async (newStatus, optionalComment = '', shouldClose = true) => {
+  const handleChangeSingleOrderStatus = async (
+    newStatus,
+    optionalComment = '',
+    shouldClose = true,
+    shouldNotify = true,
+  ) => {
     await withCooldown(async () => {
       if (!order?.id) return;
 
@@ -262,16 +272,18 @@ const OrderDetailModal = ({
       if (status === 200) {
         toast.success('Cập nhật trạng thái thành công');
 
-        // Send notifications based on status
-        switch (newStatus) {
-          case 'DOING':
-          case 'IN_REVIEW':
-            await sendNotification(order.userid, null);
-            break;
-          case 'NEED_FIX':
-            await sendNotification(null, order.designerId);
-            break;
-          default:
+        // Chỉ gửi thông báo khi shouldNotify = true
+        if (shouldNotify) {
+          switch (newStatus) {
+            case 'DOING':
+            case 'IN_REVIEW':
+              await sendNotification(order.userid, null);
+              break;
+            case 'NEED_FIX':
+              await sendNotification(null, order.designerId);
+              break;
+            default:
+          }
         }
 
         // Send comment if provided
@@ -315,7 +327,7 @@ const OrderDetailModal = ({
           await handleSubmitComment(commentText);
         }
 
-        // Batch API calls
+        // Gọi API và gửi thông báo chỉ 1 lần
         await Promise.all([
           dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() })),
           dispatch(fetchGetAllStatus('')),
@@ -326,6 +338,91 @@ const OrderDetailModal = ({
       }
       onClose();
     });
+  };
+
+  // Thêm hàm download ảnh đơn lẻ
+  const downloadSingleImage = async (url, filename = 'image') => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      toast.error('Không thể tải ảnh');
+    }
+  };
+
+  // Hàm download tất cả ảnh thành 1 file ZIP
+  const downloadAllImages = async () => {
+    if (imagesList.length === 0) return;
+
+    const toastId = toast.loading('Đang tạo file ZIP...');
+
+    try {
+      const zip = new JSZip();
+
+      // Tải tất cả ảnh và thêm vào ZIP
+      const imagePromises = imagesList.map(async (url, index) => {
+        try {
+          const response = await fetch(url);
+          const blob = await response.blob();
+          const filename = `image-${index + 1}.jpg`;
+          zip.file(filename, blob);
+        } catch (error) {
+          console.error(`Error fetching image ${index + 1}:`, error);
+          throw error;
+        }
+      });
+
+      await Promise.all(imagePromises);
+
+      toast.update(toastId, {
+        render: 'Đang nén file ZIP...',
+        type: 'info',
+        isLoading: true,
+      });
+
+      // Tạo file ZIP
+      const zipBlob = await zip.generateAsync({
+        type: 'blob',
+        compression: 'DEFLATE',
+        compressionOptions: {
+          level: 6,
+        },
+      });
+
+      // Download file ZIP
+      const downloadUrl = window.URL.createObjectURL(zipBlob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `order-${order.name}-images.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+
+      toast.update(toastId, {
+        render: `Đã tải ${imagesList.length} ảnh thành công!`,
+        type: 'success',
+        isLoading: false,
+        autoClose: 2000,
+      });
+    } catch (error) {
+      toast.update(toastId, {
+        render: 'Có lỗi khi tải ảnh',
+        type: 'error',
+        isLoading: false,
+        autoClose: 3000,
+      });
+      console.error('Error creating ZIP:', error);
+    }
   };
 
   return (
@@ -418,7 +515,26 @@ const OrderDetailModal = ({
             </Typography>
           </Box>
           <Box>
-            <Typography fontWeight="bold">{t(tokens.nav.imagesDescription)}:</Typography>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+              <Typography fontWeight="bold">{t(tokens.nav.imagesDescription)}:</Typography>
+              {imagesList.length > 0 && (
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Download />}
+                  onClick={downloadAllImages}
+                  sx={{
+                    minWidth: 'auto',
+                    fontSize: '0.75rem',
+                    px: 1.5,
+                    py: 0.5,
+                  }}
+                >
+                  Tải tất cả ({imagesList.length})
+                </Button>
+              )}
+            </Box>
+
             {imagesList.length > 0 && (
               <Box
                 sx={{
@@ -427,6 +543,7 @@ const OrderDetailModal = ({
                   p: 1,
                   overflowX: 'auto',
                   bgcolor: '#fafafa',
+                  position: 'relative',
                 }}
               >
                 {imagesList.map((url, idx) => (
@@ -439,6 +556,10 @@ const OrderDetailModal = ({
                       overflow: 'hidden',
                       flexShrink: 0,
                       border: '1px solid #ccc',
+                      position: 'relative',
+                      '&:hover .download-overlay': {
+                        opacity: 1,
+                      },
                     }}
                   >
                     <img
@@ -452,6 +573,41 @@ const OrderDetailModal = ({
                         cursor: 'pointer',
                       }}
                     />
+
+                    {/* Overlay với nút download riêng cho từng ảnh */}
+                    <Box
+                      className="download-overlay"
+                      sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0,0,0,0.4)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: 0,
+                        transition: 'opacity 0.3s ease',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <IconButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          downloadSingleImage(url, `order-${order.id}-image-${idx + 1}.jpg`);
+                        }}
+                        sx={{
+                          color: 'white',
+                          backgroundColor: 'rgba(255,255,255,0.2)',
+                          '&:hover': {
+                            backgroundColor: 'rgba(255,255,255,0.3)',
+                          },
+                        }}
+                      >
+                        <Download />
+                      </IconButton>
+                    </Box>
                   </Box>
                 ))}
               </Box>
@@ -505,7 +661,28 @@ const OrderDetailModal = ({
               </Box>
             </Box>
           )}
-
+          {isDesigner && order.status === 'DONE' && order.completedat && (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                backgroundColor: '#e6f7ff',
+                border: '1px solid #91d5ff',
+                borderRadius: 2,
+                padding: 2,
+                color: '#0050b3',
+                fontSize: '0.95rem',
+                mt: 2,
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2zm.75 15h-1.5v-1.5h1.5V17zm0-3h-1.5V7h1.5v7z" />
+              </svg>
+              Đơn hàng của bạn sẽ được thanh toán sau 2 ngày kể từ ngày hoàn thành, vào:{' '}
+              <strong>{formatPaymentTime(calculatePaymentTime(order.completedat))}</strong>
+            </Box>
+          )}
           <Dialog open={confirmOpen} onClose={() => !isProcessing && setConfirmOpen(false)}>
             <DialogTitle>{t(tokens.nav.confirmStatusChange)}</DialogTitle>
             <DialogContent>
@@ -614,7 +791,6 @@ const OrderDetailModal = ({
               </Button>
             </DialogActions>
           </Dialog>
-
           <Box textAlign="right" mt={2}>
             <Button variant="outlined" onClick={() => setShowComments((prev) => !prev)} size="small">
               {showComments ? `${t(tokens.nav.hideComment)}` : `${t(tokens.nav.showComment)}`}
