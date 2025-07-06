@@ -217,7 +217,6 @@ const OrderDetailModal = ({
             autoClose: 2000,
           });
 
-          // Send comment first if exists
           if (commentText.trim()) {
             await handleSubmitComment(commentText);
           }
