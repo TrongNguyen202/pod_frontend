@@ -13,7 +13,7 @@ import {
   Search as SearchIcon,
   TrendingDownOutlined,
   TrendingUpOutlined,
-  VerifiedOutlined
+  VerifiedOutlined,
 } from '@mui/icons-material';
 import {
   Alert,
@@ -44,6 +44,7 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
@@ -125,6 +126,7 @@ const Page = () => {
   const [emailToSearch, setEmailToSearch] = useState('');
   const [nameToSearch, setNameToSearch] = useState('');
   const [customerNameToSearch, setCustomerNameToSearch] = useState('');
+  const [transactionCodeToSearch, setTransactionCodeToSearch] = useState('');
   const [minCoin, setMinCoin] = useState('');
   const [maxCoin, setMaxCoin] = useState('');
   const [page, setPage] = useState(1);
@@ -177,8 +179,7 @@ const Page = () => {
   const formatDateTimeForAPI = (date) => {
     if (!date) return null;
 
-    // Cộng thêm 7 giờ
-    const plus7H = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+    const plus7H = new Date(date.getTime());
 
     return plus7H.toISOString();
   };
@@ -208,6 +209,10 @@ const Page = () => {
 
     if (maxCoin) {
       params.append('maxCoin', maxCoin);
+    }
+
+    if (transactionCodeToSearch) {
+      params.append('transactionCode', transactionCodeToSearch);
     }
 
     params.append('sort', sortBy);
@@ -241,6 +246,7 @@ const Page = () => {
     customerNameToSearch,
     minCoin,
     maxCoin,
+    transactionCodeToSearch,
     sortBy,
     sortDirection,
     startDate,
@@ -322,7 +328,7 @@ const Page = () => {
     setMaxCoin(tempMaxCoin);
     setStartDate(tempStartDate);
     setEndDate(tempEndDate);
-    setTempTransactionIdToSearch(tempTransactionIdToSearch);
+    setTransactionCodeToSearch(tempTransactionIdToSearch);
     setPage(1);
   };
 
@@ -330,6 +336,7 @@ const Page = () => {
     setSearchInput('');
     setEmailToSearch('');
     setNameToSearch('');
+    setTransactionCodeToSearch('');
     setTempNameToSearch('');
     setStatusToSearch('');
     setMinCoin('');
@@ -764,7 +771,7 @@ const Page = () => {
                           <TableCell
                             title={`ID: ${contents.id}`}
                             sx={{
-                              maxWidth: 100,
+                              maxWidth: 80,
                               whiteSpace: 'nowrap',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
@@ -772,12 +779,45 @@ const Page = () => {
                           >
                             #{contents.id}
                           </TableCell>
-                          <TableCell>{contents.createdBy || 'N/A'}</TableCell>
+                          <TableCell
+                            sx={{
+                              maxWidth: 246,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            <Tooltip title={contents.user.email} arrow>
+                              <span>{contents.user.email || 'N/A'}</span>
+                            </Tooltip>
+                          </TableCell>
                           <TableCell align="right">
                             <Typography fontWeight="medium">{handleAmountFormat(contents.coin) || 0}</Typography>
                           </TableCell>
-                          <TableCell>{contents.contents || 'N/A'}</TableCell>
-                          <TableCell align="center">{contents.transactionCode}</TableCell>
+                          <TableCell
+                            sx={{
+                              maxWidth: 180,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            <Tooltip title={contents.contents} arrow>
+                              <span>{contents.contents || 'N/A'}</span>
+                            </Tooltip>
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              maxWidth: 220,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            <Tooltip title={contents.transactionCode} arrow>
+                              <span>{contents.transactionCode || 'N/A'}</span>
+                            </Tooltip>
+                          </TableCell>
                           <TableCell>
                             <Chip
                               label={formatTransactionType(contents.transactionType)}

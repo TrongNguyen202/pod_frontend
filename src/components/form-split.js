@@ -13,7 +13,7 @@ import {
   TextField,
 } from '@mui/material';
 import { Box } from '@mui/system';
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { optionsDesignType, PRICE_OPTIONS, PRICE_OPTIONS_BY_DESIGN_TYPE } from 'src/constants';
 import { tokens } from 'src/locales/tokens';
@@ -50,6 +50,8 @@ const FormDialogSplitLayout = ({
   const [formData, setFormData] = useState(() => normalizeInitialData(initialData, fields));
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const imageUploadRef = useRef(null);
 
   // State để track validation errors
   const [errors, setErrors] = useState({});
@@ -272,6 +274,86 @@ const FormDialogSplitLayout = ({
     handleChange('description', finalDescription);
   }, [formData, mergedDescription, handleChange]);
 
+  // Drag images, paste images:
+  const handlePaste = useCallback(
+    (e) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      const imageFiles = [];
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.indexOf('image') !== -1) {
+          const file = item.getAsFile();
+          if (file) {
+            imageFiles.push(file);
+          }
+        }
+      }
+
+      if (imageFiles.length > 0) {
+        e.preventDefault();
+        const currentImages = formData['images'] || [];
+        const newImages = [...currentImages, ...imageFiles];
+        handleChange('images', newImages);
+      }
+    },
+    [formData, handleChange],
+  );
+
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e) => {
+      e.preventDefault();
+      setIsDragOver(false);
+
+      const files = Array.from(e.dataTransfer.files).filter((file) => file.type.startsWith('image/'));
+
+      if (files.length > 0) {
+        const currentImages = formData['images'] || [];
+        const newImages = [...currentImages, ...files];
+        handleChange('images', newImages);
+      }
+    },
+    [formData, handleChange],
+  );
+
+  const removeImage = useCallback(
+    (indexToRemove) => {
+      const currentImages = formData['images'] || [];
+      const newImages = currentImages.filter((_, index) => index !== indexToRemove);
+      handleChange('images', newImages);
+    },
+    [formData, handleChange],
+  );
+
+  // Thêm useEffect để listen paste event
+  useEffect(() => {
+    const handleGlobalPaste = (e) => {
+      // Chỉ handle paste khi dialog đang mở và không phải đang focus vào input khác
+      if (dialogOpen && !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+        handlePaste(e);
+      }
+    };
+
+    if (dialogOpen) {
+      document.addEventListener('paste', handleGlobalPaste);
+      return () => {
+        document.removeEventListener('paste', handleGlobalPaste);
+      };
+    }
+  }, [dialogOpen, handlePaste]);
+
   const priceOptions = PRICE_OPTIONS_BY_DESIGN_TYPE[formData['designType']] || [];
 
   return (
@@ -334,20 +416,64 @@ const FormDialogSplitLayout = ({
                 )}
               </Box>
               <Box sx={{ mb: 2, borderRadius: 1, bgcolor: '#fafafa' }}>
-                <TextField
-                  fullWidth
-                  required
-                  label={t(tokens.nav.chosseImages)}
-                  type="file"
-                  inputProps={{ multiple: true, accept: 'image/*' }}
-                  error={!!errors.images}
-                  helperText={errors.images}
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    handleChange('images', files);
+                {/* Label hiển thị */}
+                <Box sx={{ mb: 1 }}>
+                  <span
+                    style={{
+                      fontSize: '0.875rem',
+                      color: errors.images ? '#d32f2f' : '#666',
+                      fontWeight: 400,
+                    }}
+                  >
+                    {t(tokens.nav.chosseImages)} *
+                  </span>
+                  {errors.images && <Box sx={{ color: '#d32f2f', fontSize: '0.75rem', mt: 0.5 }}>{errors.images}</Box>}
+                </Box>
+
+                {/* Drag & Drop Zone */}
+                <Box
+                  ref={imageUploadRef}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  sx={{
+                    p: 2,
+                    border: `2px dashed ${isDragOver ? '#1976d2' : errors.images ? '#d32f2f' : '#e0e0e0'}`,
+                    borderRadius: 1,
+                    backgroundColor: isDragOver ? '#f3f8ff' : '#f9f9f9',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      borderColor: '#1976d2',
+                      backgroundColor: '#f3f8ff',
+                    },
                   }}
-                />
-                {formData['images'] && (
+                  onClick={() => imageUploadRef.current?.querySelector('input[type="file"]')?.click()}
+                >
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      const currentImages = formData['images'] || [];
+                      const newImages = [...currentImages, ...files];
+                      handleChange('images', newImages);
+                    }}
+                  />
+                  <Box sx={{ color: '#666', fontSize: '0.875rem' }}>
+                    <div>Kéo thả ảnh vào đây</div>
+                    <div>
+                      hoặc <strong>Ctrl+V</strong> để paste ảnh
+                    </div>
+                    <div>hoặc click để chọn file</div>
+                  </Box>
+                </Box>
+
+                {/* Preview images */}
+                {formData['images'] && formData['images'].length > 0 && (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', mt: 1, gap: 1 }}>
                     {(Array.isArray(formData['images']) ? formData['images'] : [formData['images']]).map(
                       (file, idx) => {
@@ -362,6 +488,9 @@ const FormDialogSplitLayout = ({
                               overflow: 'hidden',
                               border: '1px solid #ccc',
                               position: 'relative',
+                              '&:hover .remove-btn': {
+                                opacity: 1,
+                              },
                             }}
                           >
                             <img
@@ -369,6 +498,32 @@ const FormDialogSplitLayout = ({
                               alt={file.name || 'image'}
                               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             />
+                            <Button
+                              className="remove-btn"
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeImage(idx);
+                              }}
+                              sx={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                minWidth: 'auto',
+                                width: 20,
+                                height: 20,
+                                p: 0,
+                                backgroundColor: 'rgba(244, 67, 54, 0.8)',
+                                color: 'white',
+                                opacity: 0,
+                                transition: 'opacity 0.2s',
+                                '&:hover': {
+                                  backgroundColor: 'rgba(244, 67, 54, 1)',
+                                },
+                              }}
+                            >
+                              ×
+                            </Button>
                           </Box>
                         );
                       },

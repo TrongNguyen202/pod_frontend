@@ -32,7 +32,14 @@ export default function AdminLayout({ children }) {
   ];
 
   return (
-    <NextAppProvider navigation={NAVIGATION}>
+    <NextAppProvider
+      branding={{
+        title: 'Sun Admin',
+        logo: <img src="/logo.png" alt="Logo" height={32} style={{ borderRadius: '8px' }} />,
+        homeUrl: '/admin/dashboard',
+      }}
+      navigation={NAVIGATION}
+    >
       <Box
         sx={{
           display: 'flex',

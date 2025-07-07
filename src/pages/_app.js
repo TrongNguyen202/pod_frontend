@@ -31,6 +31,7 @@ import { createEmotionCache } from 'src/utils/create-emotion-cache';
 // Remove if locales are not used
 import 'src/locales/i18n';
 import ProviderCustom from 'src/providers';
+import AppWrapper from 'src/components/AppWrapper';
 
 const clientSideEmotionCache = createEmotionCache();
 
@@ -82,7 +83,7 @@ const CustomApp = (props) => {
                           <SplashScreen />
                         ) : (
                           <>
-                            {getLayout(<Component {...pageProps} />)}
+                            <AppWrapper>{getLayout(<Component {...pageProps} />)}</AppWrapper>
                             <SettingsButton onClick={settings.handleDrawerOpen} />
                             <SettingsDrawer
                               canReset={settings.isCustom}

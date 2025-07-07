@@ -96,13 +96,18 @@ export const transformBoardToFormInitialData = (boardInfoData) => ({
 });
 
 // Hàm tính toán thời gian thanh toán theo block
-export const calculatePaymentTime = (completedTimestamp) => {
+export const calculatePaymentTime = (completedTimestamp, status) => {
   // Chuyển đổi timestamp sang Date object
   const completedDate = new Date(completedTimestamp);
 
   // Tạo ngày thanh toán (sau 2 ngày)
   const paymentDate = new Date(completedDate);
-  paymentDate.setDate(paymentDate.getDate() + 2);
+  if (status === 'DONE') {
+    paymentDate.setDate(paymentDate.getDate() + 2);
+    // Tạo ngày hoan thanh (sau 3 ngày)
+  } else if (status === 'IN_REVIEW') {
+    paymentDate.setDate(paymentDate.getDate() + 3);
+  }
 
   // Lấy giờ hiện tại của ngày thanh toán
   const currentHour = paymentDate.getHours();

@@ -185,12 +185,12 @@ const OrderDetailModal = ({
     setUploadFiles((prev) => [...prev, ...fileArray]);
   };
 
-  const sendNotification = async (userId, designerId) => {
+  const sendNotification = async (userId, designerId, orderName) => {
     const data = {
       designerIds: Array.isArray(designerId) ? designerId : [designerId ?? 0],
       customerIds: Array.isArray(userId) ? userId : [userId ?? 0],
       title: 'Trạng thái đơn hàng',
-      message: 'Có đơn hàng của bạn thay đổi trạng thái, vào xem ngay!',
+      message: `Đơn hàng ${orderName} của bạn vừa cập nhật trạng thái, vào xem ngay`,
     };
 
     dispatch(fetchSendPushNotifications(data));
@@ -225,7 +225,7 @@ const OrderDetailModal = ({
           await handleChangeSingleOrderStatus('IN_REVIEW', '', false, false);
 
           // Gửi thông báo chỉ 1 lần ở đây
-          await sendNotification(order.userid, order.designerId);
+          await sendNotification(order.userid, order.designerId, order.name);
 
           await Promise.all([
             dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() })),
@@ -276,10 +276,10 @@ const OrderDetailModal = ({
           switch (newStatus) {
             case 'DOING':
             case 'IN_REVIEW':
-              await sendNotification(order.userid, null);
+              await sendNotification(order.userid, null, order.name);
               break;
             case 'NEED_FIX':
-              await sendNotification(null, order.designerId);
+              await sendNotification(null, order.designerId, order.name);
               break;
             default:
           }
@@ -330,7 +330,7 @@ const OrderDetailModal = ({
         await Promise.all([
           dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() })),
           dispatch(fetchGetAllStatus('')),
-          sendNotification(order.userid, null),
+          sendNotification(order.userid, null, order.name),
         ]);
       } else {
         toast.error('Nhận đơn thất bại!');
@@ -594,7 +594,7 @@ const OrderDetailModal = ({
                       <IconButton
                         onClick={(e) => {
                           e.stopPropagation();
-                          downloadSingleImage(url, `order-${order.id}-image-${idx + 1}.jpg`);
+                          downloadSingleImage(url, `order-${order.name}-image-${idx + 1}.jpg`);
                         }}
                         sx={{
                           color: 'white',
@@ -679,7 +679,29 @@ const OrderDetailModal = ({
                 <path d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2zm.75 15h-1.5v-1.5h1.5V17zm0-3h-1.5V7h1.5v7z" />
               </svg>
               Đơn hàng của bạn sẽ được thanh toán sau 2 ngày kể từ ngày hoàn thành, vào:{' '}
-              <strong>{formatPaymentTime(calculatePaymentTime(order.completedat))}</strong>
+              <strong>{formatPaymentTime(calculatePaymentTime(order.completedat, 'DONE'))}</strong>
+            </Box>
+          )}
+          {isCustomer && order.status === 'IN_REVIEW' && order.lastmodifieddate && (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                backgroundColor: '#e6f7ff',
+                border: '1px solid #91d5ff',
+                borderRadius: 2,
+                padding: 2,
+                color: '#0050b3',
+                fontSize: '0.95rem',
+                mt: 2,
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2zm.75 15h-1.5v-1.5h1.5V17zm0-3h-1.5V7h1.5v7z" />
+              </svg>
+              Đơn hàng của bạn sẽ được hoàn thành sau 3 ngày kể từ ngày đơn được kiểm tra, vào:{' '}
+              <strong>{formatPaymentTime(calculatePaymentTime(order.lastmodifieddate * 1000, 'IN_REVIEW'))}</strong>
             </Box>
           )}
           <Dialog open={confirmOpen} onClose={() => !isProcessing && setConfirmOpen(false)}>

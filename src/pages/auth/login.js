@@ -15,16 +15,12 @@ import { usePageView } from 'src/hooks/use-page-view';
 import { useRouter } from 'src/hooks/use-router';
 import { useSearchParams } from 'src/hooks/use-search-params';
 import { Layout as AuthLayout } from 'src/layouts/auth/classic-layout';
-import { paths } from 'src/paths';
 import { toast } from 'react-toastify';
-import { LOCAL_STORAGE_KEY } from 'src/constants';
-import { RepositoryRemote } from 'src/services';
-import { useAppDispatch, useAppSelector } from 'src/redux/hook';
+import { useAppDispatch } from 'src/redux/hook';
 import { setAuthenticate, setInitialized } from 'src/redux/reducers/auth';
-import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { tokens } from '../../locales/tokens';
-import { jwtDecode } from 'jwt-decode';
+import { authService } from 'src/services/authService';
 
 const initialValues = {
   email: '',
@@ -44,96 +40,31 @@ const Page = () => {
   const searchParams = useSearchParams();
   const returnTo = searchParams.get('returnTo');
   const dispatch = useAppDispatch();
-  const { account } = useAppSelector((state) => state.auth);
+
   const formik = useFormik({
     initialValues,
     validationSchema,
     onSubmit: async (values, helpers) => {
       try {
-        console.log('🚀 Starting login process...', values);
-
-        // Debug user agent
-        const userAgent = navigator.userAgent;
-
-        // Debug device ID generation
-        let deviceId;
-        try {
-          deviceId = crypto.randomUUID();
-          console.log('🔑 Device ID generated:', deviceId);
-        } catch (error) {
-          deviceId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-          console.log('🔄 Fallback Device ID:', deviceId);
-        }
-
-        // Debug IP detection
-        let ip;
-        try {
-          console.log('🌐 Fetching IP address...');
-          const ipRes = await fetch('https://api64.ipify.org?format=json');
-          if (!ipRes.ok) {
-            throw new Error(`HTTP error! status: ${ipRes.status}`);
-          }
-          const ipData = await ipRes.json();
-          ip = ipData.ip;
-          console.log('📍 IP Address:', ip);
-        } catch (error) {
-          console.error('❌ IP detection error:', error);
-          ip = 'unknown';
-        }
-
-        // Debug login request
-        const loginData = {
+        const userInfo = await authService.login({
           email: values.email,
           password: values.password,
-          ipAddress: ip,
-          userAgent,
-          deviceId,
-        };
-        console.log('📤 Login request data:', loginData);
+        });
 
-        console.log('🔄 Sending login request...');
-        const res = await RepositoryRemote.auth.requestLogin(loginData);
-        console.log('📥 Login response:', res);
-
-        if (res?.data?.accessToken && res?.data?.refreshToken) {
-          console.log('✅ Login successful, processing tokens...');
-
-          const decodedToken = jwtDecode(res?.data?.accessToken);
-          console.log('🔓 Decoded token:', decodedToken);
-
-          // Store tokens
-          localStorage.setItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN, res.data.accessToken);
-          localStorage.setItem(LOCAL_STORAGE_KEY.REFRESH_TOKEN, res.data.refreshToken);
-          localStorage.setItem(LOCAL_STORAGE_KEY.USER_IP, decodedToken.ipAddress);
-          localStorage.setItem(LOCAL_STORAGE_KEY.DEVICE_ID, decodedToken.deviceId);
-          localStorage.setItem(LOCAL_STORAGE_KEY.USER_EMAIL, decodedToken.sub);
-
-          // Sau 3 giây thì xóa các thông tin decoded tạm
-
-          setTimeout(() => {
-            localStorage.removeItem(LOCAL_STORAGE_KEY.USER_IP);
-            localStorage.removeItem(LOCAL_STORAGE_KEY.DEVICE_ID);
-            localStorage.removeItem(LOCAL_STORAGE_KEY.USER_EMAIL);
-          }, 3000);
-
+        if (userInfo) {
           dispatch(setInitialized(true));
           dispatch(setAuthenticate({ isAuthenticated: true }));
-          toast.success('Đăng nhập thành công!');
 
-          const redirectPath = decodedToken.role === 'admin' ? returnTo || '/admin/dashboard' : returnTo || '/ideas';
-
-          console.log('🏃 Redirecting to:', redirectPath);
-          router.push(redirectPath);
-        } else {
-          console.error('❌ Invalid response structure:', res);
           if (isMounted()) {
-            toast.error('Tên đăng nhập hoặc mật khẩu không đúng!');
+            toast.success('Đăng nhập thành công!');
           }
-          helpers.setErrors({ submit: 'Tên đăng nhập hoặc mật khẩu không đúng!' });
+
+          const redirectPath = userInfo.role === 'admin' ? returnTo || '/admin/dashboard' : returnTo || '/ideas';
+
+          router.push(redirectPath);
         }
       } catch (err) {
-        console.error('💥 Login error:', err);
-        console.error('Error stack:', err.stack);
+        console.error('Login error:', err);
 
         if (isMounted()) {
           toast.error('Tên đăng nhập hoặc mật khẩu không đúng!');
@@ -142,16 +73,6 @@ const Page = () => {
       }
     },
   });
-
-  useEffect(() => {
-    if (account) {
-      dispatch(setAuthenticate({ isAuthenticated: true }));
-      if (isMounted()) {
-        toast.success('Đăng nhập thành công!');
-        router.push(returnTo || paths.dashboard.index);
-      }
-    }
-  }, [account]);
 
   usePageView();
 

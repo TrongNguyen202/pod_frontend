@@ -22,6 +22,10 @@ const slicer = createSlice({
   reducers: {
     setAuthenticate: (state, action) => {
       state.isAuthenticated = action.payload.isAuthenticated;
+      if (action.payload.user) {
+        state.user = action.payload.user;
+        state.account = action.payload.user;
+      }
     },
     setInitialized: (state, action) => {
       state.isInitialized = action.payload;
@@ -33,6 +37,9 @@ const slicer = createSlice({
       state.account = action.payload;
     },
     setStatusLogout: (state, action) => {
+      state.isAuthenticated = false;
+      state.user = null;
+      state.account = null;
       state.isLogout = action.payload;
     },
   },
@@ -60,8 +67,8 @@ export default slicer.reducer;
 
 export const fetchUserInfo = createAsyncThunk('/user/get-all', async () => {
   const response = await RepositoryRemote.auth.requestGetProfileInfor();
-  if(response){
-    localStorage.setItem("usernamecurrent", response.data.username)
+  if (response) {
+    localStorage.setItem('usernamecurrent', response.data.username);
   }
   return response?.data;
 });

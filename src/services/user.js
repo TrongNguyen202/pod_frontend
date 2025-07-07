@@ -33,7 +33,7 @@ const requestUpdateBankInfo = async (data) => {
 const requestGetDesignerIds = async () => {
   const config = {
     method: 'GET',
-    url: 'users/designers/ids',
+    url: 'users/d/ids',
   };
   return axiosAPI(config);
 };

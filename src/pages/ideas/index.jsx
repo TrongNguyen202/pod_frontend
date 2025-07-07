@@ -59,7 +59,7 @@ const Page = () => {
   const [role, setRole] = useState('');
   const [openDrawerFilter, setOpenDrawerFilter] = useState(false);
   const [openConfirmAssign, setOpenConfirmAssign] = useState(false);
-  
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedBoardId = localStorage.getItem('b');
@@ -148,6 +148,8 @@ const Page = () => {
   const fieldIdeas = useMemo(() => {
     return getFieldsIdeas(productTypeData, templatesData);
   }, [JSON.stringify(productTypeData, templatesData)]);
+
+  const newMap = productTypeData.filter((pt) => boardData?.productTypeIds?.includes(pt.id));
 
   const initialData = useMemo(
     () => ({
@@ -300,7 +302,7 @@ const Page = () => {
               <OrderToolbar
                 role={role}
                 boardId={boardId}
-                productTypeData={productTypeData}
+                productTypeData={newMap}
                 templatesData={templatesData}
                 fieldIdeas={fieldIdeas}
                 onSubmitIdea={handleSubmitIdeas}
@@ -377,7 +379,7 @@ const Page = () => {
                   handleClickOpenDetail={handleClickOpenDetail}
                   handleClickDeleteIcon={handleClickDeleteIcon}
                   handleToggleCheck={handleToggleCheck}
-                  productTypeData={productTypeData}
+                  productTypeData={newMap}
                   handleAmountFormat={handleAmountFormat}
                   role={role}
                 />
@@ -390,7 +392,7 @@ const Page = () => {
                 handleAmountFormat={handleAmountFormat}
                 userData={userData}
                 role={role}
-                productTypeData={productTypeData}
+                productTypeData={newMap}
                 buildQueryString={buildQuery}
                 boardId={boardId}
                 onStatusChanged={handleStatusChanged}

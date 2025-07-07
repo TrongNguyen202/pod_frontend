@@ -35,6 +35,7 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
@@ -257,18 +258,18 @@ export default function AdminDashboard() {
 
   const handleSearch = () => {
     // Set all search values from inputs
-    setEmailToSearch(searchInput);
+    setEmailToSearch(searchInput.trim());
     setPage(1);
   };
 
   const handleAdvancedSearch = () => {
     // Apply tất cả temp values vào actual search states
-    setNameToSearch(tempNameToSearch);
+    setNameToSearch(tempNameToSearch.trim());
     setMinPrice(tempMinPrice);
     setMaxPrice(tempMaxPrice);
     setStartDate(tempStartDate);
     setEndDate(tempEndDate);
-    setCustomerNameToSearch(tempCustomerNameToSearch);
+    setCustomerNameToSearch(tempCustomerNameToSearch.trim());
     setPage(1);
   };
 
@@ -426,7 +427,7 @@ export default function AdminDashboard() {
               <TextField
                 fullWidth
                 size="small"
-                placeholder="Tìm kiếm theo email..."
+                placeholder="Tìm kiếm email, tên designer..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyPress={handleSearchKeyPress}
@@ -644,11 +645,55 @@ export default function AdminDashboard() {
                     {orders.map((order) => (
                       <TableRow key={order.id} hover>
                         <TableCell>#{order.id}</TableCell>
-                        <TableCell>{order.name}</TableCell>
-                        <TableCell>{order.customer?.username || 'N/A'}</TableCell>
-                        <TableCell>{order.customer?.email || 'N/A'}</TableCell>
+                        <TableCell
+                          sx={{
+                            maxWidth: 100,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          <Tooltip title={order.name} arrow>
+                            <span>{order.name}</span>
+                          </Tooltip>
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            maxWidth: 100,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          <Tooltip title={order.customer?.username} arrow>
+                            <span>{order.customer?.username || 'N/A'}</span>
+                          </Tooltip>
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            maxWidth: 246,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          <Tooltip title={order.customer?.email} arrow>
+                            <span>{order.customer?.email || 'N/A'}</span>
+                          </Tooltip>
+                        </TableCell>
                         <TableCell>{order.customer?.phone || 'N/A'}</TableCell>
-                        <TableCell>{order.designer?.username || 'N/A'}</TableCell>
+                        <TableCell
+                          sx={{
+                            maxWidth: 100,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          <Tooltip title={order.designer?.username} arrow>
+                            <span>{order.designer?.username || 'N/A'}</span>
+                          </Tooltip>
+                        </TableCell>
                         <TableCell align="right">
                           <Typography fontWeight="medium">{handleAmountFormat(order.price)}</Typography>
                         </TableCell>
