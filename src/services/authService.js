@@ -180,7 +180,7 @@ class AuthService {
     }
   }
 
-  // Refresh token method (được gọi bởi axios interceptor)
+  // Refresh token method axios interceptor
   async refreshToken() {
     if (this.isRefreshing) {
       return new Promise((resolve, reject) => {
