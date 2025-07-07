@@ -12,7 +12,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 6h
+    timeout-minutes: 360m
     steps:
       - name: Checkout frontend code
         uses: actions/checkout@v3
@@ -35,7 +35,7 @@ jobs:
           username: root
           port: 22
           password: ${{ secrets.VPS_PASSWORD }}
-          command_timeout: 6h 
+          command_timeout: 360m
           script: |
             set -e
             cd /root/frontend
