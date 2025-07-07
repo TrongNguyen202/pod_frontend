@@ -30,10 +30,10 @@ export default function TableModalDialog({ open, onClose, onSubmit, selectedBoar
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   useEffect(() => {
-    if (selectedBoardId) {
+    if (open && selectedBoardId) {
       dispatch(fetchAllTemplatesByBoardId({ boardId: selectedBoardId }));
     }
-  }, [dispatch, selectedBoardId]);
+  }, [dispatch, open, selectedBoardId]);
 
   const {
     loading: templatesLoading,
@@ -57,12 +57,6 @@ export default function TableModalDialog({ open, onClose, onSubmit, selectedBoar
     onSubmit?.(rows, confirmDeleteId);
     onClose();
   };
-
-  useEffect(() => {
-    if (open && selectedBoardId) {
-      dispatch(fetchAllTemplatesByBoardId({ boardId: selectedBoardId }));
-    }
-  }, [open, selectedBoardId]);
 
   useEffect(() => {
     if (open && templatesData) {

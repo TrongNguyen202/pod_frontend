@@ -5,6 +5,7 @@ const requestLogin = async (data) => {
     method: 'POST',
     url: '/auth/login',
     data: data,
+    credentials: 'include',
   };
 
   return axiosAPI(config);

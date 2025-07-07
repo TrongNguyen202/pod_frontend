@@ -8,6 +8,7 @@ const initialState = {
     loading: false,
     error: '',
     data: [],
+    isLoaded: false,
   },
 };
 
@@ -24,7 +25,12 @@ const slicer = createSlice({
       state.productTypes.query = action.payload;
     },
     resetDataListProductTypes: (state, action) => {
-      state.productTypes.data = {};
+      state.productTypes.data = [];
+      state.productTypes.isLoaded = false;
+    },
+    // Thêm action để force refresh
+    forceRefreshProductTypes: (state) => {
+      state.productTypes.isLoaded = false;
     },
   },
   extraReducers: (builder) => {
@@ -35,11 +41,13 @@ const slicer = createSlice({
       state.productTypes.loading = false;
       state.productTypes.data = action.payload;
       state.productTypes.error = '';
+      state.productTypes.isLoaded = true;
     });
     builder.addCase(fetchGetAllProductTypes.rejected, (state, action) => {
       state.productTypes.loading = false;
       state.productTypes.data = [];
       state.productTypes.error = action?.error?.message || 'Error while processing.';
+      state.productTypes.isLoaded = false;
     });
   },
 });

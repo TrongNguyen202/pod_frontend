@@ -3,9 +3,13 @@ import { useAppSelector } from 'src/redux/hook';
 import { fetchGetAllProductTypes } from 'src/redux/reducers/product-types';
 
 export const useProductTypes = (dispatch) => {
+  const { data, isLoaded, loading } = useAppSelector((state) => state.productTypes.productTypes);
+  
   useEffect(() => {
-    dispatch(fetchGetAllProductTypes({ query: '' }));
-  }, []);
-
-  return useAppSelector((state) => state.productTypes.productTypes);
+    if (!isLoaded && !loading) {
+      dispatch(fetchGetAllProductTypes({ query: '' }));
+    }
+  }, [dispatch, isLoaded, loading]);
+  
+  return { data, loading, isLoaded };
 };

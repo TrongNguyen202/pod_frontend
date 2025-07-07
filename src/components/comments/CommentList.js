@@ -4,13 +4,13 @@ import { formatMiliToDateTime } from 'src/utils/date';
 
 const CommentList = ({ comments }) => {
   const uniqueComments = Array.from(
-    new Map(comments.map((comment) => [comment.commentId || comment.comment_id, comment])).values(),
+    new Map(comments.map((comment) => [comment.comment_id, comment])).values(),
   );
   return (
     <>
       {uniqueComments.map((comment, index) => (
         <Box
-          key={comment.commentId || `comment-${index}`}
+          key={`comment-${index}`}
           sx={{
             border: '1px solid #f2f2f2',
             borderRadius: 2,

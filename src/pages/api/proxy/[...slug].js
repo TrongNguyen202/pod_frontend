@@ -13,9 +13,6 @@ const createProxyRequest = async (endpoint, path, method = 'GET', data = null, h
   }
 
   const fullUrl = `${baseURL}${path}`;
-  // console.log(`Proxying: ${method} ${fullUrl}`);
-  // console.log('Headers:', headers);
-  // console.log('Data:', data);
 
   try {
     const response = await axios({
@@ -27,8 +24,12 @@ const createProxyRequest = async (endpoint, path, method = 'GET', data = null, h
       },
       timeout: 10000,
     });
-
-    return response.data;
+    // Trả về cả data và headers (chứa set-cookie)
+    return {
+      data: response.data,
+      headers: response.headers,
+      status: response.status,
+    };
   } catch (error) {
     console.error('Proxy request failed:', {
       message: error.message,
@@ -43,6 +44,7 @@ const createProxyRequest = async (endpoint, path, method = 'GET', data = null, h
 export default async function handler(req, res) {
   const { slug, ...queryParams } = req.query;
   const { method } = req;
+
   try {
     if (!slug || slug.length === 0) {
       return res.status(400).json({ error: 'Missing endpoint and path' });
@@ -65,9 +67,16 @@ export default async function handler(req, res) {
       });
     }
 
-    // Forward headers từ client
+    // Forward headers từ client - THÊM COOKIE VÀO ĐÂY
     const forwardHeaders = {};
-    const headersToForward = ['authorization', 'x-device-id', 'x-forwarded-for', 'user-agent', 'content-type'];
+    const headersToForward = [
+      'authorization',
+      'x-device-id',
+      'x-forwarded-for',
+      'user-agent',
+      'content-type',
+      'cookie', // ← THÊM DÒNG NÀY
+    ];
 
     headersToForward.forEach((headerName) => {
       const value = req.headers[headerName];
@@ -76,12 +85,17 @@ export default async function handler(req, res) {
       }
     });
 
-    // console.log('📋 Forwarded headers:', forwardHeaders);
+    console.log('📋 Forwarded headers:', forwardHeaders);
 
     // Gọi backend
     const result = await createProxyRequest(endpoint, fullPath, method, req.body, forwardHeaders);
 
-    res.status(200).json(result);
+    // Forward Set-Cookie headers từ backend về client
+    if (result.headers && result.headers['set-cookie']) {
+      res.setHeader('Set-Cookie', result.headers['set-cookie']);
+    }
+
+    res.status(result.status || 200).json(result.data);
   } catch (error) {
     res.status(error.response?.status || 500).json({
       error: 'Proxy request failed',
