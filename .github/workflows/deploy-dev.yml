@@ -35,7 +35,8 @@ jobs:
           username: root
           port: 22
           password: ${{ secrets.VPS_PASSWORD }}
-         
+          timeout: 1200s
+          command_timeout: 1200s
           script: |
             set -e
             cd /root/frontend
