@@ -24,18 +24,18 @@ const normalizeInitialData = (initialData = {}, fields = []) => {
     // Handle select fields (both single and multiple)
     if (field.type === 'select') {
       const value = initialData[field.name];
-      
+
       if (field.multiple && Array.isArray(value)) {
         // For multiple select, map objects to their value or a fallback property
         normalized[field.name] = value.map((item) =>
-          typeof item === 'object' && item !== null ? item.value || item.name || item.id || '' : item
+          typeof item === 'object' && item !== null ? item.value || item.name || item.id || '' : item,
         );
       } else if (typeof value === 'object' && value !== null) {
         // For single select, extract value or a fallback property
         normalized[field.name] = value.value || value.name || value.id || '';
       }
     }
-    
+
     // Set default value if field is undefined
     if (field.default !== undefined && normalized[field.name] === undefined) {
       normalized[field.name] = field.default;
@@ -574,9 +574,9 @@ const FormDialogSplitLayout = ({
                   value={formData['productTypeId'] || ''}
                   onChange={(e) => handleChange('productTypeId', e.target.value)}
                 >
-                  {productTypeData.map((option, i) => (
-                    <MenuItem key={i} value={option.id}>
-                      {option.name}
+                  {Object.entries(productTypeMap).map(([id, name]) => (
+                    <MenuItem key={id} value={id}>
+                      {name}
                     </MenuItem>
                   ))}
                 </TextField>

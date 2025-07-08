@@ -170,7 +170,7 @@ const Page = () => {
       description: '',
       images: '',
       designType: boardData?.designType,
-      productTypeId: newMap?.[0] || '',
+      productTypeId: newMap?.[0]?.id || '',
       quantity: 1,
       number: 1,
       price: 0,
