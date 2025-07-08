@@ -12,10 +12,13 @@ const initialState = {
   },
 };
 
-export const fetchGetAllProductTypes = createAsyncThunk('/get/all/product-type', async ({ query }) => {
-  const res = await RepositoryRemote.productTypes.requestGetAllProductTypes(query);
-  return res?.data?.data;
-});
+export const fetchGetAllProductTypes = createAsyncThunk(
+  '/get/all/product-type',
+  async ({ query }) => {
+    const res = await RepositoryRemote.productTypes.requestGetAllProductTypes(query);
+    return res?.data?.data;
+  }
+);
 
 const slicer = createSlice({
   name: 'productTypes',
@@ -36,12 +39,13 @@ const slicer = createSlice({
   extraReducers: (builder) => {
     builder.addCase(fetchGetAllProductTypes.pending, (state) => {
       state.productTypes.loading = true;
+      state.productTypes.isLoaded = false;
     });
     builder.addCase(fetchGetAllProductTypes.fulfilled, (state, action) => {
       state.productTypes.loading = false;
       state.productTypes.data = action.payload;
       state.productTypes.error = '';
-      state.productTypes.isLoaded = true;
+      state.productTypes.isLoaded = true; // ← Uncomment dòng này
     });
     builder.addCase(fetchGetAllProductTypes.rejected, (state, action) => {
       state.productTypes.loading = false;
@@ -52,6 +56,5 @@ const slicer = createSlice({
   },
 });
 
-export const { setQueryAllProductTypes, resetDataListProductTypes } = slicer.actions;
-
+export const { setQueryAllProductTypes, resetDataListProductTypes, forceRefreshProductTypes } = slicer.actions;
 export default slicer.reducer;
