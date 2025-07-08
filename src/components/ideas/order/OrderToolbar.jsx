@@ -1,11 +1,12 @@
 import React from 'react';
-import { Box, Button, Card, CardContent, Grid, TextField } from '@mui/material';
+import { Box, Button, Card, CardContent, Grid, IconButton, TextField } from '@mui/material';
 import FormDialogSplitLayout from 'src/components/form-split';
 import { tokens } from 'src/locales/tokens';
 import { useTranslation } from 'react-i18next';
 import OrderFilterDrawer from 'src/components/filter-layout';
 import SearchIcon from '@mui/icons-material/Search';
 import InputAdornment from '@mui/material/InputAdornment';
+import { ClearIcon } from '@mui/x-date-pickers';
 
 const OrderToolbar = ({
   role,
@@ -99,11 +100,29 @@ const OrderToolbar = ({
               variant="outlined"
               InputProps={{
                 style: { color: '#000' },
-                endAdornment: (
-                  <InputAdornment position="end">
+                startAdornment: (
+                  <InputAdornment position="start">
                     <Button onClick={() => setSearchText(searchTextInput)}>
                       <SearchIcon sx={{ color: '#666' }} />
                     </Button>
+                  </InputAdornment>
+                ),
+                endAdornment: searchTextInput && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => {
+                        setSearchTextInput('');
+                        setSearchText('');
+                      }}
+                      sx={{
+                        padding: 0.5,
+                        '&:hover': {
+                          backgroundColor: 'transparent',
+                        },
+                      }}
+                    >
+                      <ClearIcon sx={{ color: '#666' }} />
+                    </IconButton>
                   </InputAdornment>
                 ),
               }}

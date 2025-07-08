@@ -1,6 +1,11 @@
 import { useEffect } from 'react';
 import { useAppDispatch } from 'src/redux/hook';
-import { fetchGetOrdersByBoardId, resetDataListOrder, resetCountStatus } from 'src/redux/reducers/orders';
+import {
+  fetchGetOrdersByBoardId,
+  resetDataListOrder,
+  resetCountStatus,
+  fetchGetAllStatus,
+} from 'src/redux/reducers/orders';
 
 const useOrderFetcher = ({
   role,
@@ -33,6 +38,7 @@ const useOrderFetcher = ({
     }
 
     dispatch(fetchGetOrdersByBoardId({ query: buildQuery() }));
+    dispatch(fetchGetAllStatus(buildQuery()));
   }, [
     role,
     boardId,

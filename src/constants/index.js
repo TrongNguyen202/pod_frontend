@@ -127,6 +127,26 @@ export const PRICE_OPTIONS_BY_DESIGN_TYPE = {
   ],
 };
 
+const allowedTypes = [
+  { type: 'image/jpeg', exts: ['.jpg', '.jpeg'] },
+  { type: 'image/png', exts: ['.png'] },
+  { type: 'image/gif', exts: ['.gif'] },
+  { type: 'image/webp', exts: ['.webp'] },
+  { type: 'image/bmp', exts: ['.bmp'] },
+  { type: 'image/svg+xml', exts: ['.svg'] },
+  { type: 'image/heic', exts: ['.heic'] },
+  { type: 'image/tiff', exts: ['.tiff', '.tif'] },
+  { type: 'image/x-icon', exts: ['.ico'] },
+  { type: 'image/avif', exts: ['.avif'] },
+];
+
+export function isValidImage(file) {
+  const ext = file.name.toLowerCase();
+  return allowedTypes.some(({ type, exts }) =>
+    file.type === type && exts.some((e) => ext.endsWith(e))
+  );
+}
+
 export const permission = {
   ADMIN: 0, // Admin
   CUSTOMER: 1, // Customer

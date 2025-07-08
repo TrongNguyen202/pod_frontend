@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import Button from '@mui/material/Button';
@@ -9,6 +10,12 @@ import CardHeader from '@mui/material/CardHeader';
 import FormHelperText from '@mui/material/FormHelperText';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
+import IconButton from '@mui/material/IconButton';
+import InputAdornment from '@mui/material/InputAdornment';
+import Link from '@mui/material/Link';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+
 import { Seo } from 'src/components/seo';
 import { useMounted } from 'src/hooks/use-mounted';
 import { usePageView } from 'src/hooks/use-page-view';
@@ -29,8 +36,8 @@ const initialValues = {
 };
 
 const validationSchema = Yup.object({
-  email: Yup.string().max(255).required('Username is required'),
-  password: Yup.string().max(255).required('Password is required'),
+  email: Yup.string().max(255).required('Tài khoản là bắt buộc'),
+  password: Yup.string().max(255).required('Mật khẩu là bắt buộc'),
 });
 
 const Page = () => {
@@ -40,6 +47,16 @@ const Page = () => {
   const searchParams = useSearchParams();
   const returnTo = searchParams.get('returnTo');
   const dispatch = useAppDispatch();
+
+  const [showPassword, setShowPassword] = React.useState(false);
+
+  const handleClickShowPassword = () => {
+    setShowPassword((show) => !show);
+  };
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
 
   const formik = useFormik({
     initialValues,
@@ -60,7 +77,6 @@ const Page = () => {
           }
 
           const redirectPath = userInfo.role === 'admin' ? returnTo || '/admin/dashboard' : returnTo || '/ideas';
-
           router.push(redirectPath);
         }
       } catch (err) {
@@ -104,8 +120,22 @@ const Page = () => {
                   name="password"
                   onBlur={formik.handleBlur}
                   onChange={formik.handleChange}
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={formik.values.password}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label="toggle password visibility"
+                          onClick={handleClickShowPassword}
+                          onMouseDown={handleMouseDownPassword}
+                          edge="end"
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               </Stack>
               {formik.errors.submit && (
@@ -123,6 +153,11 @@ const Page = () => {
               >
                 {t(tokens.nav.login)}
               </Button>
+              <FormHelperText sx={{ mt: 2, textAlign: 'center' }}>
+                <Link href="https://zalo.me/0968083967" underline="hover">
+                  Liên hệ để đăng ký
+                </Link>
+              </FormHelperText>
             </form>
           </CardContent>
         </Card>

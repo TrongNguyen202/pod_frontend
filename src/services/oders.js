@@ -88,7 +88,7 @@ const requestUploadImagesForDesigner = async (orderId, data) => {
     method: 'POST',
     url: `/order/${orderId}/upload-folder`,
     data,
-    headers: {},
+    timeout: 30000,
   };
   return axiosAPI(config);
 };

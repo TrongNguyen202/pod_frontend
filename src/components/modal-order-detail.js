@@ -17,7 +17,13 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
-import { categoryColors, categoryLabelsVi, categoryStatusVi, categoryStatusViU } from 'src/constants';
+import {
+  categoryColors,
+  categoryLabelsVi,
+  categoryStatusVi,
+  categoryStatusViU,
+  LOCAL_STORAGE_KEY,
+} from 'src/constants';
 import { tokens } from 'src/locales/tokens';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
 import {
@@ -39,6 +45,10 @@ import { calculatePaymentTime, checkRole, formatPaymentTime, getAllowedStatusOpt
 import CommentInput from './comments/CommentInput';
 import CommentList from './comments/CommentList';
 import JSZip from 'jszip';
+import { fetchAuthorizeOauth, fetchStatusOauth } from 'src/redux/reducers/oauth';
+import { OAuthDialog } from './oauth/OAuthDialog';
+import { CloseCircleOutlined } from '@ant-design/icons';
+import { jwtDecode } from 'jwt-decode';
 
 const OrderDetailModal = ({
   open,
@@ -64,6 +74,9 @@ const OrderDetailModal = ({
   const inputCommentRef = useRef(null);
   const seenCommentIdsRef = useRef(new Set());
   const hasInitializedComments = useRef(false); // Track comment initialization
+  const [showOAuthDialog, setShowOAuthDialog] = useState(false);
+  const [authData, setAuthData] = useState(null);
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
   const comments = useAppSelector((state) => state.comments.commentsInfo.data);
@@ -156,6 +169,47 @@ const OrderDetailModal = ({
     value: s,
   }));
 
+  const handleUploadImages = (files) => {
+    const fileArray = Array.from(files);
+    const urls = fileArray.map((file) => URL.createObjectURL(file));
+    setUploadedImages((prev) => [...prev, ...urls]);
+    setUploadFiles((prev) => [...prev, ...fileArray]);
+  };
+
+  const sendNotification = async (userId, designerId, orderName, status) => {
+    const data = {
+      designerIds: Array.isArray(designerId) ? designerId : [designerId ?? 0],
+      customerIds: Array.isArray(userId) ? userId : [userId ?? 0],
+      title: 'Trạng thái đơn hàng',
+      message:
+        status === 'DOING'
+          ? `Đơn hàng ${orderName} của bạn vừa được nhà thiết kế nhận, vào xem ngay!`
+          : `Đơn hàng ${orderName} của bạn vừa cập nhật trạng thái ${categoryStatusViU[status]}, vào xem ngay`,
+    };
+
+    dispatch(fetchSendPushNotifications(data));
+  };
+
+  const sendNotificationComment = async (userId, designerId, orderName, commentSend, role) => {
+    let targetDesignerIds = [];
+    let targetCustomerIds = [];
+
+    if (role === 'customer') {
+      targetDesignerIds = Array.isArray(designerId) ? designerId : [designerId];
+    } else if (role === 'designer') {
+      targetCustomerIds = Array.isArray(userId) ? userId : [userId];
+    }
+
+    const data = {
+      designerIds: targetDesignerIds,
+      customerIds: targetCustomerIds,
+      title: 'Thông tin đơn hàng',
+      message: `${orderName}: ${commentSend}`,
+    };
+
+    dispatch(fetchSendPushNotifications(data));
+  };
+
   const handleSubmitComment = async (commentText) => {
     if (!commentText.trim() || !order?.id || !userData?.id || isProcessing) return;
 
@@ -171,6 +225,7 @@ const OrderDetailModal = ({
       const response = await dispatch(fetchPostCommentFirebase(data));
       if (response.meta.requestStatus === 'fulfilled') {
         await dispatch(fetchPostCommentPosgres(response.payload));
+        sendNotificationComment(order.userid, order.designerId, order.name, commentText, role);
       }
       setCommentText('');
     } finally {
@@ -178,38 +233,100 @@ const OrderDetailModal = ({
     }
   };
 
-  const handleUploadImages = (files) => {
-    const fileArray = Array.from(files);
-    const urls = fileArray.map((file) => URL.createObjectURL(file));
-    setUploadedImages((prev) => [...prev, ...urls]);
-    setUploadFiles((prev) => [...prev, ...fileArray]);
+  const checkOAuthStatus = async () => {
+    try {
+      const responseFetchStatusOauth = await dispatch(fetchStatusOauth());
+
+      // Kiểm tra trong payload.data thay vì payload trực tiếp
+      const isAuth = responseFetchStatusOauth.payload || false;
+
+      if (!isAuth) {
+        // Chưa authorize, lấy authorization URL
+        const responseOAuth = await dispatch(fetchAuthorizeOauth());
+
+        // FIX: Truy cập đúng cấu trúc data
+        const authInfo = {
+          authUrl: responseOAuth.payload?.authUrl || '',
+          message: responseOAuth.payload?.message || 'Please authorize',
+        };
+
+        setAuthData(authInfo);
+        setShowOAuthDialog(true);
+        return false;
+      } else {
+        setShowOAuthDialog(false);
+        return true;
+      }
+    } catch (error) {
+      console.error('OAuth check failed:', error);
+      toast.error('Kiểm tra OAuth thất bại');
+      return false;
+    }
   };
 
-  const sendNotification = async (userId, designerId, orderName) => {
-    const data = {
-      designerIds: Array.isArray(designerId) ? designerId : [designerId ?? 0],
-      customerIds: Array.isArray(userId) ? userId : [userId ?? 0],
-      title: 'Trạng thái đơn hàng',
-      message: `Đơn hàng ${orderName} của bạn vừa cập nhật trạng thái, vào xem ngay`,
-    };
-
-    dispatch(fetchSendPushNotifications(data));
+  const handleDialogClose = (shouldRecheck = false) => {
+    setShowOAuthDialog(false);
+    if (shouldRecheck) {
+      setTimeout(() => {
+        checkOAuthStatus();
+      }, 2000);
+    }
+  };
+  const handleDeleteImage = (index) => {
+    setUploadedImages((prevImages) => prevImages.filter((_, i) => i !== index));
   };
 
   const handleSendImages = async () => {
     await withCooldown(async () => {
       if (uploadFiles.length === 0 || uploadedImages.length === 0) return;
-
+      const isAuthenticated = await checkOAuthStatus();
+      if (!isAuthenticated) {
+        toast.error('Không thể xác thực người dùng');
+        return;
+      }
       const formData = new FormData();
-      uploadFiles.forEach((file) => {
-        formData.append('files', file);
+      uploadFiles.forEach((file, index) => {
+        if (file instanceof File) {
+          if (!file.type.startsWith('image/')) {
+            console.error('Not an image:', file.name);
+            return;
+          }
+          formData.append('files', file);
+        } else {
+          console.error('Invalid file object:', file);
+        }
       });
 
       const toastId = toast.loading('Đang upload ảnh...');
       try {
-        const response = await dispatch(fetchUploadImagesForDesigner({ orderId: order.id, data: formData })).unwrap();
+        // const response = await dispatch(fetchUploadImagesForDesigner({ orderId: order.id, data: formData })).unwrap();
+        let deviceId = null;
+        let userIp = null;
+        let token = null;
+        if (typeof window !== 'undefined') {
+          token = localStorage.getItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN);
+          if (token) {
+            try {
+              const decodedToken = jwtDecode(token);
+              deviceId = decodedToken.deviceId;
+              userIp = decodedToken.ipAddress;
+            } catch (error) {
+              console.error('Error decoding token in getCommonHeaders:', error);
+            }
+          }
+        }
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/order/${order.id}/upload-folder`, {
+          method: 'POST',
+          headers: {
+            // Giả sử bạn cần gửi token xác thực
+            Authorization: `Bearer ${token}`,
+            'X-Device-Id': deviceId,
+            'X-Forwarded-For': userIp,
+          },
+          body: formData,
+        });
 
-        if (response.success === true) {
+        if (response.success === 'truer') {
           toast.update(toastId, {
             render: 'Upload thành công!',
             type: 'success',
@@ -225,7 +342,7 @@ const OrderDetailModal = ({
           await handleChangeSingleOrderStatus('IN_REVIEW', '', false, false);
 
           // Gửi thông báo chỉ 1 lần ở đây
-          await sendNotification(order.userid, order.designerId, order.name);
+          await sendNotification(order.userid, null, order.name, 'IN_REVIEW');
 
           await Promise.all([
             dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() })),
@@ -274,12 +391,14 @@ const OrderDetailModal = ({
         // Chỉ gửi thông báo khi shouldNotify = true
         if (shouldNotify) {
           switch (newStatus) {
-            case 'DOING':
             case 'IN_REVIEW':
-              await sendNotification(order.userid, null, order.name);
+              await sendNotification(order.userid, null, order.name, 'IN_REVIEW');
               break;
             case 'NEED_FIX':
-              await sendNotification(null, order.designerId, order.name);
+              await sendNotification(null, order.designerId, order.name, 'NEED_FIX');
+              break;
+            case 'DONE':
+              await sendNotification(order.userid, null, order.name, 'DONE');
               break;
             default:
           }
@@ -330,7 +449,7 @@ const OrderDetailModal = ({
         await Promise.all([
           dispatch(fetchGetOrdersByBoardId({ query: buildQueryString() })),
           dispatch(fetchGetAllStatus('')),
-          sendNotification(order.userid, null, order.name),
+          sendNotification(order.userid, null, order.name, 'DOING'),
         ]);
       } else {
         toast.error('Nhận đơn thất bại!');
@@ -704,7 +823,7 @@ const OrderDetailModal = ({
               <strong>{formatPaymentTime(calculatePaymentTime(order.lastmodifieddate * 1000, 'IN_REVIEW'))}</strong>
             </Box>
           )}
-          <Dialog open={confirmOpen} onClose={() => !isProcessing && setConfirmOpen(false)}>
+          <Dialog open={confirmOpen && !showOAuthDialog} onClose={() => !isProcessing && setConfirmOpen(false)}>
             <DialogTitle>{t(tokens.nav.confirmStatusChange)}</DialogTitle>
             <DialogContent>
               <Box sx={{ textAlign: 'center', mb: 2, fontSize: 20, fontWeight: 'bold' }}>
@@ -764,6 +883,7 @@ const OrderDetailModal = ({
                                 overflow: 'hidden',
                                 flexShrink: 0,
                                 border: '1px solid #ccc',
+                                position: 'relative', // Add relative positioning for the delete button
                               }}
                             >
                               <img
@@ -771,6 +891,20 @@ const OrderDetailModal = ({
                                 alt={`uploaded-${index}`}
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                               />
+                              <IconButton
+                                size="small"
+                                sx={{
+                                  position: 'absolute',
+                                  top: 2,
+                                  right: 2,
+                                  bgcolor: 'rgba(0, 0, 0, 0.6)',
+                                  color: 'white',
+                                  '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.8)' },
+                                }}
+                                onClick={() => handleDeleteImage(index)} // Call delete function with index
+                              >
+                                <CloseCircleOutlined fontSize="small" />
+                              </IconButton>
                             </Box>
                           ))}
                         </Box>
@@ -835,7 +969,12 @@ const OrderDetailModal = ({
           {t(tokens.nav.close)}
         </Button>
       </DialogActions>
-
+      <OAuthDialog
+        isOpen={showOAuthDialog}
+        onClose={handleDialogClose}
+        authUrl={authData?.authUrl || ''}
+        message={authData?.message || ''}
+      />
       <Dialog open={zoomImageIndex !== null} onClose={() => setZoomImageIndex(null)} maxWidth="md">
         <DialogContent
           sx={{

@@ -17,17 +17,14 @@ import {
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { tokens } from 'src/locales/tokens';
 import { useTranslation } from 'react-i18next';
+import { Box } from '@mui/system';
 
 const normalizeInitialData = (initialData = {}, fields = []) => {
   const safeData = initialData || {};
   const normalized = { ...safeData };
 
   fields.forEach((field) => {
-    if (
-      field.type === 'select' &&
-      field.multiple &&
-      Array.isArray(safeData[field.name])
-    ) {
+    if (field.type === 'select' && field.multiple && Array.isArray(safeData[field.name])) {
       const firstItem = safeData[field.name][0];
       if (typeof firstItem === 'object' && firstItem !== null) {
         normalized[field.name] = safeData[field.name].map((item) => item.value);
@@ -43,6 +40,12 @@ const FieldRenderer = memo(({ field, formData, onChange, passwordVisibility, tog
   const isSelect = field.type === 'select';
   const isMultiple = !!field.multiple;
   const isPassword = field.type === 'password';
+  const { t } = useTranslation();
+  const labelsVie = {
+    Title: t(tokens.nav.title),
+    'Product Types': t(tokens.nav.product_type),
+    'Default Design Type': t(tokens.nav.design_type),
+  };
 
   return (
     <Grid item size={12}>
@@ -51,33 +54,93 @@ const FieldRenderer = memo(({ field, formData, onChange, passwordVisibility, tog
           select
           fullWidth
           required={field.required}
-          label={field.label}
+          label={labelsVie[field.label] || field.label}
           sx={{ minWidth: 200 }}
           SelectProps={{
             multiple: isMultiple,
+            onClose: (event) => {
+              // Ngăn dropdown đóng khi click vào delete icon
+              if (event.target.closest('.MuiChip-deleteIcon')) {
+                event.preventDefault();
+              }
+            },
             renderValue: (selected) =>
-              isMultiple
-                ? selected.map((v) => {
+              isMultiple ? (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map((v) => {
                     const label = field.options.find((o) => o.value === v)?.label || v;
-                    return <Chip key={v} label={label} sx={{ mr: 0.5 }} />;
-                  })
-                : field.options.find((o) => o.value === selected)?.label || selected,
+                    const canDelete = selected.length > 1; // Chỉ cho phép xóa khi có > 1 phần tử
+
+                    return (
+                      <Chip
+                        key={v}
+                        label={label}
+                        // Chỉ hiển thị onDelete khi có thể xóa
+                        {...(canDelete && {
+                          onDelete: (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const newValue = selected.filter((item) => item !== v);
+                            onChange(field.name, newValue);
+                          },
+                        })}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                        size="small"
+                        sx={{
+                          '& .MuiChip-deleteIcon': {
+                            '&:hover': {
+                              color: 'error.main',
+                            },
+                          },
+                        }}
+                      />
+                    );
+                  })}
+                </Box>
+              ) : (
+                field.options.find((o) => o.value === selected)?.label || selected
+              ),
           }}
           value={formData[field.name] || (isMultiple ? [] : '')}
           onChange={(e) => onChange(field.name, isMultiple ? e.target.value : e.target.value)}
           InputLabelProps={{ required: field.required }}
         >
-          {field.options?.map((option, i) => (
-            <MenuItem key={i} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
+          {field.options?.map((option, i) => {
+            const isSelected = isMultiple
+              ? formData[field.name]?.includes(option.value)
+              : formData[field.name] === option.value;
+
+            const isLastSelected = isMultiple && formData[field.name]?.length === 1 && isSelected;
+
+            return (
+              <MenuItem
+                key={i}
+                value={option.value}
+                disabled={isLastSelected}
+                sx={{
+                  ...(isLastSelected && {
+                    opacity: 0.5,
+                    '&:hover': {
+                      backgroundColor: 'transparent',
+                    },
+                  }),
+                }}
+              >
+                {option.label}
+              </MenuItem>
+            );
+          })}
         </TextField>
       ) : (
         <TextField
           fullWidth
           required={field.required}
-          label={field.label}
+          label={labelsVie[field.label] || field.label}
           multiline={field.multiline}
           rows={field.rows || 1}
           type={isPassword ? (passwordVisibility[field.name] ? 'text' : 'password') : field.type || 'text'}

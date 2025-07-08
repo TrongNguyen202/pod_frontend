@@ -27,6 +27,7 @@ import { useGetAllStatus } from 'src/hooks/useGetAllStatus';
 import { tokens } from 'src/locales/tokens';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
 import { fetchGetAllStatus } from 'src/redux/reducers/orders';
+import { fetchAllTemplatesByBoardId } from 'src/redux/reducers/templates';
 import { fetchGetDesginerIds, resetDataDesginerIds } from 'src/redux/reducers/user';
 import { requestPermissionAndListen } from 'src/services/firebase';
 import { checkRole, formatCategoryLabel, getAllowedStatusOptions, getCategoryCounts } from 'src/utils';
@@ -46,6 +47,18 @@ const useGetDesignerIds = (dispatch, role) => {
   }, [dispatch, isCustomer]);
 
   return useAppSelector((state) => state.users.designerIds);
+};
+
+const useGetTemplateData = (dispatch, role, boardId) => {
+  const { isCustomer } = checkRole(role);
+
+  useEffect(() => {
+    if (isCustomer && boardId) {
+      dispatch(fetchAllTemplatesByBoardId({ boardId }));
+    }
+  }, [dispatch, isCustomer, boardId]);
+
+  return useAppSelector((state) => state.templates.templateInfo);
 };
 
 const Page = () => {
@@ -113,7 +126,7 @@ const Page = () => {
     totalPages: totalPages,
     loading: isLoading,
   } = useAppSelector((state) => state.orders.orderService);
-  const { data: templatesData } = useAppSelector((state) => state.templates.templateInfo);
+  const { data: templatesData } = useGetTemplateData(dispatch, role, boardId);
   const { data: desginerIds } = useGetDesignerIds(dispatch, role);
   const { data: boardData } = useAppSelector((state) => state.boards.boardInfo);
   const { data: statusCount } = useGetAllStatus(dispatch, boardId, role);
@@ -145,11 +158,11 @@ const Page = () => {
 
   const handleBoardChange = setBoardId;
 
-  const fieldIdeas = useMemo(() => {
-    return getFieldsIdeas(productTypeData, templatesData);
-  }, [JSON.stringify(productTypeData, templatesData)]);
-
   const newMap = productTypeData.filter((pt) => boardData?.productTypeIds?.includes(pt.id));
+
+  const fieldIdeas = useMemo(() => {
+    return getFieldsIdeas(newMap, templatesData);
+  }, [JSON.stringify(newMap, templatesData)]);
 
   const initialData = useMemo(
     () => ({
@@ -157,7 +170,7 @@ const Page = () => {
       description: '',
       images: '',
       designType: boardData?.designType,
-      productTypeId: boardData?.productTypeIds?.[0] || '',
+      productTypeId: newMap?.[0] || '',
       quantity: 1,
       number: 1,
       price: 0,

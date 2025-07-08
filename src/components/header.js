@@ -408,7 +408,7 @@ const Header = ({ onBoardChange, showBoards, role, onMenuSelect }, ref) => {
               </FormControl>
               <FormDialog
                 buttonLabel={t(tokens.nav.quick_design)}
-                title="Edit Board"
+                title={t(tokens.nav.quick_design)}
                 fields={fields}
                 onSubmit={handleSubmitBoardInfo}
                 initialData={initialFormData}

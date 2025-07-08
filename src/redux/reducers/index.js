@@ -7,6 +7,7 @@ import images from './images';
 import main from './main';
 import notifications from './notifications';
 import orders from './orders';
+import oauth from './oauth';
 import productTypes from './product-types';
 import qrtransaction from './qrtransaction';
 import statistics from './statistics';
@@ -21,6 +22,7 @@ const rootReducer = combineReducers({
   productTypes,
   templates,
   orders,
+  oauth,
   images,
   comments,
   fcmToken,

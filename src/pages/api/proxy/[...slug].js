@@ -67,7 +67,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // Forward headers từ client - THÊM COOKIE VÀO ĐÂY
+    // Forward headers từ client
     const forwardHeaders = {};
     const headersToForward = [
       'authorization',
@@ -75,7 +75,7 @@ export default async function handler(req, res) {
       'x-forwarded-for',
       'user-agent',
       'content-type',
-      'cookie', // ← THÊM DÒNG NÀY
+      'cookie',
     ];
 
     headersToForward.forEach((headerName) => {
@@ -104,3 +104,11 @@ export default async function handler(req, res) {
     });
   }
 }
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '100mb', // Tăng limit cho file upload
+    },
+  },
+};

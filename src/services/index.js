@@ -3,6 +3,7 @@ import { boards } from './boards';
 import { fcmtoken } from './fcmtoken';
 import { productTypes } from './product-types';
 import { orders } from './oders';
+import { oauth } from './oauth';
 import { templates } from './templates';
 import { images } from './images';
 import { comments } from './comments';
@@ -24,6 +25,7 @@ export const RepositoryRemote = {
   notifications,
   usertopups,
   orders,
+  oauth,
   templates,
   users,
   statistics,
