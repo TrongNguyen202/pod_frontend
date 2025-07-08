@@ -59,7 +59,7 @@ const Header = ({ onBoardChange, showBoards, role, onMenuSelect }, ref) => {
 
   const { data: userData } = useUserData(dispatch, setEmail, walletUpdated);
   const { data: boardsData } = useBoardsData(dispatch, userData?.id, role);
-  const { data: productTypeData } = useProductTypes(dispatch);
+  const { data: productTypeData } = useProductTypes(dispatch, userData?.id);
   const { data: boardInfoData } = useBoardInfo(dispatch, selectedBoardId, productTypeData, setInitialFormData);
 
   const [amountWithdraw, setAmountWithdraw] = useState(0);

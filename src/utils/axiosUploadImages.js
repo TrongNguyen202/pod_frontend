@@ -13,8 +13,7 @@ export const uploadImagesConcurrently = async (imageFiles) => {
           headers: {
             Accept: 'application/json',
             'accept-language': 'en-US,en;q=0.9,vi;q=0.8',
-            Authorization:
-              `Bearer ${process.env.NEXT_PUBLIC_TOKEN_SELLGROW}`,
+            Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2ODUyNjFlN2M5ZDRkYTYwMWQyNGI5YTAiLCJsb2NhbFVzZXJJZCI6MTAyOTcyOCwiZW1haWwiOiJ0cm9uZ3Byb3RlaW5AZ21haWwuY29tIiwiZnVsbE5hbWUiOiJuZ3V5ZW4gZGluaCB0cm9uZyIsImdyYW50U2VydmljZVR5cGUiOiJUVFMiLCJpYXQiOjE3NTE5NDE0OTgsImV4cCI6MTc1Mjk0MTQ5OH0.okweSme7bgtqKSvM1HTNXXXPNSsKoZBTrw2gGyK895E`,
             Origin: 'https://shop.sellgrow.ai',
             priority: 'u=1, i',
             referer: 'https://shop.sellgrow.ai/',
@@ -41,4 +40,3 @@ export const uploadImagesConcurrently = async (imageFiles) => {
     throw error;
   }
 };
-
