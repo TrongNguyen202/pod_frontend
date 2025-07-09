@@ -27,6 +27,12 @@ const axiosAPIPrintCare = axios.create({
   baseURL: '/api/proxy/com',
 });
 
+// Direct API service (new) - không qua proxy
+const axiosAPIDirect = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_BASE_URL || 'https://api.sundesign.io/api/v1',
+  timeout: 10000,
+});
+
 const getCommonHeaders = () => {
   const headers = {};
 
@@ -73,6 +79,24 @@ const refreshTokenApi = async (config) => {
   return config;
 };
 
+// Request interceptor cho direct API
+const refreshTokenApiDirect = async (config) => {
+  const accessToken = localStorage.getItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN) || '';
+
+  if (!config.headers) config.headers = {};
+
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  const commonHeaders = getCommonHeaders();
+  Object.entries(commonHeaders).forEach(([key, value]) => {
+    config.headers[key] = value;
+  });
+
+  return config;
+};
+
 // Import authService để sử dụng trong interceptor
 let authService;
 import('../services/authService').then((module) => {
@@ -93,10 +117,81 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// Request interceptor
+// Hàm refresh token cho direct API
+const refreshTokenDirect = async () => {
+  try {
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_BASE_URL || 'https://api.sundesign.io/api/v1'}/auth/refresh`,
+      {},
+      {
+        withCredentials: true,
+        headers: getCommonHeaders(),
+      },
+    );
+    const newToken = response.data?.accessToken;
+    if (newToken) {
+      localStorage.setItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN, newToken);
+    }
+    return newToken;
+  } catch (error) {
+    console.error('Direct refresh token failed:', error);
+    throw error;
+  }
+};
+
+// Response interceptor cho direct API
+const createDirectResponseInterceptor = (axiosInstance) => {
+  return axiosInstance.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const originalRequest = error.config;
+
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        if (isRefreshing) {
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          })
+            .then((token) => {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              return axiosInstance(originalRequest);
+            })
+            .catch((err) => Promise.reject(err));
+        }
+
+        originalRequest._retry = true;
+        isRefreshing = true;
+
+        try {
+          let newToken;
+          if (authService) {
+            newToken = await authService.refreshToken();
+          } else {
+            newToken = await refreshTokenDirect();
+          }
+
+          processQueue(null, newToken);
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          return axiosInstance(originalRequest);
+        } catch (err) {
+          processQueue(err, null);
+          localStorage.clear();
+          if (typeof window !== 'undefined') {
+            window.location.href = '/auth/login';
+          }
+          return Promise.reject(err);
+        } finally {
+          isRefreshing = false;
+        }
+      }
+
+      return Promise.reject(error);
+    },
+  );
+};
+
+// Proxy interceptors (existing)
 axiosAPI.interceptors.request.use(refreshTokenApi, (error) => Promise.reject(error));
 
-// Response interceptor với auto refresh
 axiosAPI.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -118,12 +213,10 @@ axiosAPI.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Sử dụng authService nếu có, nếu không thì fallback
         let newToken;
         if (authService) {
           newToken = await authService.refreshToken();
         } else {
-          // Fallback refresh token
           const response = await axios.post(
             '/api/proxy/com/auth/refresh',
             {},
@@ -154,6 +247,10 @@ axiosAPI.interceptors.response.use(
   },
 );
 
+// Direct API interceptors (new)
+axiosAPIDirect.interceptors.request.use(refreshTokenApiDirect, (error) => Promise.reject(error));
+createDirectResponseInterceptor(axiosAPIDirect);
+
 const refreshTokenApiFlashShip = async (config) => {
   const accessToken = localStorage.getItem(LOCAL_STORAGE_KEY.TOKEN_FLASH_SHIP) || '';
   config.headers.Authorization = `${accessToken}`;
@@ -169,4 +266,11 @@ const refreshTokenApiPrintCare = async (config) => {
 axiosAPIFlashShip.interceptors.request.use(refreshTokenApiFlashShip, (error) => Promise.reject(error));
 axiosAPIPrintCare.interceptors.request.use(refreshTokenApiPrintCare, (error) => Promise.reject(error));
 
-export { axiosAPI, axiosAPIFlashShip, axiosAPIPrintCare };
+export {
+  // Proxy services
+  axiosAPI,
+  axiosAPIFlashShip,
+  axiosAPIPrintCare,
+  // Direct services 
+  axiosAPIDirect,
+};

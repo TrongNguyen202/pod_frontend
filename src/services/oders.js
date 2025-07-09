@@ -1,4 +1,4 @@
-import { axiosAPI } from 'src/utils/axios';
+import { axiosAPI, axiosAPIDirect } from 'src/utils/axios';
 
 const requestGetOrdersByBoardId = async (query) => {
   const config = {
@@ -90,7 +90,7 @@ const requestUploadImagesForDesigner = async (orderId, data) => {
     data,
     timeout: 30000,
   };
-  return axiosAPI(config);
+  return axiosAPIDirect(config);
 };
 
 export const orders = {
