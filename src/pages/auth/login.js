@@ -28,6 +28,8 @@ import { setAuthenticate, setInitialized } from 'src/redux/reducers/auth';
 import { useTranslation } from 'react-i18next';
 import { tokens } from '../../locales/tokens';
 import { authService } from 'src/services/authService';
+import { Box } from '@mui/system';
+import { Typography } from '@mui/material';
 
 const initialValues = {
   email: '',
@@ -76,7 +78,7 @@ const Page = () => {
             toast.success('Đăng nhập thành công!');
           }
 
-          const redirectPath = userInfo.role === 'admin' ? returnTo || '/admin/dashboard' : returnTo || '/ideas';
+          const redirectPath = userInfo.role !== 'admin' ? returnTo || '/ideas' : returnTo || '/admin/dashboard';
           router.push(redirectPath);
         }
       } catch (err) {
@@ -138,11 +140,13 @@ const Page = () => {
                   }}
                 />
               </Stack>
+
               {formik.errors.submit && (
                 <FormHelperText error sx={{ mt: 3 }}>
                   {formik.errors.submit}
                 </FormHelperText>
               )}
+
               <Button
                 disabled={formik.isSubmitting}
                 fullWidth
@@ -153,12 +157,27 @@ const Page = () => {
               >
                 {t(tokens.nav.login)}
               </Button>
+
               <FormHelperText sx={{ mt: 2, textAlign: 'center' }}>
                 <Link href="https://zalo.me/0968083967" underline="hover">
                   Liên hệ để đăng ký
                 </Link>
               </FormHelperText>
             </form>
+
+            {/* ✅ Dòng nhỏ Chính sách bảo mật */}
+            <Box sx={{ mt: 2, textAlign: 'left' }}>
+              <Typography variant="caption" color="text.secondary">
+                Bạn đã đồng ý với{' '}
+                <Link href="/privacy" underline="hover" sx={{mr: 1}}>
+                  Chính Sách Bảo Mật
+                </Link>
+                và
+                <Link href="/terms" underline="hover" sx={{ml: 1}}>
+                  Điều khoản dịch vụ
+                </Link>
+              </Typography>
+            </Box>
           </CardContent>
         </Card>
       </div>

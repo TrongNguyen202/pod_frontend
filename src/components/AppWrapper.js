@@ -59,7 +59,7 @@ const AppWrapper = ({ children }) => {
           dispatch(setAuthenticate({ isAuthenticated: false }));
 
           // Kiểm tra nếu không phải trang public thì redirect về login
-          const publicPaths = ['/auth/login'];
+          const publicPaths = ['/auth/login', '/privacy', '/terms'];
           if (!publicPaths.includes(currentPath)) {
             setTimeout(() => {
               safeRedirect(`/auth/login?returnTo=${encodeURIComponent(currentPath)}`);
@@ -76,7 +76,7 @@ const AppWrapper = ({ children }) => {
 
         // Redirect về login nếu có lỗi
         const currentPath = window.location.pathname;
-        const publicPaths = ['/auth/login'];
+        const publicPaths = ['/auth/login', '/privacy', '/terms'];
         if (!publicPaths.includes(currentPath)) {
           setTimeout(() => {
             safeRedirect('/auth/login');
