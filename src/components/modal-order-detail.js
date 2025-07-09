@@ -306,33 +306,7 @@ const OrderDetailModal = ({
       const toastId = toast.loading('Đang upload ảnh...');
       try {
         const response = await dispatch(fetchUploadImagesForDesigner({ orderId: order.id, data: formData })).unwrap();
-        // let deviceId = null;
-        // let userIp = null;
-        // let token = null;
-        // if (typeof window !== 'undefined') {
-        //   token = localStorage.getItem(LOCAL_STORAGE_KEY.ACCESS_TOKEN);
-        //   if (token) {
-        //     try {
-        //       const decodedToken = jwtDecode(token);
-        //       deviceId = decodedToken.deviceId;
-        //       userIp = decodedToken.ipAddress;
-        //     } catch (error) {
-        //       console.error('Error decoding token in getCommonHeaders:', error);
-        //     }
-        //   }
-        // }
-        // const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/order/${order.id}/upload-folder`, {
-        //   method: 'POST',
-        //   headers: {
-        //     // Giả sử bạn cần gửi token xác thực
-        //     Authorization: `Bearer ${token}`,
-        //     'X-Device-Id': deviceId,
-        //     'X-Forwarded-For': userIp,
-        //   },
-        //   body: formData,
-        // });
-
-        if (response.ok === true) {
+        if (response.success === true) {
           toast.update(toastId, {
             render: 'Upload thành công!',
             type: 'success',
