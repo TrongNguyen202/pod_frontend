@@ -332,7 +332,7 @@ const OrderDetailModal = ({
           body: formData,
         });
 
-        if (response.success === true) {
+        if (response.ok === true) {
           toast.update(toastId, {
             render: 'Upload thành công!',
             type: 'success',
