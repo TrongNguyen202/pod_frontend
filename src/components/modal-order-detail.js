@@ -287,7 +287,7 @@ const OrderDetailModal = ({
       if (uploadFiles.length === 0 || uploadedImages.length === 0) return;
       const isAuthenticated = await checkOAuthStatus();
       if (!isAuthenticated) {
-        toast.error('Không thể xác thực người dùng');
+        // toast.error('Không thể xác thực người dùng');
         return;
       }
       const formData = new FormData();
