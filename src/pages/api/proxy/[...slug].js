@@ -85,8 +85,6 @@ export default async function handler(req, res) {
       }
     });
 
-    console.log('📋 Forwarded headers:', forwardHeaders);
-
     // Gọi backend
     const result = await createProxyRequest(endpoint, fullPath, method, req.body, forwardHeaders);
 
@@ -108,7 +106,7 @@ export default async function handler(req, res) {
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '100mb', // Tăng limit cho file upload
+      sizeLimit: '100mb',
     },
   },
 };

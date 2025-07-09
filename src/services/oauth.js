@@ -3,7 +3,7 @@ import { axiosAPI } from 'src/utils/axios';
 const requestPostAuthorizeOauth = async () => {
   const config = {
     method: 'GET',
-    url: `/oauth/authorize?forceReauth=true`,
+    url: `/oauth/authorize`,
   };
 
   return axiosAPI(config);

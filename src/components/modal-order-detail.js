@@ -272,8 +272,14 @@ const OrderDetailModal = ({
       }, 2000);
     }
   };
+
   const handleDeleteImage = (index) => {
-    setUploadedImages((prevImages) => prevImages.filter((_, i) => i !== index));
+    setUploadedImages((prevImages) => {
+      const newImages = prevImages.filter((_, i) => i !== index);
+      URL.revokeObjectURL(prevImages[index]);
+      return newImages;
+    });
+    setUploadFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
   };
 
   const handleSendImages = async () => {
