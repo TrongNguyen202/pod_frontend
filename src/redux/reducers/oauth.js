@@ -9,12 +9,27 @@ const initialState = {
     error: '',
     data: [],
   },
+  oauthAuthoAdmin: {
+    loading: false,
+    error: '',
+    data: [],
+  },
   oauthStatus: {
     loading: false,
     error: '',
     data: [],
   },
   oauthRevoke: {
+    loading: false,
+    error: '',
+    data: [],
+  },
+  oauthRevokeAdmin: {
+    loading: false,
+    error: '',
+    data: [],
+  },
+  oauthDriveInfo: {
     loading: false,
     error: '',
     data: [],
@@ -26,6 +41,11 @@ export const fetchAuthorizeOauth = createAsyncThunk('/post/oauth/autho', async (
   return res?.data?.data;
 });
 
+export const fetchAuthorizeOauthAdmin = createAsyncThunk('/post/oauth/autho/admin', async () => {
+  const res = await RepositoryRemote.oauth.requestPostAuthorizeOauthAdmin();
+  return res?.data?.data;
+});
+
 export const fetchStatusOauth = createAsyncThunk('/get/oauth/status', async () => {
   const res = await RepositoryRemote.oauth.requestGetStatusOauth();
   return res?.data?.data;
@@ -33,6 +53,16 @@ export const fetchStatusOauth = createAsyncThunk('/get/oauth/status', async () =
 
 export const fetchRevokeOauth = createAsyncThunk('/delete/oauth', async () => {
   const res = await RepositoryRemote.oauth.requestRevokeOauth();
+  return res?.data?.data;
+});
+
+export const fetchRevokeOauthAdmin = createAsyncThunk('/delete/oauth/admin', async () => {
+  const res = await RepositoryRemote.oauth.requestRevokeOauthAdmin();
+  return res?.data?.data;
+});
+
+export const fetchDriveInfoAdmin = createAsyncThunk('/drive/info/admin', async () => {
+  const res = await RepositoryRemote.oauth.requestGetDriveInfoAdmin();
   return res?.data?.data;
 });
 
@@ -53,6 +83,21 @@ const slicer = createSlice({
       state.oauthAutho.loading = false;
       state.oauthAutho.data = [];
       state.oauthAutho.error = action?.error?.message || 'Error while processing.';
+    });
+
+    // Authozire admin
+    builder.addCase(fetchAuthorizeOauthAdmin.pending, (state) => {
+      state.oauthAuthoAdmin.loading = true;
+    });
+    builder.addCase(fetchAuthorizeOauthAdmin.fulfilled, (state, action) => {
+      state.oauthAuthoAdmin.loading = false;
+      state.oauthAuthoAdmin.data = action.payload;
+      state.oauthAuthoAdmin.error = '';
+    });
+    builder.addCase(fetchAuthorizeOauthAdmin.rejected, (state, action) => {
+      state.oauthAuthoAdmin.loading = false;
+      state.oauthAuthoAdmin.data = [];
+      state.oauthAuthoAdmin.error = action?.error?.message || 'Error while processing.';
     });
 
     // Tao moi template
@@ -83,6 +128,35 @@ const slicer = createSlice({
       state.oauthRevoke.loading = false;
       state.oauthRevoke.data = [];
       state.oauthRevoke.error = action?.error?.message || 'Error while processing.';
+    });
+
+    // Xoa template
+    builder.addCase(fetchRevokeOauthAdmin.pending, (state) => {
+      state.oauthRevokeAdmin.loading = true;
+    });
+    builder.addCase(fetchRevokeOauthAdmin.fulfilled, (state, action) => {
+      state.oauthRevokeAdmin.loading = false;
+      state.oauthRevokeAdmin.data = action;
+      state.oauthRevokeAdmin.error = '';
+    });
+    builder.addCase(fetchRevokeOauthAdmin.rejected, (state, action) => {
+      state.oauthRevokeAdmin.loading = false;
+      state.oauthRevokeAdmin.data = [];
+      state.oauthRevokeAdmin.error = action?.error?.message || 'Error while processing.';
+    });
+
+    builder.addCase(fetchDriveInfoAdmin.pending, (state) => {
+      state.oauthDriveInfo.loading = true;
+    });
+    builder.addCase(fetchDriveInfoAdmin.fulfilled, (state, action) => {
+      state.oauthDriveInfo.loading = false;
+      state.oauthDriveInfo.data = action.payload;
+      state.oauthDriveInfo.error = '';
+    });
+    builder.addCase(fetchDriveInfoAdmin.rejected, (state, action) => {
+      state.oauthDriveInfo.loading = false;
+      state.oauthDriveInfo.data = [];
+      state.oauthDriveInfo.error = action?.error?.message || 'Error while processing.';
     });
   },
 });

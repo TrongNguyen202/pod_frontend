@@ -1,3 +1,4 @@
+import { AddToDrive } from '@mui/icons-material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import TimelineIcon from '@mui/icons-material/Timeline';
@@ -29,6 +30,7 @@ export default function AdminLayout({ children }) {
     { segment: 'admin/dashboard', title: 'Dashboard', icon: <DashboardIcon /> },
     { segment: 'admin/transaction', title: 'Transactions', icon: <TimelineIcon /> },
     { segment: 'admin/user', title: 'Users', icon: <PeopleIcon /> },
+    { segment: 'admin/drive', title: 'Drive', icon: <AddToDrive /> },
   ];
 
   return (
