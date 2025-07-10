@@ -97,6 +97,7 @@ const Page = () => {
 
           <Typography variant="body1" paragraph>
             • Email: sundesreal68@gmail.com
+            <br />• Địa chỉ:: Hoàng Mai, Hà Nội, Hanoi, Vietnam
             <br />• Số điện thoại: 0968083967
           </Typography>
 

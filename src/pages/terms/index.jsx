@@ -91,6 +91,7 @@ const Page = () => {
           <Typography variant="body1" paragraph>
             Mọi thắc mắc hoặc khiếu nại liên quan đến Điều Khoản Dịch Vụ, vui lòng liên hệ:
             <br />• Email: sundesreal68@gmail.com
+            <br />• Địa chỉ:: Hoàng Mai, Hà Nội, Hanoi, Vietnam
             <br />• Số điện thoại: 0968 083 967
             {/* <br />• Địa chỉ: [Địa chỉ công ty] */}
           </Typography>
