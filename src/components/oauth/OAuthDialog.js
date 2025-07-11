@@ -35,6 +35,7 @@ export const OAuthDialog = ({ isOpen, onClose, authUrl, message }) => {
       <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">Cần xác thực Google Drive</h2>
+          <br />
           <h3 className="text-lg font-semibold text-gray-800">
             Chúng tôi cần biết bạn thực hiện upload lên drive từ đâu, vui lòng xác thực bằng tài khoản drive của bạn
           </h3>

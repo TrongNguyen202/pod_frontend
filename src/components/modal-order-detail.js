@@ -225,7 +225,7 @@ const OrderDetailModal = ({
       const response = await dispatch(fetchPostCommentFirebase(data));
       if (response.meta.requestStatus === 'fulfilled') {
         await dispatch(fetchPostCommentPosgres(response.payload));
-        sendNotificationComment(order.userid, order.designerId, order.name, commentText, role);
+        sendNotificationComment(order.userid, order.designerid, order.name, commentText, role);
       }
       setCommentText('');
     } finally {
@@ -375,7 +375,7 @@ const OrderDetailModal = ({
               await sendNotification(order.userid, null, order.name, 'IN_REVIEW');
               break;
             case 'NEED_FIX':
-              await sendNotification(null, order.designerId, order.name, 'NEED_FIX');
+              await sendNotification(null, order.designerid, order.name, 'NEED_FIX');
               break;
             case 'DONE':
               await sendNotification(order.userid, null, order.name, 'DONE');
