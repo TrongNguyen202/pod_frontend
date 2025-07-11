@@ -405,7 +405,7 @@ const Page = () => {
                 handleAmountFormat={handleAmountFormat}
                 userData={userData}
                 role={role}
-                productTypeData={newMap}
+                productTypeData={productTypeData}
                 buildQueryString={buildQuery}
                 boardId={boardId}
                 onStatusChanged={handleStatusChanged}

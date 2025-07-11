@@ -39,6 +39,7 @@ const typeTransactionVi = {
   OUT: 'Rút tiền',
   USE: 'Sử dụng',
   MAKE: 'Trả đơn',
+  REFUND: 'Hoàn tiền',
 };
 
 const formatStatusTransaction = (status) => {
@@ -172,6 +173,7 @@ const Page = () => {
     { value: 'IN', label: 'Nạp tiền' },
     { value: 'OUT', label: 'Rút tiền' },
     { value: 'USE', label: 'Sử dụng' },
+    { value: 'REFUND', label: 'Hoàn tiền' },
   ];
 
   const labelSort = {
@@ -466,7 +468,9 @@ const Page = () => {
                                         ? 'warning.light'
                                         : row.transactionType === 'MAKE'
                                           ? 'success.light'
-                                          : 'grey.light',
+                                          : row.transactionType === 'REFUND'
+                                            ? 'success.light'
+                                            : 'grey.light',
                                 color:
                                   row.transactionType === 'IN'
                                     ? 'success.dark'
@@ -476,7 +480,9 @@ const Page = () => {
                                         ? 'warning.dark'
                                         : row.transactionType === 'MAKE'
                                           ? 'success.dark'
-                                          : 'grey.dark',
+                                          : row.transactionType === 'REFUND'
+                                            ? 'success.dark'
+                                            : 'grey.dark',
                                 textAlign: 'center',
                               }}
                             >
