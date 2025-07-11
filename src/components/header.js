@@ -356,11 +356,11 @@ const Header = ({ onBoardChange, showBoards, role, onMenuSelect }, ref) => {
           <Box
             component={Link}
             href="/ideas"
-            sx={{ color: 'pink', fontWeight: 'bold', display: 'flex', alignItems: 'center', mr: 2 }}
+            sx={{ color: 'primary.main', fontWeight: 'bold', display: 'flex', alignItems: 'center', mr: 2 }}
           >
             <Box
               component="img"
-              src="/logo.png"
+              src="/logo.ico"
               sx={{
                 width: '32px',
                 height: '32px',

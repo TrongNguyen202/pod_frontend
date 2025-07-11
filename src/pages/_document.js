@@ -7,24 +7,24 @@ const Favicon = () => (
   <>
     <link
       rel="icon"
-      href="/logo.png"
+      href="/logo.ico"
     />
     <link
       rel="icon"
-      type="image/png"
+      type="image/x-icon"
       sizes="16x16"
-      href="/logo.png"
+      href="/logo.ico"
     />
     <link
       rel="icon"
-      type="image/png"
+      type="image/x-icon"
       sizes="32x32"
-      href="/logo.png"
+      href="/logo.ico"
     />
     <link
       rel="apple-touch-icon"
       sizes="180x180"
-      href="/logo.png"
+      href="/logo.ico"
     />
   </>
 );

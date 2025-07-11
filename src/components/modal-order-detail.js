@@ -663,7 +663,6 @@ const OrderDetailModal = ({
                     <img
                       src={url}
                       alt={`preview-${idx}`}
-                      onClick={() => setZoomImageIndex(idx)}
                       style={{
                         width: '100%',
                         height: '100%',
@@ -955,67 +954,6 @@ const OrderDetailModal = ({
         authUrl={authData?.authUrl || ''}
         message={authData?.message || ''}
       />
-      <Dialog open={zoomImageIndex !== null} onClose={() => setZoomImageIndex(null)} maxWidth="md">
-        <DialogContent
-          sx={{
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            p: 0,
-            bgcolor: '#000',
-          }}
-        >
-          {zoomImageIndex !== null && (
-            <>
-              <IconButton
-                onClick={() => setZoomImageIndex((prev) => (prev > 0 ? prev - 1 : prev))}
-                sx={{
-                  position: 'absolute',
-                  left: 8,
-                  color: 'white',
-                  backgroundColor: 'rgba(0,0,0,0.5)',
-                  zIndex: 10,
-                }}
-              >
-                <ChevronLeft fontSize="large" />
-              </IconButton>
-
-              {/* Transition ảnh */}
-              <AnimatePresence mode="wait">
-                <motion.img
-                  key={zoomImageIndex}
-                  src={imagesList[zoomImageIndex]}
-                  alt="Zoomed"
-                  initial={{ opacity: 0, x: 100 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -100 }}
-                  transition={{ duration: 0.3 }}
-                  style={{
-                    width: '100%',
-                    height: 'auto',
-                    maxHeight: '80vh',
-                    objectFit: 'contain',
-                  }}
-                />
-              </AnimatePresence>
-
-              <IconButton
-                onClick={() => setZoomImageIndex((prev) => (prev < imagesList.length - 1 ? prev + 1 : prev))}
-                sx={{
-                  position: 'absolute',
-                  right: 8,
-                  color: 'white',
-                  backgroundColor: 'rgba(0,0,0,0.5)',
-                  zIndex: 10,
-                }}
-              >
-                <ChevronRight fontSize="large" />
-              </IconButton>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
     </Dialog>
   );
 };

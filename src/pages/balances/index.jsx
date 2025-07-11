@@ -200,6 +200,7 @@ const Page = () => {
   const totalWithdraw = transactionData?.totalOut || 0;
   const totalUsed = transactionData?.totalUse || 0;
   const totalMaked = transactionData?.totalMake || 0;
+  const totalRefund = transactionData?.totalRefund || 0;
 
   // Don't render complex content until hydrated
   if (!isHydrated) {
@@ -286,18 +287,31 @@ const Page = () => {
                   <Typography variant="h6" sx={{ marginBottom: 2 }}>
                     {t(tokens.nav.fulfilled)}
                   </Typography>
-                  <Typography variant="h6">{handleAmountFormat(totalUsed)}</Typography>
+                  <Typography variant="h6">{handleAmountFormat(totalUsed - totalRefund)}</Typography>
                 </Paper>
               </Grid>
 
-              <Grid item xs={12} md={3} size={3}>
-                <Paper elevation={3} sx={{ p: 2, borderRadius: 2, width: '100%' }}>
-                  <Typography variant="h6" sx={{ marginBottom: 2 }}>
-                    {t(tokens.nav.withdraw)}
-                  </Typography>
-                  <Typography variant="h6">{handleAmountFormat(totalWithdraw)}</Typography>
-                </Paper>
-              </Grid>
+              {role === 'customer' ? (
+                <Grid item xs={12} md={3} size={3}>
+                  <Paper elevation={3} sx={{ p: 2, borderRadius: 2, width: '100%' }}>
+                    <Typography variant="h6" sx={{ marginBottom: 2 }}>
+                      {t(tokens.nav.refund)}
+                    </Typography>
+                    <Typography variant="h6">{handleAmountFormat(totalRefund)}</Typography>
+                  </Paper>
+                </Grid>
+              ) : role === 'designer' ? (
+                <Grid item xs={12} md={3} size={3}>
+                  <Paper elevation={3} sx={{ p: 2, borderRadius: 2, width: '100%' }}>
+                    <Typography variant="h6" sx={{ marginBottom: 2 }}>
+                      {t(tokens.nav.withdraw)}
+                    </Typography>
+                    <Typography variant="h6">{handleAmountFormat(totalWithdraw)}</Typography>
+                  </Paper>
+                </Grid>
+              ) : (
+                <Box></Box>
+              )}
             </Grid>
 
             {/* Filter Section */}

@@ -65,6 +65,7 @@ export const vi = {
   [tokens.nav.forgetPassword]: 'Quên mật khẩu',
   [tokens.nav.forgotPassword]: 'Quên mật khẩu',
   [tokens.nav.fulfilled]: 'Đã hoàn thành',
+  [tokens.nav.refund]: 'Hoàn tiền',
   [tokens.nav.googleTrends]: 'Xu hướng Google',
   [tokens.nav.hideComment]: 'Ẩn bình luận',
   [tokens.nav.imagesDescription]: 'Ảnh mô tả',

@@ -143,4 +143,5 @@ export const en = {
   [tokens.nav.username]: 'User Name',
   [tokens.nav.verifyCode]: 'Verify Code',
   [tokens.nav.withdraw]: 'Withdraw',
+  [tokens.nav.refund]: 'Refund',
 };

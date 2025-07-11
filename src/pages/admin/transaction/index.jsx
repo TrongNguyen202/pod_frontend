@@ -65,6 +65,7 @@ const formatTransactionType = (type) => {
     OUT: 'Rút tiền',
     USE: 'Sử dụng',
     MAKE: 'Designer làm',
+    REFUND: 'Hoàn tiền',
   };
   return types[type] || type;
 };
@@ -75,6 +76,7 @@ const getTransactionTypeColor = (type) => {
     OUT: 'error',
     USE: 'info',
     MAKE: 'warning',
+    REFUND: 'success',
   };
   return colors[type] || 'default';
 };

@@ -56,6 +56,7 @@ export const tokens = {
     received: 'nav.received',
     fulfilled: 'nav.fulfilled',
     withdraw: 'nav.withdraw',
+    refund: 'nav.refund',
     amount: 'nav.amount',
     filterTransactions: 'nav.filterTransactions',
     transactionType: 'nav.transactionType',
