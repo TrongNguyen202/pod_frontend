@@ -450,7 +450,7 @@ const Page = () => {
             justifyContent: 'center',
             fontSize: '1.4rem',
             alignItems: 'center',
-            minHeight: '80vh', // hoặc 100vh nếu bạn muốn chiếm full viewport
+            minHeight: '80vh', 
             textAlign: 'center',
             px: 2,
             color: 'text.secondary',
