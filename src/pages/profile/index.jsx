@@ -248,26 +248,28 @@ export default function UserProfile() {
                   />
                 </Box>
 
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', marginBottom: 2 }}>
-                    Thông tin ngân hàng
-                  </Typography>
-                  <InfoItem
-                    icon={<PersonIcon sx={{ color: '#059669' }} />}
-                    label="Chủ tài khoản"
-                    value={userData?.bankAccountName}
-                  />
-                  <InfoItem
-                    icon={<BankIcon sx={{ color: '#059669' }} />}
-                    label="Ngân hàng"
-                    value={userData?.bankName}
-                  />
-                  <InfoItem
-                    icon={<CardIcon sx={{ color: '#059669' }} />}
-                    label="Số tài khoản"
-                    value={userData?.bankNumber}
-                  />
-                </Box>
+                {userData?.role_name === 'designer' && (
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', marginBottom: 2 }}>
+                      Thông tin ngân hàng
+                    </Typography>
+                    <InfoItem
+                      icon={<PersonIcon sx={{ color: '#059669' }} />}
+                      label="Chủ tài khoản"
+                      value={userData?.bankAccountName}
+                    />
+                    <InfoItem
+                      icon={<BankIcon sx={{ color: '#059669' }} />}
+                      label="Ngân hàng"
+                      value={userData?.bankName}
+                    />
+                    <InfoItem
+                      icon={<CardIcon sx={{ color: '#059669' }} />}
+                      label="Số tài khoản"
+                      value={userData?.bankNumber}
+                    />
+                  </Box>
+                )}
               </Box>
             </CardContent>
           </Card>
