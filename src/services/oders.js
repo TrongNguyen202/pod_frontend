@@ -83,6 +83,15 @@ const requestAssignOrdersForDesigner = async (data) => {
   return axiosAPI(config);
 };
 
+const requestResetOrderToNew = async (data) => {
+  const config = {
+    method: 'PUT',
+    url: `/order/reset-to-new`,
+    data,
+  };
+  return axiosAPI(config);
+}
+
 const requestUploadImagesForDesigner = async (orderId, data) => {
   const config = {
     method: 'POST',
@@ -103,5 +112,6 @@ export const orders = {
   requestChangeStatusOrders,
   requestApiDeleteOrders,
   requestAssignOrdersForDesigner,
+  requestResetOrderToNew,
   requestUploadImagesForDesigner,
 };

@@ -455,8 +455,30 @@ const Page = () => {
                       (userTopupsInfo || []).map((row) => (
                         <TableRow key={row.id}>
                           <TableCell>{userData?.username || '-'}</TableCell>
-                          <TableCell>{row.transactionCode || '-'}</TableCell>
-                          <TableCell>{row.contents || '-'}</TableCell>
+                          <TableCell
+                            sx={{
+                              maxWidth: 300,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                            title={row.transactionCode || '-'}
+                          >
+                            {row.transactionCode || '-'}
+                          </TableCell>
+
+                          <TableCell
+                            sx={{
+                              maxWidth: 300,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                            title={row.contents || '-'}
+                          >
+                            {row.contents || '-'}
+                          </TableCell>
+
                           <TableCell>
                             <Typography color={row.coin > 0 ? 'success.main' : 'error.main'} fontWeight="medium">
                               {row.coin > 0 ? '+' : ''}

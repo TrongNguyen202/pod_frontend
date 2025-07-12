@@ -226,8 +226,9 @@ const Page = () => {
 
   const requiredFields = fieldIdeas.filter((f) => f.required && f.name !== 'images').map((f) => f.name);
 
-  const handleClickDeleteIcon = (id) => {
-    setSelectedId(id);
+  const handleClickDeleteIcon = (order) => {
+    setSelectedOrder(order);
+    setSelectedId(order?.id);
     setOpenConfirm(true);
   };
 
@@ -435,7 +436,7 @@ const Page = () => {
                   <Button onClick={handleCloseDialog} color="inherit">
                     {t(tokens.nav.cancel)}
                   </Button>
-                  <Button onClick={handleConfirmDelete} color="error" variant="contained">
+                  <Button onClick={() => handleConfirmDelete(selectedOrder)} color="error" variant="contained">
                     {t(tokens.nav.submit)}
                   </Button>
                 </DialogActions>

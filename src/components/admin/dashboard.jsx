@@ -2,11 +2,11 @@
 
 import {
   AttachMoney as AttachMoneyIcon,
-  CalendarToday as CalendarTodayIcon,
   Clear as ClearIcon,
   DashboardCustomize as DashboardCustomizeIcon,
   FilterList as FilterListIcon,
   Groups as GroupsIcon,
+  PersonOff,
   Refresh as RefreshIcon,
   Search as SearchIcon,
   ShowChart as ShowChartIcon,
@@ -19,6 +19,10 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   FormControl,
   Grid,
   IconButton,
@@ -39,7 +43,10 @@ import {
   Typography,
 } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
+import { fetchSendPushNotifications } from 'src/redux/reducers/notifications';
+import { fetchResetOrderToNew } from 'src/redux/reducers/orders';
 import { fetchGetStatisticsOrder } from 'src/redux/reducers/statistics';
 import handleAmountFormat from 'src/utils/amount-vnd';
 import { formatDateTime } from 'src/utils/date';
@@ -107,6 +114,9 @@ export default function AdminDashboard() {
   const [tempStartDate, setTempStartDate] = useState(null);
   const [tempEndDate, setTempEndDate] = useState(null);
   const [tempCustomerNameToSearch, setTempCustomerNameToSearch] = useState('');
+
+  const [showConfirmRemoveDesigner, setShowConfirmRemoveDesigner] = useState(false);
+  const [orderToRemoveDesigner, setOrderToRemoveDesigner] = useState(null);
 
   // Get data from Redux store
   const { data: statisticsOrderData, loading, error } = useAppSelector((state) => state.statistics.order);
@@ -306,6 +316,44 @@ export default function AdminDashboard() {
 
   const handleRefresh = () => {
     fetchData();
+  };
+
+  const handleShowConfirmRemoveDesigner = (orderSelected) => {
+    setShowConfirmRemoveDesigner(true);
+    setOrderToRemoveDesigner(orderSelected);
+  };
+
+  const sendNotificationSafely = useCallback(
+    async (notificationData) => {
+      try {
+        await dispatch(fetchSendPushNotifications(notificationData));
+      } catch (error) {
+        console.error('Error sending notification:', error);
+      }
+    },
+    [dispatch],
+  );
+
+  const handleRemoveDesigner = async () => {
+    if (orderToRemoveDesigner?.status === 'DOING') {
+      const response = await dispatch(
+        fetchResetOrderToNew({ data: { orderIds: [Number(orderToRemoveDesigner?.id)] } }),
+      );
+      if (response?.meta?.requestStatus === 'fulfilled') {
+        (sendNotificationSafely({
+          customerIds: orderToRemoveDesigner?.userid ? [orderToRemoveDesigner.userid] : [],
+          title: 'Trạng thái đơn hàng',
+          message: `Đơn hàng của bạn vừa được cập nhật trạng thái, xem ngay!`,
+        }),
+          toast.success('Gỡ designer thành công!'));
+      } else {
+        toast.error('Gỡ designer thất bại!');
+      }
+    } else {
+      toast.error('Đơn hàng phải ở trạng thái Đang xử lý mới có thể gỡ');
+    }
+    setShowConfirmRemoveDesigner(false);
+    setOrderToRemoveDesigner(null);
   };
 
   if (error) {
@@ -639,6 +687,7 @@ export default function AdminDashboard() {
                       <TableCell>Trạng thái</TableCell>
                       <TableCell>Ngày tạo</TableCell>
                       <TableCell align="center">Số lượng</TableCell>
+                      <TableCell align="center">Thao tác</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -709,11 +758,23 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell>{formatDateTime(order.createdDate)}</TableCell>
                         <TableCell align="center">{order.quantity}</TableCell>
+                        <TableCell align="center" onClick={() => handleShowConfirmRemoveDesigner(order)}>
+                          <PersonOff />{' '}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </TableContainer>
+
+              <Dialog open={showConfirmRemoveDesigner} onClose={() => setShowConfirmRemoveDesigner(false)}>
+                <DialogTitle>Xác nhận gỡ designer khỏi đơn hàng?</DialogTitle>
+                <DialogContent>Xác nhận gỡ designer khỏi đơn hàng và chuyển trạng thái đơn hàng về Mới?</DialogContent>
+                <DialogActions>
+                  <Button onClick={() => setShowConfirmRemoveDesigner(false)}>Hủy</Button>
+                  <Button onClick={() => handleRemoveDesigner()}>Lưu</Button>
+                </DialogActions>
+              </Dialog>
 
               {/* Pagination */}
               {pagination && (

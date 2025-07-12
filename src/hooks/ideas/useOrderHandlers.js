@@ -8,6 +8,7 @@ import {
   fetchAssignOrdersForDesigner,
   fetchGetAllStatus,
   fetchGetOrdersByBoardId,
+  fetchResetOrderToNew,
   postOrder,
   requestDeleteOrders,
 } from 'src/redux/reducers/orders';
@@ -140,16 +141,32 @@ const useOrderHandlers = ({
     ],
   );
 
-  const handleConfirmDelete = useCallback(async () => {
+  const handleConfirmDelete = useCallback(async (selectedOrder) => {
     if (selectedId !== null) {
-      const response = await dispatch(requestDeleteOrders({ ids: [Number(selectedId)] }));
+      if (isCustomer) {
+        const response = await dispatch(requestDeleteOrders({ ids: [Number(selectedId)] }));
 
-      if (response.payload?.status === 200) {
-        await dispatch(fetchGetOrdersByBoardId({ query: buildQuery() }));
-        await fetchAllStatuses();
-        toast.success('Xóa đơn thành công!');
-      } else {
-        toast.error('Xóa đơn thất bại!');
+        if (response.payload?.status === 200) {
+          await dispatch(fetchGetOrdersByBoardId({ query: buildQuery() }));
+          await fetchAllStatuses();
+          toast.success('Xóa đơn thành công!');
+        } else {
+          toast.error('Xóa đơn thất bại!');
+        }
+      } else if (isDesigner) {
+        const response = await dispatch(fetchResetOrderToNew({ data: { orderIds: [Number(selectedOrder?.id)] } }));
+        if (response?.meta?.requestStatus === 'fulfilled') {
+          await dispatch(fetchGetOrdersByBoardId({ query: buildQuery() }));
+          await fetchAllStatuses();
+          (sendNotificationSafely({
+            customerIds: selectedOrder?.userid ? [selectedOrder.userid] : [],
+            title: 'Trạng thái đơn hàng',
+            message: `Đơn hàng của bạn vừa được cập nhật trạng thái, xem ngay!`,
+          }),
+            toast.success('Hủy nhận đơn thành công!'));
+        } else {
+          toast.error('Hủy nhận đơn thất bại!');
+        }
       }
       setOpenConfirm(false);
     }

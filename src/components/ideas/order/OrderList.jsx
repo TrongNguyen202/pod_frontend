@@ -22,6 +22,7 @@ const OrderList = ({
         const showCheckbox = ['NEW', 'DRAFT'].includes(selectedCategory);
         const canDelete = isCustomer && ['DRAFT', 'NEW'].includes(item.status);
         const priceValue = isCustomer ? item.price : isDesigner ? item.price_ : 0;
+        const canRemoveByDesigner = isDesigner && ['DOING'].includes(item.status)
 
         return (
           <Grid item size={3} xs={12} sm={6} md={3} key={item.id} position="relative">
@@ -34,6 +35,7 @@ const OrderList = ({
               onToggleCheck={handleToggleCheck}
               showCheckbox={showCheckbox}
               canDelete={canDelete}
+              canRemoveByDesigner={canRemoveByDesigner}
               productTypeData={productTypeData}
               handleAmountFormat={() => handleAmountFormat(priceValue)}
             />

@@ -1,11 +1,5 @@
 import React, { useMemo } from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  Checkbox,
-  IconButton,
-} from '@mui/material';
+import { Box, Paper, Typography, Checkbox, IconButton } from '@mui/material';
 import { Delete } from '@mui/icons-material';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import LayersIcon from '@mui/icons-material/Layers';
@@ -22,6 +16,7 @@ const OrderCard = ({
   onToggleCheck,
   showCheckbox,
   canDelete,
+  canRemoveByDesigner,
   productTypeData,
   handleAmountFormat,
 }) => {
@@ -47,15 +42,29 @@ const OrderCard = ({
         cursor: 'pointer',
       }}
     >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 8px' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: showCheckbox ? 'space-between' : 'flex-end',
+          alignItems: 'center',
+          margin: '0 8px',
+        }}
+      >
         {showCheckbox && (
-          <Checkbox checked={isChecked} onClick={(e) => { e.stopPropagation(); onToggleCheck(item.id); }} />
-        )}
-        {canDelete && (
-          <IconButton
+          <Checkbox
+            checked={isChecked}
             onClick={(e) => {
               e.stopPropagation();
-              onDelete(item.id);
+              onToggleCheck(item.id);
+            }}
+          />
+        )}
+        {(canDelete || canRemoveByDesigner) && (
+          <IconButton
+            sx={{ position: 'relative', right: 0 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(item);
             }}
           >
             <Delete sx={{ color: 'red' }} />
@@ -78,14 +87,33 @@ const OrderCard = ({
       {itemImages.length > 1 && (
         <Box sx={{ display: 'flex', gap: 0.5, p: 1, overflowX: 'auto', maxHeight: 60, bgcolor: '#fafafa' }}>
           {itemImages.slice(1, 4).map((url, idx) => (
-            <Box key={idx} sx={{ width: 50, height: 50, borderRadius: 1, overflow: 'hidden', flexShrink: 0, border: '1px solid #ccc' }}>
+            <Box
+              key={idx}
+              sx={{
+                width: 50,
+                height: 50,
+                borderRadius: 1,
+                overflow: 'hidden',
+                flexShrink: 0,
+                border: '1px solid #ccc',
+              }}
+            >
               <img src={url} alt={`preview-${idx}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </Box>
           ))}
         </Box>
       )}
 
-      <Box sx={{ flex: 1, p: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+      <Box
+        sx={{
+          flex: 1,
+          p: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          fontSize: '0.75rem',
+        }}
+      >
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Typography noWrap variant="body1" fontWeight="bold" color="text.secondary">
             {item.usercreate}
@@ -103,16 +131,29 @@ const OrderCard = ({
             </Typography>
           </Box>
           <Box>
-            <Typography noWrap variant="body4" title="Files" sx={{ ml: 1 }}><AttachFileIcon />{itemImages.length}</Typography>
-            <Typography noWrap variant="body4" title="Quantity" sx={{ ml: 1 }}><LayersIcon />{item.quantity}</Typography>
-            <Typography noWrap variant="body4" title="Number" sx={{ ml: 1 }}><NumbersIcon />{item.number}</Typography>
+            <Typography noWrap variant="body4" title="Files" sx={{ ml: 1 }}>
+              <AttachFileIcon />
+              {itemImages.length}
+            </Typography>
+            <Typography noWrap variant="body4" title="Quantity" sx={{ ml: 1 }}>
+              <LayersIcon />
+              {item.quantity}
+            </Typography>
+            <Typography noWrap variant="body4" title="Number" sx={{ ml: 1 }}>
+              <NumbersIcon />
+              {item.number}
+            </Typography>
           </Box>
         </Box>
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '4px 0' }}>
           <Box>
-            <Typography noWrap variant="body4">{productTypeData.find((pt) => pt.id === item.producttypeid)?.name}</Typography>
-            <Typography noWrap variant="body4" sx={{ ml: 2 }}>{categoryLabelsVi[item.designtype]}</Typography>
+            <Typography noWrap variant="body4">
+              {productTypeData.find((pt) => pt.id === item.producttypeid)?.name}
+            </Typography>
+            <Typography noWrap variant="body4" sx={{ ml: 2 }}>
+              {categoryLabelsVi[item.designtype]}
+            </Typography>
           </Box>
           <Typography noWrap variant="body1" fontSize="20px" sx={{ ml: 1 }}>
             {handleAmountFormat(role === 'customer' ? item.price : role === 'designer' ? item.price_ : 0)} đ

@@ -47,6 +47,11 @@ const initialState = {
     error: '',
     data: [],
   },
+  resetOrder: {
+    loading: false,
+    error: '',
+    data: [],
+  },
   uploadImageService: {
     loading: false,
     error: '',
@@ -96,6 +101,10 @@ export const requestDeleteOrders = createAsyncThunk('/delete/orders', async ({ i
 
 export const fetchAssignOrdersForDesigner = createAsyncThunk('/asign/orders', async ({ data }) => {
   const res = await RepositoryRemote.orders.requestAssignOrdersForDesigner(data);
+});
+
+export const fetchResetOrderToNew = createAsyncThunk('/reset/orders/new', async ({ data }) => {
+  const res = await RepositoryRemote.orders.requestResetOrderToNew(data);
 });
 
 export const fetchUploadImagesForDesigner = createAsyncThunk(
@@ -275,6 +284,21 @@ const slicer = createSlice({
       state.deleteService.loading = false;
       state.deleteService.data = [];
       state.deleteService.error = action?.error?.message || 'Error while processing.';
+    });
+
+    // Reset order from designer
+    builder.addCase(fetchResetOrderToNew.pending, (state) => {
+      state.resetOrder.loading = true;
+    });
+    builder.addCase(fetchResetOrderToNew.fulfilled, (state, action) => {
+      state.resetOrder.loading = false;
+      state.resetOrder.data = action.payload;
+      state.resetOrder.error = '';
+    });
+    builder.addCase(fetchResetOrderToNew.rejected, (state, action) => {
+      state.resetOrder.loading = false;
+      state.resetOrder.data = [];
+      state.resetOrder.error = action?.error?.message || 'Error while processing.';
     });
 
     // Upload image order for designer
