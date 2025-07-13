@@ -13,6 +13,7 @@ import dayjs from 'dayjs';
 import { isArray } from 'lodash';
 import utc from 'dayjs/plugin/utc';
 import { categoryList, standardizationCategory } from 'src/constants';
+import imageCompression from 'browser-image-compression';
 
 dayjs.extend(utc);
 
@@ -85,6 +86,85 @@ export const checkRole = (role) => {
     isDesigner: role === 'designer',
     isCustomer: role === 'customer',
   };
+};
+
+export const compressImageForDesigner = async (file) => {
+  // Cấu hình nén khác nhau cho từng loại ảnh
+  const getCompressionOptions = (fileSize) => {
+    if (fileSize > 10 * 1024 * 1024) {
+      // >10MB
+      return {
+        maxSizeMB: 5,
+        maxWidthOrHeight: 2048,
+        useWebWorker: true,
+        fileType: 'image/jpeg',
+        initialQuality: 0.7,
+      };
+    } else if (fileSize > 5 * 1024 * 1024) {
+      // >5MB
+      return {
+        maxSizeMB: 3,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+        fileType: 'image/jpeg',
+        initialQuality: 0.8,
+      };
+    } else {
+      return {
+        maxSizeMB: 2,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+        fileType: 'image/jpeg',
+        initialQuality: 0.9,
+      };
+    }
+  };
+
+  try {
+    const options = getCompressionOptions(file.size);
+    const compressedFile = await imageCompression(file, options);
+
+    // Tạo file mới với tên gốc
+    const newFile = new File([compressedFile], file.name, {
+      type: compressedFile.type,
+      lastModified: Date.now(),
+    });
+
+    console.log(`Compressed ${file.name}: ${file.size} -> ${newFile.size}`);
+    return newFile;
+  } catch (error) {
+    console.error('Compression failed for:', file.name, error);
+    return file; // Trả về file gốc nếu nén thất bại
+  }
+};
+
+export const validateFiles = (files) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const allowedExtensions = ['.psd'];
+  const maxFileSize = 50 * 1024 * 1024; // 50MB
+
+  const validFiles = [];
+  const errors = [];
+
+  files.forEach((file) => {
+    const fileName = file.name.toLowerCase();
+    const isImage = allowedTypes.includes(file.type);
+    const isPSD = allowedExtensions.some((ext) => fileName.endsWith(ext));
+
+    if (!isImage && !isPSD) {
+      errors.push(`${file.name}: Định dạng không được hỗ trợ`);
+      return;
+    }
+
+    if (file.size > maxFileSize) {
+      errors.push(`${file.name}: Kích thước vượt quá 50MB`);
+      return;
+    }
+
+    validFiles.push(file);
+  });
+
+  return { validFiles, errors };
 };
 
 export const transformBoardToFormInitialData = (boardInfoData) => ({

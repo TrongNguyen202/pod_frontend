@@ -90,14 +90,19 @@ const requestResetOrderToNew = async (data) => {
     data,
   };
   return axiosAPI(config);
-}
+};
 
 const requestUploadImagesForDesigner = async (orderId, data) => {
   const config = {
     method: 'POST',
     url: `/order/${orderId}/upload-folder`,
     data,
-    timeout: 30000,
+    timeout: 120000, // Tăng timeout lên 2 phút
+    maxContentLength: 100 * 1024 * 1024, // 100MB
+    maxBodyLength: 100 * 1024 * 1024, // 100MB
+    onUploadProgress: (progressEvent) => {
+      const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+    },
   };
   return axiosAPIDirect(config);
 };

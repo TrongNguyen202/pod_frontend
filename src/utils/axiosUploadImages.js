@@ -1,11 +1,33 @@
 import axios from 'axios';
+import imageCompression from 'browser-image-compression';
+
+const compressImageAdvanced = async (file) => {
+  const options = {
+    maxSizeMB: 5, // Giới hạn 5MB
+    maxWidthOrHeight: 1920,
+    useWebWorker: true,
+    fileType: 'image/jpeg',
+    initialQuality: 0.8,
+  };
+
+  try {
+    const compressedFile = await imageCompression(file, options);
+    return compressedFile;
+  } catch (error) {
+    console.error('Compression failed:', error);
+    return file;
+  }
+};
 
 export const uploadImagesConcurrently = async (imageFiles) => {
   try {
     const uploadPromises = imageFiles.map(async (file) => {
+      const compressedFile = await compressImageAdvanced(file);
+
       const uploadFormData = new FormData();
-      uploadFormData.append('file', file);
+      uploadFormData.append('file', compressedFile);
       uploadFormData.append('source', 'tts_product');
+
       const response = await axios.post(
         'https://upload-service-staging-api.ecomdy.com/api/upload/image',
         uploadFormData,

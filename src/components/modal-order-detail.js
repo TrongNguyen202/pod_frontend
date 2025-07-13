@@ -41,7 +41,14 @@ import {
   fetchUploadImagesForDesigner,
 } from 'src/redux/reducers/orders';
 import { listenToOrderComments } from 'src/services/firebase';
-import { calculatePaymentTime, checkRole, formatPaymentTime, getAllowedStatusOptions } from 'src/utils';
+import {
+  calculatePaymentTime,
+  checkRole,
+  compressImageForDesigner,
+  formatPaymentTime,
+  getAllowedStatusOptions,
+  validateFiles,
+} from 'src/utils';
 import CommentInput from './comments/CommentInput';
 import CommentList from './comments/CommentList';
 import JSZip from 'jszip';
@@ -285,27 +292,49 @@ const OrderDetailModal = ({
   const handleSendImages = async () => {
     await withCooldown(async () => {
       if (uploadFiles.length === 0 || uploadedImages.length === 0) return;
+
+      const { validFiles, errors } = validateFiles(uploadFiles);
+
+      if (errors.length > 0) {
+        toast.error(`Lỗi validation:\n${errors.join('\n')}`);
+        return;
+      }
+
       const isAuthenticated = await checkOAuthStatus();
       if (!isAuthenticated) {
-        // toast.error('Không thể xác thực người dùng');
         return;
       }
       const formData = new FormData();
-      uploadFiles.forEach((file, index) => {
-        if (file instanceof File) {
-          if (!file.type.startsWith('image/')) {
-            console.error('Not an image:', file.name);
-            return;
-          }
-          formData.append('files', file);
-        } else {
-          console.error('Invalid file object:', file);
-        }
-      });
-
       const toastId = toast.loading('Đang upload ảnh...');
       try {
-        const response = await dispatch(fetchUploadImagesForDesigner({ orderId: order.id, data: formData })).unwrap();
+        for (const [index, file] of validFiles.entries()) {
+          toast.update(toastId, {
+            render: `Đang xử lý file ${index + 1}/${validFiles.length}...`,
+            type: 'info',
+            isLoading: true,
+          });
+
+          if (file.type.startsWith('image/')) {
+            const compressedFile = await compressImageForDesigner(file);
+            formData.append('files', compressedFile);
+          } else if (file.name.toLowerCase().endsWith('.psd')) {
+            formData.append('files', file);
+          }
+        }
+
+        toast.update(toastId, {
+          render: 'Đang upload lên server...',
+          type: 'info',
+          isLoading: true,
+        });
+
+        const response = await dispatch(
+          fetchUploadImagesForDesigner({
+            orderId: order.id,
+            data: formData,
+          }),
+        ).unwrap();
+        
         if (response.success === true) {
           toast.update(toastId, {
             render: 'Upload thành công!',
@@ -829,6 +858,7 @@ const OrderDetailModal = ({
                   (order.status === 'NEED_FIX' && confirmStatus === 'IN_REVIEW')) && (
                   <Box>
                     <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center">
+                      <Box sx={{my: 1, opacity: 0.8}}>{"Có thể upload file .psd <= 50MB"}</Box>
                       <Button variant="contained" component="label" size="small" disabled={isProcessing}>
                         {t(tokens.nav.chosseImages)}
                         <input
