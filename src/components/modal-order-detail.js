@@ -44,7 +44,7 @@ import { listenToOrderComments } from 'src/services/firebase';
 import {
   calculatePaymentTime,
   checkRole,
-  compressImageForDesigner,
+  // compressImageForDesigner,
   formatPaymentTime,
   getAllowedStatusOptions,
   validateFiles,
@@ -313,13 +313,14 @@ const OrderDetailModal = ({
             type: 'info',
             isLoading: true,
           });
+          formData.append('files', file);
 
-          if (file.type.startsWith('image/')) {
-            const compressedFile = await compressImageForDesigner(file);
-            formData.append('files', compressedFile);
-          } else if (file.name.toLowerCase().endsWith('.psd')) {
-            formData.append('files', file);
-          }
+          // if (file.type.startsWith('image/')) {
+          //   // const compressedFile = await compressImageForDesigner(file);
+          //   formData.append('files', file);
+          // } else if (file.name.toLowerCase().endsWith('.psd')) {
+          //   formData.append('files', file);
+          // }
         }
 
         toast.update(toastId, {
@@ -334,7 +335,7 @@ const OrderDetailModal = ({
             data: formData,
           }),
         ).unwrap();
-        
+
         if (response.success === true) {
           toast.update(toastId, {
             render: 'Upload thành công!',
@@ -858,7 +859,7 @@ const OrderDetailModal = ({
                   (order.status === 'NEED_FIX' && confirmStatus === 'IN_REVIEW')) && (
                   <Box>
                     <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center">
-                      <Box sx={{my: 1, opacity: 0.8}}>{"Có thể upload file .psd <= 50MB"}</Box>
+                      <Box sx={{ my: 1, opacity: 0.8 }}>{'Có thể upload file .psd <= 50MB'}</Box>
                       <Button variant="contained" component="label" size="small" disabled={isProcessing}>
                         {t(tokens.nav.chosseImages)}
                         <input
