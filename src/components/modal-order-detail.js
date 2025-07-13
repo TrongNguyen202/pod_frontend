@@ -863,7 +863,7 @@ const OrderDetailModal = ({
                         {t(tokens.nav.chosseImages)}
                         <input
                           type="file"
-                          accept="image/*"
+                          accept="*"
                           multiple
                           hidden
                           onChange={(e) => handleUploadImages(e.target.files)}
