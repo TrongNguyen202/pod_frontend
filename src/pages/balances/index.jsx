@@ -22,6 +22,7 @@ import {
 import { DateTimePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format } from 'date-fns';
+import { t } from 'i18next';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
@@ -42,11 +43,19 @@ const typeTransactionVi = {
   REFUND: 'Hoàn tiền',
 };
 
+const typeTransactionEn = {
+  IN: 'Deposit',
+  OUT: 'Withdrawal',
+  USE: 'Usage',
+  MAKE: 'Order Payment',
+  REFUND: 'Refund',
+};
+
 const formatStatusTransaction = (status) => {
   const list = {
-    '-1': 'Hủy',
-    1: 'Thành công',
-    0: 'Chờ duyệt',
+    '-1': t(tokens.nav.cancel),
+    1: t(tokens.nav.success),
+    0: t(tokens.nav.pending),
   };
   return list[status] || status;
 };
@@ -78,7 +87,7 @@ const Page = () => {
 
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
   const dispatch = useDispatch();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const { data: userData } = useAppSelector((state) => state.users.userInfo);
   const { data: transactionsData, loading } = useAppSelector((state) => state.usertopups.userTransactionInfo);
@@ -522,12 +531,14 @@ const Page = () => {
                                 textAlign: 'center',
                               }}
                             >
-                              {typeTransactionVi[row.transactionType] || '-'}
+                              {i18n.language === 'vi'
+                                ? typeTransactionVi[row.transactionType]
+                                : typeTransactionEn[row.transactionType]}
                             </Typography>
                           </TableCell>
                           <TableCell>
                             <Chip
-                              label={formatStatusTransaction(row.status)}
+                              label={formatStatusTransaction(row.status, t)}
                               color={getStatusTransactionColor(row.status)}
                               size="small"
                             />

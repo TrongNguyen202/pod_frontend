@@ -12,20 +12,9 @@ export const LOCAL_STORAGE_KEY = {
   USER_EMAIL: 'email',
 };
 
-export const categoryList = [
-  'DRAFT',
-  'NEW',
-  // 'TODO',
-  'DOING',
-  // 'CHECK',
-  'IN_REVIEW',
-  'NEED_FIX',
-  'DONE',
-  'ARCHIVED',
-  'ALL',
-];
+export const categoryList = ['DRAFT', 'NEW', 'DOING', 'IN_REVIEW', 'NEED_FIX', 'DONE', 'ARCHIVED', 'ALL'];
 
-export const standardizationCategory = {
+export const standardizationCategoryVi = {
   DRAFT: 'Nháp',
   NEW: 'Mới',
   DOING: 'Đang xử lý',
@@ -36,12 +25,21 @@ export const standardizationCategory = {
   ALL: 'Tất cả',
 };
 
+export const standardizationCategoryEn = {
+  DRAFT: 'Draft',
+  NEW: 'New',
+  DOING: 'Doing',
+  IN_REVIEW: 'In Review',
+  NEED_FIX: 'Need Fix',
+  DONE: 'Done',
+  ARCHIVED: 'Archived',
+  ALL: 'All',
+};
+
 export const validNextStatusMap = {
   DRAFT: ['NEW'],
   NEW: ['DOING'],
-  // TODO: ['DOING'],
   DOING: ['IN_REVIEW'],
-  // CHECK: ['IN_REVIEW'],
   IN_REVIEW: ['NEED_FIX', 'DONE'],
   NEED_FIX: ['IN_REVIEW'],
   DONE: ['ARCHIVED'],
@@ -66,24 +64,10 @@ export const categoryLabelsVi = {
   CLONE: 'Tạo bản sao',
 };
 
-export const categoryStatusVi = {
-  DRAFT: 'Nháp',
-  NEW: 'Mới',
-  DOING: 'Nhận đơn',
-  IN_REVIEW: 'Kiểm tra',
-  NEED_FIX: 'Cần sửa',
-  DONE: 'Hoàn thành',
-  ARCHIVED: 'Lưu trữ ',
-};
-
-export const categoryStatusViU = {
-  DRAFT: 'Nháp',
-  NEW: 'Mới',
-  DOING: 'Đang xử lý',
-  IN_REVIEW: 'Kiểm tra',
-  NEED_FIX: 'Cần sửa',
-  DONE: 'Hoàn thành',
-  ARCHIVED: 'Lưu trữ ',
+export const categoryLabelsEn = {
+  NEW: 'New',
+  RE_DESIGN: 'ReDesign',
+  CLONE: 'Clone',
 };
 
 export const optionsDesignType = [
@@ -110,7 +94,6 @@ export const PRICE_OPTIONS_BY_DESIGN_TYPE = {
     { id: 2, label: '35,000', value: 35000 },
     { id: 3, label: '45,000', value: 45000 },
     { id: 4, label: '54,000', value: 54000 },
-
   ],
   RE_DESIGN: [
     { id: 5, label: '40,500', value: 40500 },
@@ -123,7 +106,6 @@ export const PRICE_OPTIONS_BY_DESIGN_TYPE = {
     { id: 10, label: '175,000', value: 175000 },
     { id: 11, label: '225,000', value: 225000 },
     { id: 12, label: '270,000', value: 270000 },
-
   ],
 };
 
@@ -142,9 +124,7 @@ const allowedTypes = [
 
 export function isValidImage(file) {
   const ext = file.name.toLowerCase();
-  return allowedTypes.some(({ type, exts }) =>
-    file.type === type && exts.some((e) => ext.endsWith(e))
-  );
+  return allowedTypes.some(({ type, exts }) => file.type === type && exts.some((e) => ext.endsWith(e)));
 }
 
 export const permission = {

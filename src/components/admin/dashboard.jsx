@@ -129,6 +129,12 @@ export default function AdminDashboard() {
   const [showConfirmRemoveDesigner, setShowConfirmRemoveDesigner] = useState(false);
   const [orderToRemoveDesigner, setOrderToRemoveDesigner] = useState(null);
 
+  const [showSelectDesigner, setShowSelectDesigner] = useState(false);
+  const [orderToAssign, setOrderToAssign] = useState(null);
+  const designers = useFetchDesigners(dispatch);
+
+  const handleClose = () => setShowSelectDesigner(false);
+
   // Get data from Redux store
   const { data: statisticsOrderData, loading, error } = useAppSelector((state) => state.statistics.order);
 
@@ -368,12 +374,6 @@ export default function AdminDashboard() {
     setOrderToRemoveDesigner(null);
   };
 
-  const [showSelectDesigner, setShowSelectDesigner] = useState(false);
-  const [orderToAssign, setOrderToAssign] = useState(null);
-  const designers = useFetchDesigners(dispatch);
-
-  const handleClose = () => setShowSelectDesigner(false);
-
   const designersOptions = designers?.data.map((designer) => ({
     label: designer.username,
     value: JSON.stringify({ id: designer.id, email: designer.email }),
@@ -391,7 +391,7 @@ export default function AdminDashboard() {
       (sendNotificationSafely({
         designerIds: da?.id ? [da?.id] : [],
         title: 'Trạng thái đơn hàng',
-        message: `Đơn hàng của bạn vừa được cập nhật trạng thái, xem ngay!`,
+        message: `Bạn vừa nhận đơn. Hãy bắt đầu thực hiện ngay để nhận thu nhập sớm nhất!`,
       }),
         toast.success('Cập nhật designer thành công!'));
       fetchData();
@@ -830,7 +830,7 @@ export default function AdminDashboard() {
 
               {showSelectDesigner && (
                 <ModalAssignDesigner
-                  open={showSelectDesigner} 
+                  open={showSelectDesigner}
                   onClose={handleClose}
                   title="Chọn designer"
                   fields={[

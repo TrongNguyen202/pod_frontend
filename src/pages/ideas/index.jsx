@@ -114,7 +114,7 @@ const Page = () => {
     clearFilters: handleClearFilters,
   } = useOrderFilter();
 
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const dispatch = useAppDispatch();
 
   const [selectedTab, setSelectedTab] = useState(0);
@@ -145,7 +145,7 @@ const Page = () => {
     }
   }, [userData?.id]);
 
-  const categories = getCategoryCounts(role, statusCount);
+  const categories = getCategoryCounts(role, statusCount, i18n.language);
   const selectedCategory = categories[selectedTab].value;
 
   const filteredOrders = useMemo(() => {
@@ -174,7 +174,7 @@ const Page = () => {
       quantity: 1,
       number: 1,
       price: 0,
-      completed_at: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
+      deadline: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
       templates: [],
     }),
     [boardData],
@@ -451,13 +451,13 @@ const Page = () => {
             justifyContent: 'center',
             fontSize: '1.4rem',
             alignItems: 'center',
-            minHeight: '80vh', 
+            minHeight: '80vh',
             textAlign: 'center',
             px: 2,
             color: 'text.secondary',
           }}
         >
-          Vui lòng chọn bảng để sử dụng chức năng, nếu chưa có bảng hãy thử tạo tại thanh chức năng bên trái
+          {t(tokens.nav.chooseBoard)}
         </Box>
       )}
     </PageLayout>

@@ -56,13 +56,13 @@ const FormDialogSplitLayout = ({
   openOverride,
   onCloseOverride,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [formData, setFormData] = useState(() => normalizeInitialData(initialData, fields));
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const imageUploadRef = useRef(null);
-
+  const language = i18n.language;
   // State để track validation errors
   const [errors, setErrors] = useState({});
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
@@ -111,7 +111,12 @@ const FormDialogSplitLayout = ({
   }, [formData, hasAttemptedSubmit, validateForm]);
 
   const handleOpen = useCallback(() => {
-    setFormData(normalizeInitialData(initialData, fields));
+    const updatedInitialData = {
+      ...normalizeInitialData(initialData, fields),
+      deadline: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    };
+    console.log(updatedInitialData);
+    setFormData(updatedInitialData);
     setIsManuallyEditingDescription(false);
     setErrors({});
     setHasAttemptedSubmit(false);
@@ -184,10 +189,15 @@ const FormDialogSplitLayout = ({
       }
 
       setIsSubmitting(true);
-
       const formDataToSubmit = new FormData();
       for (const key in formData) {
         let value = formData[key];
+        if (key === 'deadline') {
+          // Nếu deadline null/undefined, set giá trị mặc định
+          if (!value) {
+            value = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+          }
+        }
 
         if (Array.isArray(value)) {
           value.forEach((file) => {
@@ -405,7 +415,7 @@ const FormDialogSplitLayout = ({
                       onClick={handleMergeTemplates}
                       sx={{ fontSize: '0.75rem', py: 0.5 }}
                     >
-                      Thêm từ Templates
+                      {language === 'vi' ? 'Thêm từ Templates' : 'Add from Templates'}
                     </Button>
                   )}
                 </Box>
@@ -456,6 +466,10 @@ const FormDialogSplitLayout = ({
                     textAlign: 'center',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
+                    display: 'flex', 
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: '100px',
                     '&:hover': {
                       borderColor: '#1976d2',
                       backgroundColor: '#f3f8ff',
@@ -476,11 +490,11 @@ const FormDialogSplitLayout = ({
                     }}
                   />
                   <Box sx={{ color: '#666', fontSize: '0.875rem' }}>
-                    <div>Kéo thả ảnh vào đây</div>
-                    <div>
-                      hoặc <strong>Ctrl+V</strong> để paste ảnh
+                    <div className="max-w-80">
+                      {language === 'vi'
+                        ? 'Kéo thả ảnh vào đây hoặc Ctrl+V để paste ảnh hoặc click để chọn file'
+                        : 'Drag and drop image here or Ctrl+V to paste image or click to select file'}{' '}
                     </div>
-                    <div>hoặc click để chọn file</div>
                   </Box>
                 </Box>
 
@@ -617,14 +631,25 @@ const FormDialogSplitLayout = ({
                   }}
                 />
               </Box>
-              <Box sx={{ mb: 2, borderRadius: 1, bgcolor: '#fafafa' }}>
+              <Box sx={{ mb: 2, border: '1px solid #e0e0e0', borderRadius: 1, bgcolor: '#fafafa' }}>
+                {/* <TextField
+                  fullWidth
+                  label={t(tokens.nav.deadline)}
+                  type="datetime-local"
+                  InputLabelProps={{ shrink: true }}
+                  inputProps={{
+                    min: toDatetimeLocalString(new Date()),
+                  }}
+                  value={toDatetimeLocalString(new Date(formData['deadline']))}
+                  onChange={(e) => handleChange('deadline', new Date(e.target.value).toISOString())}
+                /> */}
                 <TextField
                   fullWidth
                   label={t(tokens.nav.deadline)}
                   type="date"
                   InputLabelProps={{ shrink: true }}
-                  value={formData['completed_at'] ? new Date(formData['completed_at']).toISOString().split('T')[0] : ''}
-                  onChange={(e) => handleChange('completed_at', e.target.value)}
+                  value={formData['deadline'] ? new Date(formData['deadline']).toISOString().split('T')[0] : ''}
+                  onChange={(e) => handleChange('deadline', e.target.value)}
                 />
               </Box>
               <Box sx={{ mb: 2, border: '1px solid #e0e0e0', borderRadius: 1, bgcolor: '#fafafa' }}>

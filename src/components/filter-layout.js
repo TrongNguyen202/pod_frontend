@@ -11,12 +11,21 @@ import {
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 import dayjs from 'dayjs';
+import { useTranslation } from 'react-i18next';
+import { tokens } from 'src/locales/tokens';
 
-const mapNameFilter = {
+const mapNameFilterVi = {
   price: 'Giá',
   price_: 'Giá',
   created_date: 'Ngày tạo',
   last_modified_date: 'Ngày cập nhật',
+};
+
+const mapNameFilterEn = {
+  price: 'Price',
+  price_: 'Price',
+  created_date: 'Created Date',
+  last_modified_date: 'Last Updated Date',
 };
 
 const OrderFilterDrawer = ({
@@ -45,6 +54,8 @@ const OrderFilterDrawer = ({
   setMaxPriceDe,
   onClear,
 }) => {
+  const { t, i18n } = useTranslation();
+  const language = i18n.language;
   return (
     <Drawer
       anchor="right"
@@ -62,17 +73,17 @@ const OrderFilterDrawer = ({
       <Box sx={{ width: 432, p: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Typography variant="h6" gutterBottom fontWeight="bold">
-            Bộ lọc nâng cao
+            {t(tokens.nav.advancedFilter)}
           </Typography>
           <Button variant="outlined" color="secondary" onClick={onClear} sx={{ borderRadius: 2 }}>
-            Xóa bộ lọc
+            {t(tokens.nav.clearFilter)}
           </Button>
         </Box>
 
         {/* Ngày tạo */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="subtitle2" fontWeight="medium">
-            Ngày tạo
+            {t(tokens.nav.createdDate)}
           </Typography>
           <ToggleButtonGroup
             value={sortBy === 'created_date' ? sortDirection : ''}
@@ -86,13 +97,13 @@ const OrderFilterDrawer = ({
             sx={{ mt: 1 }}
             fullWidth
           >
-            <ToggleButton value="asc">Tăng dần</ToggleButton>
-            <ToggleButton value="desc">Giảm dần</ToggleButton>
+            <ToggleButton value="asc">{t(tokens.nav.increase)}</ToggleButton>
+            <ToggleButton value="desc">{t(tokens.nav.descending)}</ToggleButton>
           </ToggleButtonGroup>
 
           {/* Bộ lọc ngày tạo */}
           <DatePicker
-            label="Từ ngày"
+            label={t(tokens.nav.from)}
             value={startCreateDate}
             onChange={(val) => setStartCreateDate(val)}
             slotProps={{
@@ -112,7 +123,7 @@ const OrderFilterDrawer = ({
             sx={{ mt: 1, width: '100%' }}
           />
           <DatePicker
-            label="Đến ngày"
+            label={t(tokens.nav.to)}
             value={endCreateDate}
             onChange={(val) => setEndCreateDate(val)}
             slotProps={{
@@ -135,7 +146,7 @@ const OrderFilterDrawer = ({
 
         {/* Ngày cập nhật */}
         <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2">Ngày cập nhật</Typography>
+          <Typography variant="subtitle2">{t(tokens.nav.lastUpdate)}</Typography>
           <ToggleButtonGroup
             value={sortBy === 'last_modified_date' ? sortDirection : ''}
             exclusive
@@ -148,13 +159,13 @@ const OrderFilterDrawer = ({
             sx={{ mt: 1 }}
             fullWidth
           >
-            <ToggleButton value="asc">Tăng dần</ToggleButton>
-            <ToggleButton value="desc">Giảm dần</ToggleButton>
+            <ToggleButton value="asc">{t(tokens.nav.increase)}</ToggleButton>
+            <ToggleButton value="desc">{t(tokens.nav.descending)}</ToggleButton>
           </ToggleButtonGroup>
 
           {/* Bộ lọc ngày cập nhật */}
           <DatePicker
-            label="Từ ngày"
+            label={t(tokens.nav.from)}
             value={startUpdateDate}
             onChange={(val) => setStartUpdateDate(val)}
             slotProps={{
@@ -174,7 +185,7 @@ const OrderFilterDrawer = ({
             sx={{ mt: 1, width: '100%' }}
           />
           <DatePicker
-            label="Đến ngày"
+            label={t(tokens.nav.to)}
             value={endUpdateDate}
             onChange={(val) => setEndUpdateDate(val)}
             slotProps={{
@@ -198,7 +209,7 @@ const OrderFilterDrawer = ({
         {/* Giá (theo role) */}
         {role === 'customer' && (
           <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle2">Giá</Typography>
+            <Typography variant="subtitle2">{t(tokens.nav.price)}</Typography>
             <ToggleButtonGroup
               value={sortBy === 'price' ? sortDirection : ''}
               exclusive
@@ -211,19 +222,19 @@ const OrderFilterDrawer = ({
               sx={{ mt: 1 }}
               fullWidth
             >
-              <ToggleButton value="asc">Tăng dần</ToggleButton>
-              <ToggleButton value="desc">Giảm dần</ToggleButton>
+              <ToggleButton value="asc">{t(tokens.nav.increase)}</ToggleButton>
+              <ToggleButton value="desc">{t(tokens.nav.descending)}</ToggleButton>
             </ToggleButtonGroup>
 
             <TextField
-              label="Giá từ"
+              label={t(tokens.nav.from)}
               type="number"
               value={minPrice || ''}
               onChange={(e) => setMinPrice(Number(e.target.value))}
               sx={{ mt: 1, width: '100%' }}
             />
             <TextField
-              label="Giá đến"
+              label={t(tokens.nav.to)}
               type="number"
               value={maxPrice || ''}
               onChange={(e) => setMaxPrice(Number(e.target.value))}
@@ -252,14 +263,14 @@ const OrderFilterDrawer = ({
             </ToggleButtonGroup>
 
             <TextField
-              label="Giá nhận từ"
+              label={t(tokens.nav.from)}
               type="number"
               value={minPriceDe || ''}
               onChange={(e) => setMinPriceDe(Number(e.target.value))}
               sx={{ mt: 1, width: '100%' }}
             />
             <TextField
-              label="Giá nhận đến"
+              label={t(tokens.nav.to)}
               type="number"
               value={maxPriceDe || ''}
               onChange={(e) => setMaxPriceDe(Number(e.target.value))}
@@ -269,18 +280,26 @@ const OrderFilterDrawer = ({
         )}
       </Box>
       <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', alignItems: 'center', ml: 3, gap: 1 }}>
-        <Typography variant="subtitle2">Sắp xếp theo: </Typography>
+        <Typography variant="subtitle2">{t(tokens.nav.sortBy)}: </Typography>
         {sortBy && (
-          <Chip label={`${mapNameFilter[sortBy ? sortBy : 'created_date']} ${sortDirection === 'asc' ? '↑' : '↓'}`} />
+          <Chip
+            label={`${language === 'vi' ? mapNameFilterVi[sortBy ? sortBy : 'created_date'] : mapNameFilterEn[sortBy ? sortBy : 'created_date']} ${sortDirection === 'asc' ? '↑' : '↓'}`}
+          />
         )}
-        {minPrice && <Chip label={`Giá từ: ${minPrice.toLocaleString()}`} sx={{ mr: 1 }} />}
-        {maxPrice && <Chip label={`Giá đến: ${maxPrice.toLocaleString()}`} sx={{ mr: 1 }} />}
-        {startCreateDate && <Chip label={`Tạo từ: ${dayjs(startCreateDate).format('DD/MM/YYYY')}`} sx={{ mr: 1 }} />}
-        {endCreateDate && <Chip label={`Tạo đến: ${dayjs(endCreateDate).format('DD/MM/YYYY')}`} sx={{ mr: 1 }} />}
+        {minPrice && <Chip label={`${t(tokens.nav.from)}: ${minPrice.toLocaleString()}`} sx={{ mr: 1 }} />}
+        {maxPrice && <Chip label={`${t(tokens.nav.to)}: ${maxPrice.toLocaleString()}`} sx={{ mr: 1 }} />}
+        {startCreateDate && (
+          <Chip label={`${t(tokens.nav.from)}: ${dayjs(startCreateDate).format('DD/MM/YYYY')}`} sx={{ mr: 1 }} />
+        )}
+        {endCreateDate && (
+          <Chip label={`${t(tokens.nav.to)}: ${dayjs(endCreateDate).format('DD/MM/YYYY')}`} sx={{ mr: 1 }} />
+        )}
         {startUpdateDate && (
-          <Chip label={`Cập nhật từ: ${dayjs(startUpdateDate).format('DD/MM/YYYY')}`} sx={{ mr: 1 }} />
+          <Chip label={`${t(tokens.nav.from)}: ${dayjs(startUpdateDate).format('DD/MM/YYYY')}`} sx={{ mr: 1 }} />
         )}
-        {endUpdateDate && <Chip label={`Cập nhật đến: ${dayjs(endUpdateDate).format('DD/MM/YYYY')}`} sx={{ mr: 1 }} />}
+        {endUpdateDate && (
+          <Chip label={`${t(tokens.nav.to)}: ${dayjs(endUpdateDate).format('DD/MM/YYYY')}`} sx={{ mr: 1 }} />
+        )}
       </Box>
     </Drawer>
   );

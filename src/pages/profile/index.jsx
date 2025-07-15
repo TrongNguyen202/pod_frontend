@@ -24,9 +24,11 @@ import PageLayout from '../../components/ideas/page-layout';
 import { useAppSelector, useAppDispatch } from '../../redux/hook';
 import { fetchUserByEmail, updateUserProfile } from '../../redux/reducers/user';
 import { toast } from 'react-toastify';
+import { tokens } from 'src/locales/tokens';
+import { useTranslation } from 'react-i18next';
 
 export default function UserProfile() {
-  const [showPassword, setShowPassword] = useState(false);
+  const { t } = useTranslation();
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const dispatch = useAppDispatch();
   const { data: userData } = useAppSelector((state) => state.users.userInfo);
@@ -71,11 +73,9 @@ export default function UserProfile() {
   const getStatusInfo = (status) => {
     switch (status) {
       case 1:
-        return { label: 'Hoạt động', color: '#15803d', icon: <ActiveIcon /> };
+        return { label: t(tokens.nav.active), color: '#15803d', icon: <ActiveIcon /> };
       case 0:
-        return { label: 'Không hoạt động', color: '#dc2626', icon: <InactiveIcon /> };
-      case -1:
-        return { label: 'Đã xóa', color: '#6b7280', icon: <DeletedIcon /> };
+        return { label: t(tokens.nav.inactive), color: '#dc2626', icon: <InactiveIcon /> };
       default:
         return { label: 'Không xác định', color: '#6b7280', icon: <InactiveIcon /> };
     }
@@ -181,7 +181,7 @@ export default function UserProfile() {
                   startIcon={<EditIcon />}
                   onClick={() => setIsEditProfileOpen(true)}
                 >
-                  Chỉnh sửa
+                  {t(tokens.nav.edit)}
                 </Button>
               </Box>
             </Box>
@@ -204,17 +204,17 @@ export default function UserProfile() {
               >
                 <Box>
                   <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', marginBottom: 2 }}>
-                    Thông tin cơ bản
+                    {t(tokens.nav.accountInfo)}
                   </Typography>
                   <InfoItem
                     icon={<PersonIcon sx={{ color: '#2563eb' }} />}
-                    label="Tên người dùng"
+                    label={t(tokens.nav.username)}
                     value={userData?.username}
                   />
                   <InfoItem icon={<EmailIcon sx={{ color: '#2563eb' }} />} label="Email" value={userData?.email} />
                   <InfoItem
                     icon={<SecurityIcon sx={{ color: statusInfo.color }} />}
-                    label="Trạng thái"
+                    label={t(tokens.nav.status)}
                     value={
                       <Chip
                         label={statusInfo.label}
@@ -228,12 +228,10 @@ export default function UserProfile() {
                 </Box>
 
                 <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', marginBottom: 2 }}>
-                    Thông tin liên hệ
-                  </Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', marginBottom: 4 }}></Typography>
                   <InfoItem
                     icon={<PhoneIcon sx={{ color: '#15803d' }} />}
-                    label="Số điện thoại"
+                    label={t(tokens.nav.phone)}
                     value={userData?.phone}
                   />
                   <InfoItem
@@ -243,29 +241,27 @@ export default function UserProfile() {
                   />
                   <InfoItem
                     icon={<SecurityIcon sx={{ color: '#7c3aed' }} />}
-                    label="Vai trò"
+                    label={t(tokens.nav.role)}
                     value={<Chip label={userData?.role_name} variant="outlined" size="small" />}
                   />
                 </Box>
 
                 {userData?.role_name === 'designer' && (
                   <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', marginBottom: 2 }}>
-                      Thông tin ngân hàng
-                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', marginBottom: 4 }}></Typography>
                     <InfoItem
                       icon={<PersonIcon sx={{ color: '#059669' }} />}
-                      label="Chủ tài khoản"
+                      label={t(tokens.nav.bankAccountName)}
                       value={userData?.bankAccountName}
                     />
                     <InfoItem
                       icon={<BankIcon sx={{ color: '#059669' }} />}
-                      label="Ngân hàng"
+                      label={t(tokens.nav.bankName)}
                       value={userData?.bankName}
                     />
                     <InfoItem
                       icon={<CardIcon sx={{ color: '#059669' }} />}
-                      label="Số tài khoản"
+                      label={t(tokens.nav.accountNumber)}
                       value={userData?.bankNumber}
                     />
                   </Box>
@@ -284,10 +280,14 @@ export default function UserProfile() {
             }}
           >
             {[
-              { value: formatCurrency(userData?.coin), label: 'Số dư hiện tại', color: '#f59e0b' },
-              { value: statusInfo.label, label: 'Trạng thái tài khoản', color: statusInfo.color },
-              { value: userData?.bankName, label: 'Ngân hàng', color: '#059669' },
-              { value: userData?.role_name?.toUpperCase(), label: 'Vai trò', color: '#7c3aed' },
+              { value: formatCurrency(userData?.coin), label: t(tokens.nav.account_balance), color: '#f59e0b' },
+              { value: statusInfo.label, label: t(tokens.nav.status), color: statusInfo.color },
+              {
+                value: userData?.bankName,
+                label: userData?.role_name === 'designer' ? t(tokens.nav.bankName) : '',
+                color: '#059669',
+              },
+              { value: userData?.role_name?.toUpperCase(), label: t(tokens.nav.role), color: '#7c3aed' },
             ].map((item, index) => (
               <Card
                 key={index}

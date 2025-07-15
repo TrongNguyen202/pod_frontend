@@ -12,7 +12,7 @@
 import dayjs from 'dayjs';
 import { isArray } from 'lodash';
 import utc from 'dayjs/plugin/utc';
-import { categoryList, standardizationCategory } from 'src/constants';
+import { categoryList, standardizationCategoryVi, standardizationCategoryEn } from 'src/constants';
 import imageCompression from 'browser-image-compression';
 
 dayjs.extend(utc);
@@ -39,26 +39,31 @@ export const formatNumber = (str) => {
   return '';
 };
 
-export const getCategoryCounts = (role, statusCountMap = {}) => {
+export const getCategoryCounts = (role, statusCountMap = {}, lang) => {
   const visibleCategories = categoryList.filter((label) => {
     if (role === 'designer' && label === 'DRAFT') return false;
     if (role === 'customer' && label === 'ARCHIVED') return false;
     return true;
   });
-
   return visibleCategories.map((label) => {
     const count =
       label === 'ALL' ? Object.values(statusCountMap).reduce((sum, val) => sum + val, 0) : statusCountMap[label] || 0;
 
     return {
-      label: formatCategoryLabel(label),
+      label: formatCategoryLabel(label, lang),
       value: label,
       count,
     };
   });
 };
 
-export const formatCategoryLabel = (label) => standardizationCategory[label];
+export const formatCategoryLabel = (label, lang) => {
+  if (lang === 'vi') {
+    return standardizationCategoryVi[label];
+  } else {
+    return standardizationCategoryEn[label];
+  }
+};
 
 export const getAllowedStatusOptions = (role, currentStatuses) => {
   if (currentStatuses.length !== 1) return [];
@@ -220,6 +225,21 @@ export const formatPaymentTime = (date) => {
   const hour = date.getHours().toString().padStart(2, '0');
 
   return `${day}/${month}/${year} lúc ${hour}:00`;
+};
+
+export const toDatetimeLocalString = (date) => {
+  if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+    return '';
+  }
+  
+  const pad = (n) => n.toString().padStart(2, '0');
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+  
+  return `${year}-${month}-${day}`;
 };
 
 export const formatPriceOrContact = (p) => {

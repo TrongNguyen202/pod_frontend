@@ -1,6 +1,7 @@
 'use client';
 
-import { ChevronLeft, ChevronRight, Download } from '@mui/icons-material';
+import { CloseCircleOutlined } from '@ant-design/icons';
+import { Download } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -13,16 +14,16 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { AnimatePresence, motion } from 'framer-motion';
+import JSZip from 'jszip';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import {
   categoryColors,
+  categoryLabelsEn,
   categoryLabelsVi,
-  categoryStatusVi,
-  categoryStatusViU,
-  LOCAL_STORAGE_KEY,
+  standardizationCategoryEn,
+  standardizationCategoryVi,
 } from 'src/constants';
 import { tokens } from 'src/locales/tokens';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
@@ -33,6 +34,7 @@ import {
   fetchPostCommentPosgres,
 } from 'src/redux/reducers/comments';
 import { fetchSendPushNotifications } from 'src/redux/reducers/notifications';
+import { fetchAuthorizeOauth, fetchStatusOauth } from 'src/redux/reducers/oauth';
 import {
   changeStatusOrders,
   fetchAssignOrdersForDesigner,
@@ -51,11 +53,7 @@ import {
 } from 'src/utils';
 import CommentInput from './comments/CommentInput';
 import CommentList from './comments/CommentList';
-import JSZip from 'jszip';
-import { fetchAuthorizeOauth, fetchStatusOauth } from 'src/redux/reducers/oauth';
 import { OAuthDialog } from './oauth/OAuthDialog';
-import { CloseCircleOutlined } from '@ant-design/icons';
-import { jwtDecode } from 'jwt-decode';
 
 const OrderDetailModal = ({
   open,
@@ -69,7 +67,6 @@ const OrderDetailModal = ({
   onStatusChanged,
 }) => {
   const [showComments, setShowComments] = useState(false);
-  const [zoomImageIndex, setZoomImageIndex] = useState(null);
   const [commentText, setCommentText] = useState('');
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploadFiles, setUploadFiles] = useState([]);
@@ -83,12 +80,11 @@ const OrderDetailModal = ({
   const hasInitializedComments = useRef(false); // Track comment initialization
   const [showOAuthDialog, setShowOAuthDialog] = useState(false);
   const [authData, setAuthData] = useState(null);
-  const [isAuthorized, setIsAuthorized] = useState(false);
   const dispatch = useAppDispatch();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const comments = useAppSelector((state) => state.comments.commentsInfo.data);
   const { isCustomer, isDesigner } = checkRole(role);
-
+  const language = i18n.language;
   // Optimized: Only fetch comments once when modal opens
   useEffect(() => {
     if (open && order?.id && !hasInitializedComments.current) {
@@ -172,7 +168,7 @@ const OrderDetailModal = ({
   const currentStatuses = [order.status];
   const allowedStatuses = getAllowedStatusOptions(role, currentStatuses);
   const statusOptions = allowedStatuses.map((s) => ({
-    label: categoryStatusVi[s] || s,
+    label: language === 'vi' ? standardizationCategoryVi[s] : standardizationCategoryEn[s] || s,
     value: s,
   }));
 
@@ -191,7 +187,7 @@ const OrderDetailModal = ({
       message:
         status === 'DOING'
           ? `Đơn hàng ${orderName} của bạn vừa được nhà thiết kế nhận, vào xem ngay!`
-          : `Đơn hàng ${orderName} của bạn vừa cập nhật trạng thái ${categoryStatusViU[status]}, vào xem ngay`,
+          : `Đơn hàng ${orderName} của bạn vừa cập nhật trạng thái ${standardizationCategoryVi[status]}, vào xem ngay`,
     };
 
     dispatch(fetchSendPushNotifications(data));
@@ -572,7 +568,11 @@ const OrderDetailModal = ({
         <Box>{t(tokens.nav.details)}</Box>
         <Box display="flex" alignItems="center" gap={1}>
           <Chip
-            label={isDesigner ? categoryStatusViU[order.status] : categoryStatusVi[order.status] || order.status}
+            label={
+              language === 'vi'
+                ? standardizationCategoryVi[order.status]
+                : standardizationCategoryEn[order.status] || order.status
+            }
             size="small"
             sx={{
               textTransform: 'capitalize',
@@ -633,13 +633,27 @@ const OrderDetailModal = ({
           <Box display="flex">
             <Typography sx={{ width: 140, fontWeight: 'bold', flexShrink: 0 }}>{t(tokens.nav.design_type)}:</Typography>
             <Typography sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', flex: 1 }}>
-              {categoryLabelsVi[order.designtype]}
+              {language === 'vi' ? categoryLabelsVi[order.designtype] : categoryLabelsEn[order.designtype]}
+            </Typography>
+          </Box>
+          <Box display="flex">
+            <Typography sx={{ width: 140, fontWeight: 'bold', flexShrink: 0 }}>{t(tokens.nav.deadline)}:</Typography>
+            <Typography sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', flex: 1 }}>
+              {new Date(order.deadline * 1000).toLocaleString('vi-VN')}
             </Typography>
           </Box>
           <Box display="flex">
             <Typography sx={{ width: 140, fontWeight: 'bold', flexShrink: 0 }}>{t(tokens.nav.createdDate)}:</Typography>
             <Typography sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', flex: 1 }}>
               {new Date(order.createddate * 1000).toLocaleString('vi-VN')}
+            </Typography>
+          </Box>
+          <Box display="flex" alignItems="center">
+            <Typography sx={{ width: 140, fontWeight: 'bold', flexShrink: 0 }}>{t(tokens.nav.lastUpdate)}:</Typography>
+            <Typography sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', flex: 1 }}>
+              {order.lastmodifieddate
+                ? new Date(order.lastmodifieddate * 1000).toLocaleString('vi-VN')
+                : new Date(order.createddate * 1000).toLocaleString('vi-VN')}
             </Typography>
           </Box>
           <Box>
@@ -658,7 +672,7 @@ const OrderDetailModal = ({
                     py: 0.5,
                   }}
                 >
-                  Tải tất cả ({imagesList.length})
+                  {t(tokens.nav.downloadAll)} ({imagesList.length})
                 </Button>
               )}
             </Box>
@@ -833,7 +847,11 @@ const OrderDetailModal = ({
             </Box>
           )}
           <Dialog open={confirmOpen && !showOAuthDialog} onClose={() => !isProcessing && setConfirmOpen(false)}>
-            <DialogTitle>{t(tokens.nav.confirmStatusChange)}</DialogTitle>
+            <DialogTitle>
+              <Typography fontSize="24px" fontWeight='bold' textAlign="center">
+                {isCustomer ? t(tokens.nav.confirmStatusChange) : isDesigner ? t(tokens.nav.confirmAssignOrder) : ''}
+              </Typography>
+            </DialogTitle>
             <DialogContent>
               <Box sx={{ textAlign: 'center', mb: 2, fontSize: 20, fontWeight: 'bold' }}>
                 {statusOptions.find((opt) => opt.value === confirmStatus)?.label || confirmStatus}?
@@ -859,7 +877,7 @@ const OrderDetailModal = ({
                   (order.status === 'NEED_FIX' && confirmStatus === 'IN_REVIEW')) && (
                   <Box>
                     <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center">
-                      <Box sx={{ my: 1, opacity: 0.8 }}>{'Có thể upload file .psd <= 50MB'}</Box>
+                      <Box sx={{ my: 1, opacity: 0.8 }}>{t(tokens.nav.uploadPsd)}</Box>
                       <Button variant="contained" component="label" size="small" disabled={isProcessing}>
                         {t(tokens.nav.chosseImages)}
                         <input

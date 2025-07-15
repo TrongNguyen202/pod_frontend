@@ -5,7 +5,8 @@ import AttachFileIcon from '@mui/icons-material/AttachFile';
 import LayersIcon from '@mui/icons-material/Layers';
 import NumbersIcon from '@mui/icons-material/Numbers';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import { categoryLabelsVi } from 'src/constants';
+import { categoryLabelsEn, categoryLabelsVi } from 'src/constants';
+import { useTranslation } from 'react-i18next';
 
 const OrderCard = ({
   item,
@@ -20,6 +21,8 @@ const OrderCard = ({
   productTypeData,
   handleAmountFormat,
 }) => {
+  const { t, i18n } = useTranslation();
+  const language = i18n.language;
   const itemImages = useMemo(() => {
     try {
       return JSON.parse(item.images || '[]');
@@ -152,7 +155,7 @@ const OrderCard = ({
               {productTypeData.find((pt) => pt.id === item.producttypeid)?.name}
             </Typography>
             <Typography noWrap variant="body4" sx={{ ml: 2 }}>
-              {categoryLabelsVi[item.designtype]}
+              {language === 'vi' ? categoryLabelsVi[item.designtype] : categoryLabelsEn[item.designtype]}
             </Typography>
           </Box>
           <Typography noWrap variant="body1" fontSize="20px" sx={{ ml: 1 }}>

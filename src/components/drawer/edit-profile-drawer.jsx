@@ -24,6 +24,8 @@ import {
   AccountBalance as BankIcon,
   CreditCard as CardIcon,
 } from '@mui/icons-material';
+import { tokens } from 'src/locales/tokens';
+import { useTranslation } from 'react-i18next';
 
 export default function EditProfileDrawer({ open, onClose, userData, onSubmit }) {
   const [formData, setFormData] = useState({
@@ -38,6 +40,7 @@ export default function EditProfileDrawer({ open, onClose, userData, onSubmit })
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (userData) {
@@ -150,19 +153,15 @@ export default function EditProfileDrawer({ open, onClose, userData, onSubmit })
     >
       <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
-        <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
+        <Box display="flex" alignItems="center" justifyContent="space-between" mb={3} mt={7}>
           <Box display="flex" alignItems="center" gap={1}>
             <PersonIcon color="primary" />
-            <Typography variant="h6">Chỉnh sửa thông tin</Typography>
+            <Typography variant="h6">{t(tokens.nav.edit)}</Typography>
           </Box>
           <IconButton onClick={handleClose}>
             <CloseIcon />
           </IconButton>
         </Box>
-
-        <Typography variant="body2" color="text.secondary" mb={3}>
-          Cập nhật thông tin cá nhân của bạn. Nhấn lưu để áp dụng thay đổi.
-        </Typography>
 
         <Divider sx={{ mb: 3 }} />
 
@@ -181,7 +180,7 @@ export default function EditProfileDrawer({ open, onClose, userData, onSubmit })
         )}
 
         {/* Avatar Section */}
-        <Box display="flex" flexDirection="column" alignItems="center" mb={3}>
+        {/* <Box display="flex" flexDirection="column" alignItems="center" mb={3}>
           <Box position="relative">
             <Avatar src={formData?.avatar} sx={{ width: 80, height: 80, mb: 2 }}>
               {formData?.username?.charAt(0)?.toUpperCase()}
@@ -206,13 +205,13 @@ export default function EditProfileDrawer({ open, onClose, userData, onSubmit })
           <Typography variant="caption" color="text.secondary" textAlign="center">
             Nhấn vào icon camera để thay đổi ảnh đại diện
           </Typography>
-        </Box>
+        </Box> */}
 
         {/* Form */}
         <Box component="form" onSubmit={handleSubmit} sx={{ flexGrow: 1 }}>
           <TextField
             fullWidth
-            label="Tên người dùng"
+            label={t(tokens.nav.username)}
             value={formData.username}
             onChange={(e) => handleInputChange('username', e.target.value)}
             error={!!errors.username}
@@ -248,7 +247,7 @@ export default function EditProfileDrawer({ open, onClose, userData, onSubmit })
 
           <TextField
             fullWidth
-            label="Số điện thoại"
+            label={t(tokens.nav.phone)}
             value={formData.phone}
             onChange={(e) => handleInputChange('phone', e.target.value)}
             error={!!errors.phone}
@@ -284,14 +283,14 @@ export default function EditProfileDrawer({ open, onClose, userData, onSubmit })
           {userData.role_name === 'designer' && (
             <Box>
               <Divider sx={{ my: 2 }}>
-                <Typography variant="body2" color="text.secondary">
+                {/* <Typography variant="body2" color="text.secondary">
                   Thông tin ngân hàng
-                </Typography>
+                </Typography> */}
               </Divider>
 
               <TextField
                 fullWidth
-                label="Tên chủ tài khoản"
+                label={t(tokens.nav.bankAccountName)}
                 value={formData.bankAccountName}
                 onChange={(e) => handleInputChange('bankAccountName', e.target.value)}
                 error={!!errors.bankAccountName}
@@ -309,7 +308,7 @@ export default function EditProfileDrawer({ open, onClose, userData, onSubmit })
 
               <TextField
                 fullWidth
-                label="Số tài khoản"
+                label={t(tokens.nav.accountNumber)}
                 value={formData.bankNumber}
                 onChange={(e) => handleInputChange('bankNumber', e.target.value)}
                 error={!!errors.bankNumber}
@@ -328,7 +327,7 @@ export default function EditProfileDrawer({ open, onClose, userData, onSubmit })
 
               <TextField
                 fullWidth
-                label="Tên ngân hàng"
+                label={t(tokens.nav.bankName)}
                 value={formData.bankName}
                 onChange={(e) => handleInputChange('bankName', e.target.value)}
                 error={!!errors.bankName}
@@ -350,10 +349,10 @@ export default function EditProfileDrawer({ open, onClose, userData, onSubmit })
         {/* Footer */}
         <Box display="flex" gap={2} mt={3}>
           <Button variant="outlined" onClick={handleClose} disabled={isLoading} fullWidth>
-            Hủy
+            {t(tokens.nav.cancel)}
           </Button>
           <Button variant="contained" onClick={handleSubmit} disabled={isLoading} fullWidth>
-            {isLoading ? 'Đang lưu...' : 'Lưu thay đổi'}
+            {t(tokens.nav.submit)}
           </Button>
         </Box>
       </Box>

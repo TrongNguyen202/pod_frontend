@@ -90,7 +90,7 @@ const useOrderHandlers = ({
           status,
           number: Number(formData.get('number') || 1),
           quantity: Number(formData.get('quantity') || 1),
-          price: Number(formData.get('price') || 35000),
+          price: Number(formData.get('price') || 27000),
           // completedAt: formData.get('completed_at'),
         };
 
@@ -142,34 +142,34 @@ const useOrderHandlers = ({
   );
 
   const handleConfirmDelete = useCallback(async (selectedOrder) => {
-    if (selectedId !== null) {
-      if (isCustomer) {
-        const response = await dispatch(requestDeleteOrders({ ids: [Number(selectedId)] }));
+      if (selectedId !== null) {
+        if (isCustomer) {
+          const response = await dispatch(requestDeleteOrders({ ids: [Number(selectedId)] }));
 
-        if (response.payload?.status === 200) {
-          await dispatch(fetchGetOrdersByBoardId({ query: buildQuery() }));
-          await fetchAllStatuses();
-          toast.success('Xóa đơn thành công!');
-        } else {
-          toast.error('Xóa đơn thất bại!');
+          if (response.payload?.status === 200) {
+            await dispatch(fetchGetOrdersByBoardId({ query: buildQuery() }));
+            await fetchAllStatuses();
+            toast.success('Xóa đơn thành công!');
+          } else {
+            toast.error('Xóa đơn thất bại!');
+          }
+        } else if (isDesigner) {
+          const response = await dispatch(fetchResetOrderToNew({ data: { orderIds: [Number(selectedOrder?.id)] } }));
+          if (response?.meta?.requestStatus === 'fulfilled') {
+            await dispatch(fetchGetOrdersByBoardId({ query: buildQuery() }));
+            await fetchAllStatuses();
+            (sendNotificationSafely({
+              customerIds: selectedOrder?.userid ? [selectedOrder.userid] : [],
+              title: 'Trạng thái đơn hàng',
+              message: `Đơn hàng của bạn vừa được cập nhật trạng thái, xem ngay!`,
+            }),
+              toast.success('Hủy nhận đơn thành công!'));
+          } else {
+            toast.error('Hủy nhận đơn thất bại!');
+          }
         }
-      } else if (isDesigner) {
-        const response = await dispatch(fetchResetOrderToNew({ data: { orderIds: [Number(selectedOrder?.id)] } }));
-        if (response?.meta?.requestStatus === 'fulfilled') {
-          await dispatch(fetchGetOrdersByBoardId({ query: buildQuery() }));
-          await fetchAllStatuses();
-          (sendNotificationSafely({
-            customerIds: selectedOrder?.userid ? [selectedOrder.userid] : [],
-            title: 'Trạng thái đơn hàng',
-            message: `Đơn hàng của bạn vừa được cập nhật trạng thái, xem ngay!`,
-          }),
-            toast.success('Hủy nhận đơn thành công!'));
-        } else {
-          toast.error('Hủy nhận đơn thất bại!');
-        }
+        setOpenConfirm(false);
       }
-      setOpenConfirm(false);
-    }
   }, [selectedId, dispatch, buildQuery, fetchAllStatuses, setOpenConfirm]);
 
   const confirmAssignOrders = useCallback(

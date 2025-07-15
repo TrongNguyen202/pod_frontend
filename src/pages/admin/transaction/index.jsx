@@ -81,11 +81,11 @@ const getTransactionTypeColor = (type) => {
   return colors[type] || 'default';
 };
 
-const formatStatusTransaction = (status) => {
+const formatStatusTransaction = (status, t) => {
   const list = {
-    '-1': 'Hủy',
-    1: 'Thành công',
-    0: 'Chờ duyệt',
+    '-1': t(tokens.nav.cancel),
+    1: t(tokens.nav.success),
+    0: t(tokens.nav.pending),
   };
   return list[status] || status;
 };
@@ -831,7 +831,7 @@ const Page = () => {
                           <TableCell>{formatDateTime(contents.createdDate)}</TableCell>
                           <TableCell>
                             <Chip
-                              label={formatStatusTransaction(contents.status)}
+                              label={formatStatusTransaction(contents.status, t)}
                               color={getStatusTransactionColor(contents.status)}
                               size="small"
                             />
@@ -875,7 +875,7 @@ const Page = () => {
                                 </strong>
                                 .
                                 <br />
-                                Chủ tài khoản: <strong style={{ color: '#1976d2' }}>{bankAccountName}</strong>
+                                {t(tokens.nav.bankAccountName)} <strong style={{ color: '#1976d2' }}>{bankAccountName}</strong>
                               </DialogContentText>
                             </DialogContent>
 

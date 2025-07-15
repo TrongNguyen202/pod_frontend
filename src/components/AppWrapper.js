@@ -89,7 +89,7 @@ const AppWrapper = ({ children }) => {
 
     // Chỉ initialize một lần khi app load
     initializeApp();
-  }, []); // Chỉ chạy 1 lần khi mount
+  }, [dispatch]); // Chỉ chạy 1 lần khi mount
 
   // Hiển thị loading khi đang khởi tạo
   if (isInitializing || !isInitialized) {

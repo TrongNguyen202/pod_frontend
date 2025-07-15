@@ -29,9 +29,10 @@ import ClickDropdownMenu from './dropdown_click';
 import ChangePasswordDialog from './header/components/ChangePasswordDialog';
 import { useDialogHandlers } from './header/handlers/useDialogHandlers';
 import TableModalDialog from './table-modal';
+import { LanguageSwitcher } from './language';
 
 const Header = ({ onBoardChange, showBoards, role, onMenuSelect }, ref) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const dispatch = useAppDispatch();
   const router = useRouter();
   const [selectedBoardId, setSelectedBoardId] = useState(null);
@@ -66,6 +67,8 @@ const Header = ({ onBoardChange, showBoards, role, onMenuSelect }, ref) => {
   const [bankName, setBankName] = useState('');
   const [bankNumber, setBankNumber] = useState('');
   const [bankAccountName, setBankAccountName] = useState('');
+
+  const language = i18n.language;
 
   // Thêm useEffect để sync với userData
   useEffect(() => {
@@ -614,7 +617,11 @@ const Header = ({ onBoardChange, showBoards, role, onMenuSelect }, ref) => {
                     }}
                   >
                     {/* QR Image */}
-                    <img src={qrCode} alt="QR Code" style={{ width: '80%', maxWidth: 400 }} />
+                    <img
+                      src={qrCode}
+                      alt={language === 'vi' ? 'Mã QR' : 'QR Code'}
+                      style={{ width: '80%', maxWidth: 400 }}
+                    />
 
                     {/* Số tiền */}
                     <Typography variant="h5" sx={{ mt: 4, fontWeight: 'bold' }}>
@@ -622,49 +629,60 @@ const Header = ({ onBoardChange, showBoards, role, onMenuSelect }, ref) => {
                     </Typography>
 
                     <Typography variant="body2" color="success.main">
-                      Tặng ngay <strong>3% giá trị</strong> – tiết kiệm thêm từ giá gốc!
+                      {language === 'vi'
+                        ? 'Tặng ngay 3% giá trị – tiết kiệm thêm từ giá gốc!'
+                        : 'Get an extra 3% value – save more from the original price!'}
                     </Typography>
 
                     <Typography variant="body2" sx={{ mt: 1 }}>
-                      Tổng giá trị nhận được:&nbsp;
+                      {language === 'vi' ? 'Tổng giá trị nhận được: ' : 'Total amount received: '}
                       <strong>{(amount * 1.03).toLocaleString('vi-VN')}₫</strong>
                     </Typography>
 
                     {/* Mã giao dịch */}
                     <Typography variant="body2" sx={{ mt: 1, color: 'gray' }}>
-                      Mã giao dịch: {transactionCode}
+                      {language === 'vi' ? 'Mã giao dịch: ' : 'Transaction code: '}
+                      {transactionCode}
                     </Typography>
 
                     {secondsLeft > 0 && (
                       <Typography variant="body2" sx={{ mt: 1, color: 'red' }}>
-                        Còn lại: {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
+                        {language === 'vi' ? 'Còn lại: ' : 'Time left: '}
+                        {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
                       </Typography>
                     )}
+
                     <Typography variant="body1" sx={{ mt: 1, color: 'red' }}>
-                      Lưu ý KHÔNG thực hiện chuyển tiền khi mã hết hạn để tránh rủi ro
+                      {language === 'vi'
+                        ? 'Lưu ý KHÔNG thực hiện chuyển tiền khi mã hết hạn để tránh rủi ro'
+                        : '⚠️ Do NOT transfer money if the code has expired to avoid risks'}
                     </Typography>
+
                     {/* Số tài khoản */}
                     <Typography
                       variant="body2"
                       sx={{ mt: 0.5, color: 'gray', cursor: 'pointer' }}
                       onClick={() => {
                         navigator.clipboard.writeText('0399709507');
-                        alert('Đã copy số tài khoản');
+                        alert(language === 'vi' ? 'Đã copy số tài khoản' : 'Account number copied');
                       }}
                     >
-                      STK: 0399709507 (MBBank)
+                      {language === 'vi' ? 'STK: 0399709507 (MBBank)' : 'Account number: 0399709507 (MBBank)'}
                     </Typography>
 
                     {/* Hướng dẫn */}
                     <Typography variant="h6" sx={{ mt: 4 }}>
-                      Quét mã để nạp tiền
+                      {language === 'vi' ? 'Quét mã để nạp tiền' : 'Scan the code to top up'}
                     </Typography>
+
                     <Typography variant="body2" sx={{ mt: 1, color: 'gray', maxWidth: 300 }}>
-                      Quá trình sẽ tự động hoàn thành khi bạn thanh toán thành công.
+                      {language === 'vi'
+                        ? 'Quá trình sẽ tự động hoàn thành khi bạn thanh toán thành công.'
+                        : 'The process will complete automatically once your payment is successful.'}
                     </Typography>
 
                     <Button onClick={() => setOpenQRDialog(false)} sx={{ mt: 6 }} variant="outlined">
-                      Đóng
+                      {language === 'vi' ? 'Đóng' : 'Close'}
                     </Button>
                   </Box>
                 </Dialog>
@@ -693,12 +711,15 @@ const Header = ({ onBoardChange, showBoards, role, onMenuSelect }, ref) => {
                     </Typography>
 
                     <Typography variant="h6" color="success.main">
-                      Yêu cầu rút tiền của bạn đã được ghi nhận, vui lòng chờ!
+                      {language === 'vi'
+                        ? 'Yêu cầu rút tiền của bạn đã được ghi nhận, vui lòng chờ!'
+                        : 'Your withdrawal request has been received. Please wait!'}
                     </Typography>
 
                     {/* Mã giao dịch */}
                     <Typography variant="h5" sx={{ mt: 2, color: 'gray' }}>
-                      Mã giao dịch: {transactionCode}
+                      {language === 'vi' ? 'Mã giao dịch: ' : 'Transaction code: '}
+                      {transactionCode}
                     </Typography>
 
                     {/* Số tài khoản */}
@@ -706,24 +727,28 @@ const Header = ({ onBoardChange, showBoards, role, onMenuSelect }, ref) => {
                       variant="body1"
                       sx={{ mt: 2, color: 'primary.main', cursor: 'pointer', fontSize: '32px' }}
                     >
-                      Tên chủ tài khoản: {bankAccountName}
+                      {language === 'vi' ? 'Tên chủ tài khoản: ' : 'Account holder name: '}
+                      {bankAccountName}
                     </Typography>
+
                     <Typography
                       variant="body1"
                       sx={{ mt: 2, color: 'primary.main', cursor: 'pointer', fontSize: '32px' }}
                     >
-                      STK: {bankNumber} ({bankName})
+                      {language === 'vi'
+                        ? `STK: ${bankNumber} (${bankName})`
+                        : `Account number: ${bankNumber} (${bankName})`}
                     </Typography>
 
                     <Button onClick={() => setOpenQRDialog(false)} sx={{ mt: 6 }} variant="outlined">
-                      Đóng
+                      {language === 'vi' ? 'Đóng' : 'Close'}
                     </Button>
                   </Box>
                 </Dialog>
               )}
             </Box>
           )}
-
+          <LanguageSwitcher />
           {openDrawerBoardInfo && selectedBoardId && (
             <Drawer
               anchor="right"

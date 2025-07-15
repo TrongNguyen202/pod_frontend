@@ -77,7 +77,7 @@ export const getFieldsIdeas = (productTypeData = [], templatesData = []) => [
     pattern: '[0-9]*',
   },
   {
-    name: 'completed_at',
+    name: 'deadline',
     label: 'Deadline',
     type: 'date',
     width: '25%',

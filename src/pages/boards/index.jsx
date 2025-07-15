@@ -41,7 +41,7 @@ import {
   putBoardInfoByBoardId,
 } from 'src/redux/reducers/boards';
 import { tokens } from '../../locales/tokens';
-import { categoryLabelsVi } from 'src/constants';
+import { categoryLabelsVi, categoryLabelsEn } from 'src/constants';
 
 const Page = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -52,7 +52,7 @@ const Page = () => {
   const [limit, setLimit] = useState(20);
   const [openAddBoard, setOpenAddBoard] = useState(false);
   const dispatch = useAppDispatch();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [role, setRole] = useState('');
   const [openDialogDelete, setOpenDialogDelete] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
@@ -69,7 +69,7 @@ const Page = () => {
   } = useAppSelector((state) => state.boards.boardService);
   const { data: userData } = useAppSelector((state) => state.users.userInfo);
   const { data: productTypeData } = useAppSelector((state) => state.productTypes.productTypes);
-
+  const language = i18n.language;
   useEffect(() => {
     if (userData) {
       setRole(userData.role_name);
@@ -303,7 +303,9 @@ const Page = () => {
                             <Checkbox checked={selected.includes(row.id)} onChange={() => handleSelect(row.id)} />
                           </TableCell>
                           <TableCell>{row.title}</TableCell>
-                          <TableCell>{categoryLabelsVi[row.designtype]}</TableCell>
+                          <TableCell>
+                            {language === 'vi' ? categoryLabelsVi[row.designtype] : categoryLabelsEn[row.designtype]}
+                          </TableCell>
                           <TableCell>
                             {JSON.parse(row.producttypeids)
                               .map((id) => {

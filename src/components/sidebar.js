@@ -5,11 +5,14 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { checkRole } from 'src/utils';
+import { useTranslation } from 'react-i18next';
+import { tokens } from 'src/locales/tokens';
 
 const drawerWidth = 240;
 const collapsedWidth = 60;
 
 const Sidebar = ({ open, toggleSidebar, role }) => {
+  const { t } = useTranslation();
   const router = useRouter();
   const { pathname } = router;
   const { isCustomer } = checkRole(role);
@@ -65,7 +68,7 @@ const Sidebar = ({ open, toggleSidebar, role }) => {
             <Home />
           </ListItemIcon>
           <ListItemText
-            primary="Đơn hàng"
+            primary={t(tokens.nav.orders)}
             sx={{
               opacity: open ? 1 : 0,
               transition: 'opacity 0.2s ease-in-out',
@@ -103,7 +106,7 @@ const Sidebar = ({ open, toggleSidebar, role }) => {
               <Star />
             </ListItemIcon>
             <ListItemText
-              primary="Bảng"
+              primary={t(tokens.nav.boards)}
               sx={{
                 opacity: open ? 1 : 0,
                 transition: 'opacity 0.2s ease-in-out',
@@ -140,7 +143,7 @@ const Sidebar = ({ open, toggleSidebar, role }) => {
             <AccountBalanceWalletIcon />
           </ListItemIcon>
           <ListItemText
-            primary="Tài chính"
+            primary={t(tokens.nav.balances)}
             sx={{
               opacity: open ? 1 : 0,
               transition: 'opacity 0.2s ease-in-out',
