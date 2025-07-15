@@ -57,6 +57,11 @@ const initialState = {
     error: '',
     data: [],
   },
+  assignDesignerService: {
+    loading: false,
+    error: '',
+    data: [],
+  },
 };
 
 export const fetchGetOrdersByBoardId = createAsyncThunk('/get/order/boardId', async ({ query }) => {
@@ -118,6 +123,10 @@ export const fetchUploadImagesForDesigner = createAsyncThunk(
     }
   },
 );
+
+export const fetchAssignOrderToDesigner = createAsyncThunk('/assign/order/design', async ({ data }) => {
+  const res = await RepositoryRemote.orders.requestAssignOrderToDesigner(data);
+});
 
 const slicer = createSlice({
   name: 'orders',
@@ -314,6 +323,21 @@ const slicer = createSlice({
       state.uploadImageService.loading = false;
       state.uploadImageService.data = [];
       state.uploadImageService.error = action?.error?.message || 'Error while processing.';
+    });
+
+    // Assign NEW order for designer
+    builder.addCase(fetchAssignOrderToDesigner.pending, (state) => {
+      state.assignDesignerService.loading = true;
+    });
+    builder.addCase(fetchAssignOrderToDesigner.fulfilled, (state, action) => {
+      state.assignDesignerService.loading = false;
+      state.assignDesignerService.data = action.payload;
+      state.assignDesignerService.error = '';
+    });
+    builder.addCase(fetchAssignOrderToDesigner.rejected, (state, action) => {
+      state.assignDesignerService.loading = false;
+      state.assignDesignerService.data = [];
+      state.assignDesignerService.error = action?.error?.message || 'Error while processing.';
     });
   },
 });

@@ -38,6 +38,14 @@ const requestGetDesignerIds = async () => {
   return axiosAPI(config);
 };
 
+const requestGetDesignerInfo = async () => {
+  const config = {
+    method: 'GET',
+    url: 'users/d',
+  };
+  return axiosAPI(config);
+};
+
 const requestSetTaxForDesigner = async (data) => {
   const config = {
     method: 'POST',
@@ -146,6 +154,7 @@ const requestGetUsersStats = async () => {
 export const users = {
   requestGetUserInfoByEmail,
   requestGetDesignerIds,
+  requestGetDesignerInfo,
   requestSetTaxForDesigner,
   requestPutStatusUser,
   requestUpdateBankInfo,

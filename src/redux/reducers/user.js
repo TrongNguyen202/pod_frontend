@@ -29,6 +29,11 @@ const initialState = {
     error: '',
     data: [],
   },
+  designersInfo: {
+    loading: false,
+    error: '',
+    data: [],
+  },
   designerTax: {
     loading: false,
     error: '',
@@ -79,6 +84,11 @@ export const fetchGetShopByUser = createAsyncThunk('/user/shop-by-user', async (
 
 export const fetchGetDesginerIds = createAsyncThunk('/get/designer/ids', async () => {
   const res = await RepositoryRemote.users.requestGetDesignerIds();
+  return res.data.data;
+});
+
+export const fetchGetDesginerInfo = createAsyncThunk('/get/designer/info', async () => {
+  const res = await RepositoryRemote.users.requestGetDesignerInfo();
   return res.data.data;
 });
 
@@ -224,6 +234,28 @@ const slicer = createSlice({
     builder.addCase(fetchGetDesginerIds.rejected, (state, action) => {
       state.loading = false;
       state.designerIds = {
+        loading: false,
+        error: action?.error?.message || 'Error while processing.',
+        data: [],
+      };
+    });
+
+    builder.addCase(fetchGetDesginerInfo.pending, (state) => {
+      state.loading = true;
+      state.designersInfo.loading = true;
+    });
+    builder.addCase(fetchGetDesginerInfo.fulfilled, (state, action) => {
+      state.loading = false;
+      state.designersInfo = {
+        loading: false,
+        error: '',
+        data: action.payload,
+      };
+      state.error = '';
+    });
+    builder.addCase(fetchGetDesginerInfo.rejected, (state, action) => {
+      state.loading = false;
+      state.designersInfo = {
         loading: false,
         error: action?.error?.message || 'Error while processing.',
         data: [],

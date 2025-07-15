@@ -107,6 +107,15 @@ const requestUploadImagesForDesigner = async (orderId, data) => {
   return axiosAPIDirect(config);
 };
 
+const requestAssignOrderToDesigner = async (data) => {
+  const config = {
+    method: 'PUT',
+    url: `order/assign-to-designer`,
+    data,
+  };
+  return axiosAPI(config);
+};
+
 export const orders = {
   requestGetOrdersByBoardId,
   requestGetAllStatus,
@@ -119,4 +128,5 @@ export const orders = {
   requestAssignOrdersForDesigner,
   requestResetOrderToNew,
   requestUploadImagesForDesigner,
+  requestAssignOrderToDesigner,
 };

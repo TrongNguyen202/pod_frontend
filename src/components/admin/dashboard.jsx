@@ -10,6 +10,7 @@ import {
   Refresh as RefreshIcon,
   Search as SearchIcon,
   ShowChart as ShowChartIcon,
+  SwitchAccountOutlined,
 } from '@mui/icons-material';
 import {
   Alert,
@@ -46,10 +47,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAppDispatch, useAppSelector } from 'src/redux/hook';
 import { fetchSendPushNotifications } from 'src/redux/reducers/notifications';
-import { fetchResetOrderToNew } from 'src/redux/reducers/orders';
+import { fetchAssignOrderToDesigner, fetchResetOrderToNew } from 'src/redux/reducers/orders';
 import { fetchGetStatisticsOrder } from 'src/redux/reducers/statistics';
+import { fetchGetDesginerInfo } from 'src/redux/reducers/user';
 import handleAmountFormat from 'src/utils/amount-vnd';
 import { formatDateTime } from 'src/utils/date';
+import ModalAssignDesigner from '../ModalAssignDesigner';
 
 const formatDateTimeForInput = (date) => {
   if (!date) return '';
@@ -86,6 +89,14 @@ const getStatusLabel = (status) => {
     ARCHIVED: 'Đã lưu trữ',
   };
   return labels[status] || status;
+};
+
+const useFetchDesigners = (dispatch) => {
+  useEffect(() => {
+    dispatch(fetchGetDesginerInfo());
+  }, [dispatch]);
+
+  return useAppSelector((state) => state.users.designersInfo);
 };
 
 export default function AdminDashboard() {
@@ -346,6 +357,7 @@ export default function AdminDashboard() {
           message: `Đơn hàng của bạn vừa được cập nhật trạng thái, xem ngay!`,
         }),
           toast.success('Gỡ designer thành công!'));
+        fetchData();
       } else {
         toast.error('Gỡ designer thất bại!');
       }
@@ -354,6 +366,38 @@ export default function AdminDashboard() {
     }
     setShowConfirmRemoveDesigner(false);
     setOrderToRemoveDesigner(null);
+  };
+
+  const [showSelectDesigner, setShowSelectDesigner] = useState(false);
+  const [orderToAssign, setOrderToAssign] = useState(null);
+  const designers = useFetchDesigners(dispatch);
+
+  const handleClose = () => setShowSelectDesigner(false);
+
+  const designersOptions = designers?.data.map((designer) => ({
+    label: designer.username,
+    value: JSON.stringify({ id: designer.id, email: designer.email }),
+  }));
+
+  const confirmAssignOrderToDesigner = async (d) => {
+    const da = JSON.parse(d.email);
+
+    const data = {
+      orderIds: [orderToAssign?.id],
+      designerEmail: da.email,
+    };
+    const response = await dispatch(fetchAssignOrderToDesigner({ data }));
+    if (response?.meta?.requestStatus === 'fulfilled') {
+      (sendNotificationSafely({
+        designerIds: da?.id ? [da?.id] : [],
+        title: 'Trạng thái đơn hàng',
+        message: `Đơn hàng của bạn vừa được cập nhật trạng thái, xem ngay!`,
+      }),
+        toast.success('Cập nhật designer thành công!'));
+      fetchData();
+    } else {
+      toast.error('Cập nhật designer thất bại!');
+    }
   };
 
   if (error) {
@@ -758,8 +802,16 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell>{formatDateTime(order.createdDate)}</TableCell>
                         <TableCell align="center">{order.quantity}</TableCell>
-                        <TableCell align="center" onClick={() => handleShowConfirmRemoveDesigner(order)}>
-                          <PersonOff />{' '}
+                        <TableCell align="center" sx={{}}>
+                          <Box sx={{ display: 'flex' }}>
+                            <PersonOff sx={{ mx: 1 }} onClick={() => handleShowConfirmRemoveDesigner(order)} />{' '}
+                            <SwitchAccountOutlined
+                              onClick={() => {
+                                setShowSelectDesigner(true);
+                                setOrderToAssign(order);
+                              }}
+                            />{' '}
+                          </Box>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -775,6 +827,32 @@ export default function AdminDashboard() {
                   <Button onClick={() => handleRemoveDesigner()}>Lưu</Button>
                 </DialogActions>
               </Dialog>
+
+              {showSelectDesigner && (
+                <ModalAssignDesigner
+                  open={showSelectDesigner} 
+                  onClose={handleClose}
+                  title="Chọn designer"
+                  fields={[
+                    {
+                      name: 'email',
+                      label: 'Designer',
+                      type: 'select',
+                      options: designersOptions,
+                    },
+                  ]}
+                  onSubmit={(data) => {
+                    confirmAssignOrderToDesigner(data);
+                    handleClose();
+                  }}
+                  buttonProps={{
+                    sx: { borderTopLeftRadius: 0, borderBottomLeftRadius: 0, m: 0 },
+                    variant: 'text',
+                    color: 'primary',
+                    size: 'medium',
+                  }}
+                />
+              )}
 
               {/* Pagination */}
               {pagination && (
