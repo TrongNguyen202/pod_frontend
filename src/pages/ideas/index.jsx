@@ -393,7 +393,7 @@ const Page = () => {
                   handleClickOpenDetail={handleClickOpenDetail}
                   handleClickDeleteIcon={handleClickDeleteIcon}
                   handleToggleCheck={handleToggleCheck}
-                  productTypeData={newMap}
+                  productTypeData={productTypeData}
                   handleAmountFormat={handleAmountFormat}
                   role={role}
                 />

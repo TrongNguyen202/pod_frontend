@@ -242,6 +242,18 @@ export const toDatetimeLocalString = (date) => {
   return `${year}-${month}-${day}`;
 };
 
+export const parseCommentImages = (comment) => {
+  try {
+    if (comment.images && typeof comment.images === 'string') {
+      return JSON.parse(comment.images);
+    }
+    return comment.images || [];
+  } catch (error) {
+    console.error('Error parsing comment images:', error);
+    return [];
+  }
+};
+
 export const formatPriceOrContact = (p) => {
   if (!p) return 'Liên hệ';
   p = Math.round(p);

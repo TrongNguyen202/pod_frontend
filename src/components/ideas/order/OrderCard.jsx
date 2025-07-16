@@ -117,10 +117,15 @@ const OrderCard = ({
           fontSize: '0.75rem',
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Typography noWrap variant="body1" fontWeight="bold" color="text.secondary">
-            {item.usercreate}
-          </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', marginRight: '12px' }}>
+            <Typography noWrap variant="body1" fontWeight="bold" color="text.primary" marginRight="8px">
+              #{item.id}
+            </Typography>
+            <Typography noWrap variant="body1" fontWeight="bold" color="text.secondary">
+              {item.usercreate}
+            </Typography>
+          </Box>
           <Typography noWrap variant="body2" fontWeight="bold" color="text.secondary">
             {item.name}
           </Typography>

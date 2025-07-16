@@ -33,7 +33,8 @@ export const en = {
   [tokens.nav.confirmAssign]: 'Confirm receive orders',
   [tokens.nav.confirmPassword]: 'Confirm password',
   [tokens.nav.confirmStatusChange]: 'Confirm change order status',
-  [tokens.nav.confirmAssignOrder]: 'Confirm order receipt and completion before deadline? (2h)',
+  [tokens.nav.confirmAssignOrder]:
+    'Confirm order receipt and completion before deadline? (2 hours - Over limit -10% of goods value)',
   [tokens.nav.concepts]: 'Concepts',
   [tokens.nav.contact]: 'Contact',
   [tokens.nav.create]: 'Create',

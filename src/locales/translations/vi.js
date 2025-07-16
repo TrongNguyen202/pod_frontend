@@ -33,7 +33,7 @@ export const vi = {
   [tokens.nav.confirmAssign]: 'Xác nhận nhận đơn',
   [tokens.nav.confirmPassword]: 'Xác nhận mật khẩu',
   [tokens.nav.confirmStatusChange]: 'Xác nhận chuyển trạng thái đơn hàng',
-  [tokens.nav.confirmAssignOrder]: 'Xác nhận nhận đơn hàng và hoàn thành đúng thời hạn? (2h)',
+  [tokens.nav.confirmAssignOrder]: 'Xác nhận nhận đơn hàng và hoàn thành đúng thời hạn? (2 giờ - Quá hạn -10% giá trị đơn)',
   [tokens.nav.concepts]: 'Khái niệm',
   [tokens.nav.contact]: 'Liên hệ',
   [tokens.nav.create]: 'Tạo mới',

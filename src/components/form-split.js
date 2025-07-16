@@ -115,7 +115,6 @@ const FormDialogSplitLayout = ({
       ...normalizeInitialData(initialData, fields),
       deadline: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
     };
-    console.log(updatedInitialData);
     setFormData(updatedInitialData);
     setIsManuallyEditingDescription(false);
     setErrors({});

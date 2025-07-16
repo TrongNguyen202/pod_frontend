@@ -250,25 +250,26 @@ export default function AdminDashboard() {
         circle: 'blue-circle',
       },
       {
+        title: 'Tổng giá',
+        value: handleAmountFormat(statistics.totalPrice || 0),
+        diff: `Trong tổng ${statistics.totalOrders?.toLocaleString() || 0} đơn hàng`,
+
+        icon: ShowChartIcon,
+        circle: 'purple-circle',
+      },
+      {
+        title: 'Tổng trả designer',
+        value: handleAmountFormat(statistics.totalPriceDe || 0),
+        diff: `Trong tổng ${statistics.statusBreakdown?.DONE || 0} đã hoàn thành`,
+        icon: DashboardCustomizeIcon,
+        circle: 'orange-circle',
+      },
+      {
         title: 'Doanh thu thuần',
         value: handleAmountFormat(statistics.netRevenue || 0),
         diff: `Từ ${statistics.totalOrders || 0} đơn hàng`,
         icon: AttachMoneyIcon,
         circle: 'green-circle',
-      },
-      {
-        title: 'Giá trị TB/đơn',
-        value: handleAmountFormat(statistics.averageOrderValue || 0),
-        diff: 'Trung bình mỗi đơn hàng',
-        icon: ShowChartIcon,
-        circle: 'purple-circle',
-      },
-      {
-        title: 'Hoàn thành hôm nay',
-        value: todayTransactions.doneOrders?.toString() || '0',
-        diff: `Trong tổng ${statistics.statusBreakdown?.DONE || 0} đã hoàn thành`,
-        icon: DashboardCustomizeIcon,
-        circle: 'orange-circle',
       },
     ];
   };
@@ -740,7 +741,7 @@ export default function AdminDashboard() {
                         <TableCell>#{order.id}</TableCell>
                         <TableCell
                           sx={{
-                            maxWidth: 100,
+                            maxWidth: 158,
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap',
@@ -752,7 +753,7 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell
                           sx={{
-                            maxWidth: 100,
+                            maxWidth: 135,
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap',
@@ -777,7 +778,7 @@ export default function AdminDashboard() {
                         <TableCell>{order.customer?.phone || 'N/A'}</TableCell>
                         <TableCell
                           sx={{
-                            maxWidth: 100,
+                            maxWidth: 159,
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap',

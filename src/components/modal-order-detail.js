@@ -54,6 +54,7 @@ import {
 import CommentInput from './comments/CommentInput';
 import CommentList from './comments/CommentList';
 import { OAuthDialog } from './oauth/OAuthDialog';
+import { uploadImagesConcurrently } from 'src/utils/axiosUploadImages';
 
 const OrderDetailModal = ({
   open,
@@ -139,15 +140,23 @@ const OrderDetailModal = ({
 
     seenCommentIdsRef.current = new Set();
 
-    // Initialize với comments hiện tại
-    comments.forEach((comment) => {
-      const id = comment.commentId || comment.comment_id;
+    const getCommentsData = () => {
+      if (Array.isArray(comments)) return comments;
+      if (comments?.data && Array.isArray(comments.data)) return comments.data;
+      return [];
+    };
+
+    const currentComments = getCommentsData();
+    currentComments.forEach((comment) => {
+      const id = comment?.commentId || comment?.comment_id;
       if (id) {
         seenCommentIdsRef.current.add(id);
       }
     });
 
     const unsubscribe = listenToOrderComments(order.id, (newComment) => {
+      if (!newComment) return;
+
       const id = newComment.commentId || newComment.comment_id;
       if (id && !seenCommentIdsRef.current.has(id)) {
         seenCommentIdsRef.current.add(id);
@@ -160,7 +169,7 @@ const OrderDetailModal = ({
         unsubscribe();
       }
     };
-  }, [dispatch, order?.id, open]); // Removed comments dependency to prevent re-subscription
+  }, [dispatch, order?.id, open]);
 
   if (!order) return null;
 
@@ -213,8 +222,9 @@ const OrderDetailModal = ({
     dispatch(fetchSendPushNotifications(data));
   };
 
-  const handleSubmitComment = async (commentText) => {
-    if (!commentText.trim() || !order?.id || !userData?.id || isProcessing) return;
+  const handleSubmitComment = async (commentText, imageUrls) => {
+    if (!commentText.trim()) return;
+    if (!order?.id || !userData?.id || isProcessing) return;
 
     setIsProcessing(true);
     try {
@@ -224,12 +234,15 @@ const OrderDetailModal = ({
         userId: userData.id,
         username: userData.username,
         role: userData.role_name,
+        images: JSON.stringify(imageUrls),
       };
+
       const response = await dispatch(fetchPostCommentFirebase(data));
+
       if (response.meta.requestStatus === 'fulfilled') {
-        await dispatch(fetchPostCommentPosgres(response.payload));
         sendNotificationComment(order.userid, order.designerid, order.name, commentText, role);
       }
+
       setCommentText('');
     } finally {
       setIsProcessing(false);
@@ -341,7 +354,7 @@ const OrderDetailModal = ({
           });
 
           if (commentText.trim()) {
-            await handleSubmitComment(commentText);
+            await handleSubmitComment(commentText, null);
           }
 
           // Gọi handleChangeSingleOrderStatus với shouldNotify = false để tránh gửi thông báo trùng
@@ -412,7 +425,7 @@ const OrderDetailModal = ({
 
         // Send comment if provided
         if (optionalComment.trim()) {
-          await handleSubmitComment(optionalComment);
+          await handleSubmitComment(optionalComment, null);
         }
 
         // Batch API calls
@@ -448,7 +461,7 @@ const OrderDetailModal = ({
 
         // Send comment if exists
         if (commentText.trim()) {
-          await handleSubmitComment(commentText);
+          await handleSubmitComment(commentText, null);
         }
 
         // Gọi API và gửi thông báo chỉ 1 lần
@@ -639,7 +652,9 @@ const OrderDetailModal = ({
           <Box display="flex">
             <Typography sx={{ width: 140, fontWeight: 'bold', flexShrink: 0 }}>{t(tokens.nav.deadline)}:</Typography>
             <Typography sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', flex: 1 }}>
-              {new Date(order.deadline * 1000).toLocaleString('vi-VN')}
+              {order.deadline
+                ? new Date(order.deadline * 1000).toLocaleString('vi-VN')
+                : new Date(Date.now() + 2 * 60 * 60 * 1000).toLocaleString('vi-VN')}
             </Typography>
           </Box>
           <Box display="flex">
@@ -848,7 +863,7 @@ const OrderDetailModal = ({
           )}
           <Dialog open={confirmOpen && !showOAuthDialog} onClose={() => !isProcessing && setConfirmOpen(false)}>
             <DialogTitle>
-              <Typography fontSize="24px" fontWeight='bold' textAlign="center">
+              <Typography fontSize="24px" fontWeight="bold" textAlign="center">
                 {isCustomer ? t(tokens.nav.confirmStatusChange) : isDesigner ? t(tokens.nav.confirmAssignOrder) : ''}
               </Typography>
             </DialogTitle>
@@ -983,10 +998,11 @@ const OrderDetailModal = ({
             <Box sx={{ padding: '8px 4px' }}>
               <CommentList comments={comments} />
               <CommentInput
-                onSubmit={(text) => handleSubmitComment(text)}
+                onSubmit={handleSubmitComment}
                 placeholder={t(tokens.nav.typing)}
                 t={t(tokens.nav.send)}
                 disabled={isProcessing}
+                uploadImagesConcurrently={uploadImagesConcurrently}
               />
             </Box>
           )}
