@@ -548,6 +548,7 @@ export default function AdminDashboard() {
                   <MenuItem value="IN_REVIEW">{getStatusLabel('IN_REVIEW')}</MenuItem>
                   <MenuItem value="NEED_FIX">{getStatusLabel('NEED_FIX')}</MenuItem>
                   <MenuItem value="DONE">{getStatusLabel('DONE')}</MenuItem>
+                  <MenuItem value="ARCHIVED">{getStatusLabel('ARCHIVED')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
