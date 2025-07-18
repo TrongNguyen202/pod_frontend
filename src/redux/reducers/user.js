@@ -60,6 +60,12 @@ const initialState = {
       inactive: 0,
     },
   },
+  userSetting: {
+    loading: false,
+    error: '',
+    data: [],
+    total: 0,
+  },
 };
 
 export const fetchUserByEmail = createAsyncThunk('/user/post/user-detail', async (email) => {
@@ -114,6 +120,16 @@ export const fetchUsers = createAsyncThunk('/user/fetch-list', async (filterData
 
 export const fetchUsersStats = createAsyncThunk('/user/stats', async () => {
   const res = await RepositoryRemote.users.requestGetUsersStats();
+  return res.data.data;
+});
+
+export const fetchGetUserSetting = createAsyncThunk('/get/user/settings', async () => {
+  const res = await RepositoryRemote.users.requestGetUserSettings();
+  return res.data.data;
+});
+
+export const fetchPostUserSetting = createAsyncThunk('/post/user/settings', async (data) => {
+  const res = await RepositoryRemote.users.requestPostUserSettings(data);
   return res.data.data;
 });
 
@@ -360,6 +376,35 @@ const slicer = createSlice({
     builder.addCase(fetchUsersStats.rejected, (state, action) => {
       state.usersStats.loading = false;
       state.usersStats.error = action?.error?.message || 'Error fetching users stats.';
+    });
+
+    // Fetch users setting
+    builder
+      // Fetch users setting
+      .addCase(fetchGetUserSetting.pending, (state) => {
+        state.userSetting.loading = true;
+      });
+    builder.addCase(fetchGetUserSetting.fulfilled, (state, action) => {
+      state.userSetting.loading = false;
+      state.userSetting.data = action.payload.data || action.payload;
+      state.userSetting.error = '';
+    });
+    builder.addCase(fetchGetUserSetting.rejected, (state, action) => {
+      state.userSetting.loading = false;
+      state.userSetting.error = action?.error?.message || 'Error fetching user setting.';
+    });
+    // Update user setting (POST)
+    builder.addCase(fetchPostUserSetting.pending, (state) => {
+      state.userSetting.loading = true;
+    });
+    builder.addCase(fetchPostUserSetting.fulfilled, (state, action) => {
+      state.userSetting.loading = false;
+      state.userSetting.data = action.payload.data || action.payload;
+      state.userSetting.error = '';
+    });
+    builder.addCase(fetchPostUserSetting.rejected, (state, action) => {
+      state.userSetting.loading = false;
+      state.userSetting.error = action?.error?.message || 'Error updating user setting.';
     });
   },
 });

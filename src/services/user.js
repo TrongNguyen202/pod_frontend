@@ -151,6 +151,25 @@ const requestGetUsersStats = async () => {
   return axiosAPI(config);
 };
 
+const requestGetUserSettings = async () => {
+  const config = {
+    method: 'GET',
+    url: '/users/settings',
+  };
+
+  return axiosAPI(config);
+};
+
+const requestPostUserSettings = async (data) => {
+  const config = {
+    method: 'POST',
+    url: '/users/settings',
+    data,
+  };
+
+  return axiosAPI(config);
+};
+
 export const users = {
   requestGetUserInfoByEmail,
   requestGetDesignerIds,
@@ -168,4 +187,6 @@ export const users = {
   requestCreateUserAccount,
   requestGetUsers,
   requestGetUsersStats,
+  requestGetUserSettings,
+  requestPostUserSettings
 };
