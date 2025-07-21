@@ -732,6 +732,7 @@ export default function AdminDashboard() {
                       <TableCell align="center">Giá thiết kế</TableCell>
                       <TableCell>Trạng thái</TableCell>
                       <TableCell>Ngày tạo</TableCell>
+                      <TableCell>Ngày cập nhật</TableCell>
                       <TableCell align="center">Số lượng</TableCell>
                       <TableCell align="center">Thao tác</TableCell>
                     </TableRow>
@@ -803,6 +804,7 @@ export default function AdminDashboard() {
                           />
                         </TableCell>
                         <TableCell>{formatDateTime(order.createdDate)}</TableCell>
+                        <TableCell>{formatDateTime(order.lastModifiedDate)}</TableCell>
                         <TableCell align="center">{order.quantity}</TableCell>
                         <TableCell align="center" sx={{}}>
                           <Box sx={{ display: 'flex' }}>
