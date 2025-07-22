@@ -67,6 +67,24 @@ const Vendors = () => (
   </>
 );
 
+const GoogleAnalyst = () => (
+  <>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-BR8YK2CPJT" />
+    <script
+      dangerouslySetInnerHTML={{
+        __html: `
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-BR8YK2CPJT', {
+            page_path: window.location.pathname,
+          });
+        `,
+      }}
+    />
+  </>
+);
+
 const CustomDocument = ({ emotionStyleTags }) => {
   return (
     <Html lang="en">
@@ -74,6 +92,7 @@ const CustomDocument = ({ emotionStyleTags }) => {
         <Favicon />
         <Fonts />
         <Vendors />
+        <GoogleAnalyst />
         <meta
           name="emotion-insertion-point"
           content=""
@@ -101,7 +120,7 @@ CustomDocument.getInitialProps = async (ctx) => {
           {...props} />
       );
     }
-  });
+    });
 
   const initialProps = await Document.getInitialProps(ctx);
   const emotionStyles = extractCriticalToChunks(initialProps.html);
